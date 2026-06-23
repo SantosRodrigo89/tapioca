@@ -4,7 +4,7 @@ import { getFirestore, type Firestore } from "firebase-admin/firestore";
 
 function getAdminApp(): App {
   if (getApps().length > 0) {
-    return getApps()[0];
+    return getApps()[0]!;
   }
 
   return initializeApp({
@@ -16,6 +16,25 @@ function getAdminApp(): App {
   });
 }
 
-export const adminApp: App = getAdminApp();
-export const adminAuth: Auth = getAuth(adminApp);
-export const adminDb: Firestore = getFirestore(adminApp);
+// Lazy accessors — deferred until first use so module import during build
+// (without real env vars) does not throw.
+export function getAdminAuth(): Auth {
+  return getAuth(getAdminApp());
+}
+
+export function getAdminDb(): Firestore {
+  return getFirestore(getAdminApp());
+}
+
+// Named re-exports for convenience (resolved lazily via getters)
+export const adminAuth: Auth = new Proxy({} as Auth, {
+  get(_target, prop) {
+    return getAdminAuth()[prop as keyof Auth];
+  },
+});
+
+export const adminDb: Firestore = new Proxy({} as Firestore, {
+  get(_target, prop) {
+    return getAdminDb()[prop as keyof Firestore];
+  },
+});
