@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { refreshAuthToken } from "@/hooks/use-auth";
 import {
   createCategory,
   updateCategory,
@@ -54,6 +55,11 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
   );
   const [dialog, setDialog] = useState<DialogState>({ type: "none" });
 
+  // Ensure Firestore client token includes custom claims (tenantId) for writes
+  useEffect(() => {
+    void refreshAuthToken().catch(console.error);
+  }, []);
+
   const toggleExpand = (id: string) =>
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -72,8 +78,15 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
       setExpandedIds((prev) => new Set([...prev, created.id]));
       setDialog({ type: "none" });
       toast.success("Categoria criada");
-    } catch {
-      toast.error("Erro ao criar categoria");
+    } catch (err) {
+      console.error("[createCategory]", err);
+      const message =
+        err instanceof Error ? err.message : "Erro ao criar categoria";
+      toast.error(
+        message.includes("permission") || message.includes("insufficient")
+          ? "Sem permissão. Saia e entre novamente na conta."
+          : "Erro ao criar categoria",
+      );
     }
   };
 

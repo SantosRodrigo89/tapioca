@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Copy, Check } from "lucide-react";
+import { refreshAuthToken } from "@/hooks/use-auth";
 import { UpdateTenantSchema, type UpdateTenantInput } from "@/lib/schemas";
 import { updateTenant } from "@/lib/repositories/tenant.repository";
 import { Button } from "@/components/ui/button";
@@ -21,6 +22,10 @@ interface SettingsClientProps {
 export function SettingsClient({ tenant }: SettingsClientProps) {
   const [copied, setCopied] = useState(false);
   const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${tenant.slug}`;
+
+  useEffect(() => {
+    void refreshAuthToken().catch(console.error);
+  }, []);
 
   const {
     register,

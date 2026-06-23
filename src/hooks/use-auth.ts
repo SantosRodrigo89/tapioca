@@ -10,25 +10,22 @@ import {
   updateProfile,
   type User,
 } from "firebase/auth";
-import { auth } from "@/lib/firebase/client";
+import { getClientAuth } from "@/lib/firebase/client";
 import type { AuthUser } from "@/types";
 
-function firebaseUserToAuthUser(user: User): AuthUser {
-  const token = (user as User & { reloadUserInfo?: { customAttributes?: string } })
-    .reloadUserInfo?.customAttributes;
-  let role: AuthUser["role"];
-  let tenantId: string | undefined;
+async function getClaimsFromToken(user: User): Promise<{
+  role?: AuthUser["role"];
+  tenantId?: string;
+}> {
+  const tokenResult = await user.getIdTokenResult();
+  return {
+    role: tokenResult.claims.role as AuthUser["role"] | undefined,
+    tenantId: tokenResult.claims.tenantId as string | undefined,
+  };
+}
 
-  if (token) {
-    try {
-      const claims = JSON.parse(token);
-      role = claims.role;
-      tenantId = claims.tenantId;
-    } catch {
-      // ignore parse errors
-    }
-  }
-
+async function firebaseUserToAuthUser(user: User): Promise<AuthUser> {
+  const { role, tenantId } = await getClaimsFromToken(user);
   return {
     uid: user.uid,
     email: user.email,
@@ -36,6 +33,14 @@ function firebaseUserToAuthUser(user: User): AuthUser {
     tenantId,
     role,
   };
+}
+
+/** Forces a new ID token so custom claims (tenantId, role) are available for Firestore rules. */
+export async function refreshAuthToken(): Promise<void> {
+  const user = getClientAuth().currentUser;
+  if (user) {
+    await user.getIdToken(true);
+  }
 }
 
 interface UseAuthReturn {
@@ -52,16 +57,24 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const auth = getClientAuth();
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      setUser(firebaseUser ? firebaseUserToAuthUser(firebaseUser) : null);
+      if (!firebaseUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      void firebaseUserToAuthUser(firebaseUser).then(setUser);
       setLoading(false);
     });
     return unsubscribe;
   }, []);
 
   const signIn = async (email: string, password: string): Promise<void> => {
+    const auth = getClientAuth();
     const credential = await signInWithEmailAndPassword(auth, email, password);
-    const idToken = await credential.user.getIdToken();
+    // Force refresh so custom claims from signup are present in the Firestore client token
+    const idToken = await credential.user.getIdToken(true);
 
     const res = await fetch("/api/auth/session", {
       method: "POST",
@@ -70,7 +83,7 @@ export function useAuth(): UseAuthReturn {
     });
 
     if (!res.ok) {
-      const data = await res.json() as { error?: string };
+      const data = (await res.json()) as { error?: string };
       throw new Error(data.error ?? "Falha ao criar sessão");
     }
   };
@@ -80,6 +93,7 @@ export function useAuth(): UseAuthReturn {
     password: string,
     displayName: string,
   ): Promise<string> => {
+    const auth = getClientAuth();
     const credential = await createUserWithEmailAndPassword(auth, email, password);
     await updateProfile(credential.user, { displayName });
     return credential.user.uid;
@@ -87,11 +101,11 @@ export function useAuth(): UseAuthReturn {
 
   const signOut = async (): Promise<void> => {
     await fetch("/api/auth/session", { method: "DELETE" });
-    await firebaseSignOut(auth);
+    await firebaseSignOut(getClientAuth());
   };
 
   const resetPassword = async (email: string): Promise<void> => {
-    await sendPasswordResetEmail(auth, email);
+    await sendPasswordResetEmail(getClientAuth(), email);
   };
 
   return { user, loading, signIn, signUp, signOut, resetPassword };

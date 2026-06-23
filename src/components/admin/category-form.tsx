@@ -48,7 +48,7 @@ export function CategoryForm({
           id="cat-active"
           type="checkbox"
           className="h-4 w-4 rounded border-input"
-          {...register("active")}
+          {...register("active", { setValueAs: (v) => v === true || v === "on" })}
         />
         <Label htmlFor="cat-active" className="font-normal">
           Categoria ativa (visível no cardápio)

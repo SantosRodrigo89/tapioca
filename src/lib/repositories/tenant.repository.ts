@@ -6,7 +6,7 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase/client";
+import { getClientDb } from "@/lib/firebase/client";
 import type { Tenant, TenantStatus } from "@/types";
 import { generateSlug } from "@/lib/utils";
 
@@ -27,13 +27,13 @@ function docToTenant(id: string, data: Record<string, unknown>): Tenant {
 }
 
 export async function getTenantById(tenantId: string): Promise<Tenant | null> {
-  const snap = await getDoc(doc(db, "tenants", tenantId));
+  const snap = await getDoc(doc(getClientDb(), "tenants", tenantId));
   if (!snap.exists()) return null;
   return docToTenant(snap.id, snap.data() as Record<string, unknown>);
 }
 
 export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
-  const indexSnap = await getDoc(doc(db, "slugIndex", slug));
+  const indexSnap = await getDoc(doc(getClientDb(), "slugIndex", slug));
   if (!indexSnap.exists()) return null;
   const { tenantId } = indexSnap.data() as { tenantId: string };
   return getTenantById(tenantId);
@@ -68,13 +68,13 @@ export async function createTenant(
     updatedAt: now,
   };
 
-  await setDoc(doc(db, "tenants", tenantId), tenantData);
-  await setDoc(doc(db, "slugIndex", slug), {
+  await setDoc(doc(getClientDb(), "tenants", tenantId), tenantData);
+  await setDoc(doc(getClientDb(), "slugIndex", slug), {
     tenantId,
     createdAt: now,
   });
 
-  const snap = await getDoc(doc(db, "tenants", tenantId));
+  const snap = await getDoc(doc(getClientDb(), "tenants", tenantId));
   return docToTenant(snap.id, snap.data() as Record<string, unknown>);
 }
 
@@ -90,7 +90,7 @@ export async function updateTenant(
   tenantId: string,
   data: UpdateTenantData,
 ): Promise<void> {
-  await updateDoc(doc(db, "tenants", tenantId), {
+  await updateDoc(doc(getClientDb(), "tenants", tenantId), {
     ...data,
     updatedAt: serverTimestamp(),
   });

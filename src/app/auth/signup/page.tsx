@@ -41,7 +41,7 @@ export default function SignupPage() {
         throw new Error(body.error ?? "Falha ao criar restaurante");
       }
 
-      // 3. Sign in to get session cookie
+      // 3. Sign in to get session cookie (getIdToken(true) picks up custom claims)
       await signIn(data.email, data.password);
       router.push("/dashboard");
     } catch (err) {

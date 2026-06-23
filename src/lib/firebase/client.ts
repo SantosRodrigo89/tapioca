@@ -20,8 +20,6 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Lazy initialization — avoids module-level Firebase init during SSR/build
-// where NEXT_PUBLIC_* env vars may not be available.
 let _app: FirebaseApp | null = null;
 let _auth: Auth | null = null;
 let _db: Firestore | null = null;
@@ -34,55 +32,47 @@ function getClientApp(): FirebaseApp {
   return _app;
 }
 
-function maybeConnectEmulators(
-  auth: Auth,
-  db: Firestore,
-  storage: FirebaseStorage,
-) {
-  if (_emulatorsConnected) return;
+function initClientSdk(): void {
+  if (typeof window === "undefined") return;
+
+  const app = getClientApp();
+  if (!_auth) _auth = getAuth(app);
+  if (!_db) _db = getFirestore(app);
+  if (!_storage) _storage = getStorage(app);
+
   if (
-    typeof window !== "undefined" &&
+    !_emulatorsConnected &&
     process.env.NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true"
   ) {
-    connectAuthEmulator(auth, "http://localhost:9099", { disableWarnings: true });
-    connectFirestoreEmulator(db, "localhost", 8080);
-    connectStorageEmulator(storage, "localhost", 9199);
+    connectAuthEmulator(_auth, "http://localhost:9099", { disableWarnings: true });
+    connectFirestoreEmulator(_db, "localhost", 8080);
+    connectStorageEmulator(_storage, "localhost", 9199);
     _emulatorsConnected = true;
   }
 }
 
-export const auth: Auth = new Proxy({} as Auth, {
-  get(_target, prop) {
-    if (!_auth) {
-      _auth = getAuth(getClientApp());
-      if (!_db) _db = getFirestore(getClientApp());
-      if (!_storage) _storage = getStorage(getClientApp());
-      maybeConnectEmulators(_auth, _db!, _storage!);
-    }
-    return _auth[prop as keyof Auth];
-  },
-});
+/** Real Auth instance — required for Firestore rules (custom claims in ID token). */
+export function getClientAuth(): Auth {
+  if (typeof window === "undefined") {
+    throw new Error("Firebase Auth is only available in the browser");
+  }
+  initClientSdk();
+  return _auth!;
+}
 
-export const db: Firestore = new Proxy({} as Firestore, {
-  get(_target, prop) {
-    if (!_db) {
-      _db = getFirestore(getClientApp());
-      if (!_auth) _auth = getAuth(getClientApp());
-      if (!_storage) _storage = getStorage(getClientApp());
-      maybeConnectEmulators(_auth!, _db, _storage!);
-    }
-    return _db[prop as keyof Firestore];
-  },
-});
+/** Real Firestore instance — do not wrap in Proxy (breaks collection()). */
+export function getClientDb(): Firestore {
+  if (typeof window === "undefined") {
+    throw new Error("Firestore is only available in the browser");
+  }
+  initClientSdk();
+  return _db!;
+}
 
-export const storage: FirebaseStorage = new Proxy({} as FirebaseStorage, {
-  get(_target, prop) {
-    if (!_storage) {
-      _storage = getStorage(getClientApp());
-      if (!_auth) _auth = getAuth(getClientApp());
-      if (!_db) _db = getFirestore(getClientApp());
-      maybeConnectEmulators(_auth!, _db!, _storage);
-    }
-    return _storage[prop as keyof FirebaseStorage];
-  },
-});
+export function getClientStorage(): FirebaseStorage {
+  if (typeof window === "undefined") {
+    throw new Error("Firebase Storage is only available in the browser");
+  }
+  initClientSdk();
+  return _storage!;
+}

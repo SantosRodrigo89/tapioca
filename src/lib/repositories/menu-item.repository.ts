@@ -12,8 +12,13 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase/client";
+import { getClientDb } from "@/lib/firebase/client";
 import type { MenuItem } from "@/types";
+
+function timestampToDate(value: unknown): Date {
+  if (value instanceof Timestamp) return value.toDate();
+  return new Date();
+}
 
 function docToMenuItem(id: string, data: Record<string, unknown>): MenuItem {
   return {
@@ -24,13 +29,13 @@ function docToMenuItem(id: string, data: Record<string, unknown>): MenuItem {
     imageUrl: data.imageUrl as string | undefined,
     available: data.available as boolean,
     order: data.order as number,
-    createdAt: (data.createdAt as Timestamp).toDate(),
-    updatedAt: (data.updatedAt as Timestamp).toDate(),
+    createdAt: timestampToDate(data.createdAt),
+    updatedAt: timestampToDate(data.updatedAt),
   };
 }
 
 function itemsRef(tenantId: string, categoryId: string) {
-  return collection(db, "tenants", tenantId, "categories", categoryId, "items");
+  return collection(getClientDb(), "tenants", tenantId, "categories", categoryId, "items");
 }
 
 export async function getItemsByCategory(
@@ -88,8 +93,17 @@ export async function createMenuItem(
     updatedAt: serverTimestamp(),
   });
 
-  const snap = await getDoc(ref);
-  return docToMenuItem(snap.id, snap.data() as Record<string, unknown>);
+  return {
+    id: ref.id,
+    name: data.name,
+    description: data.description,
+    price: data.price,
+    imageUrl: data.imageUrl,
+    available: data.available ?? true,
+    order: nextOrder,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 }
 
 export async function updateMenuItem(

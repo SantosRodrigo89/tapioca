@@ -12,8 +12,13 @@ import {
   serverTimestamp,
   Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase/client";
+import { getClientDb } from "@/lib/firebase/client";
 import type { Category } from "@/types";
+
+function timestampToDate(value: unknown): Date {
+  if (value instanceof Timestamp) return value.toDate();
+  return new Date();
+}
 
 function docToCategory(id: string, data: Record<string, unknown>): Category {
   return {
@@ -21,13 +26,13 @@ function docToCategory(id: string, data: Record<string, unknown>): Category {
     name: data.name as string,
     order: data.order as number,
     active: data.active as boolean,
-    createdAt: (data.createdAt as Timestamp).toDate(),
-    updatedAt: (data.updatedAt as Timestamp).toDate(),
+    createdAt: timestampToDate(data.createdAt),
+    updatedAt: timestampToDate(data.updatedAt),
   };
 }
 
 function categoriesRef(tenantId: string) {
-  return collection(db, "tenants", tenantId, "categories");
+  return collection(getClientDb(), "tenants", tenantId, "categories");
 }
 
 export async function getCategoriesByTenant(
@@ -72,8 +77,14 @@ export async function createCategory(
     updatedAt: serverTimestamp(),
   });
 
-  const snap = await getDoc(ref);
-  return docToCategory(snap.id, snap.data() as Record<string, unknown>);
+  return {
+    id: ref.id,
+    name: data.name,
+    order: nextOrder,
+    active: data.active ?? true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 }
 
 export async function updateCategory(
