@@ -18,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { ReorderButtons } from "@/components/admin/reorder-buttons";
+import { applyOrderUpdates, getReorderUpdates } from "@/lib/utils/reorder";
 import {
   Dialog,
   DialogContent,
@@ -48,13 +50,25 @@ type DialogState =
   | { type: "delete-category"; categoryId: string; name: string }
   | { type: "delete-item"; categoryId: string; itemId: string; name: string };
 
+function sortCategories(cats: CategoryWithItems[]): CategoryWithItems[] {
+  return [...cats]
+    .sort((a, b) => a.order - b.order)
+    .map((c) => ({
+      ...c,
+      items: [...c.items].sort((a, b) => a.order - b.order),
+    }));
+}
+
 export function CatalogClient({ tenantId, initialCategories }: CatalogClientProps) {
   const router = useRouter();
-  const [categories, setCategories] = useState(initialCategories);
+  const [categories, setCategories] = useState(() =>
+    sortCategories(initialCategories),
+  );
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
     () => new Set(initialCategories.map((c) => c.id)),
   );
   const [dialog, setDialog] = useState<DialogState>({ type: "none" });
+  const [reordering, setReordering] = useState(false);
 
   // Ensure Firestore client token includes custom claims (tenantId) for writes
   useEffect(() => {
@@ -75,7 +89,9 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
   const handleCreateCategory = async (data: CreateCategoryInput) => {
     try {
       const created = await createCategory(tenantId, data);
-      setCategories((prev) => [...prev, { ...created, items: [] }]);
+      setCategories((prev) =>
+        sortCategories([...prev, { ...created, items: [] }]),
+      );
       setExpandedIds((prev) => new Set([...prev, created.id]));
       setDialog({ type: "none" });
       toast.success("Categoria criada");
@@ -219,10 +235,12 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
     try {
       await deleteMenuItem(tenantId, categoryId, itemId);
       setCategories((prev) =>
-        prev.map((c) =>
-          c.id === categoryId
-            ? { ...c, items: c.items.filter((i) => i.id !== itemId) }
-            : c,
+        sortCategories(
+          prev.map((c) =>
+            c.id === categoryId
+              ? { ...c, items: c.items.filter((i) => i.id !== itemId) }
+              : c,
+          ),
         ),
       );
       toast.success("Item excluído");
@@ -230,6 +248,72 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
       toast.error("Erro ao excluir item");
     }
   };
+
+  const handleMoveCategory = async (
+    categoryId: string,
+    direction: "up" | "down",
+  ) => {
+    const updates = getReorderUpdates(categories, categoryId, direction);
+    if (!updates) return;
+
+    setReordering(true);
+    const previous = categories;
+    setCategories((prev) => sortCategories(applyOrderUpdates(prev, updates)));
+
+    try {
+      await Promise.all(
+        updates.map(({ id, order }) =>
+          updateCategory(tenantId, id, { order }),
+        ),
+      );
+    } catch (err) {
+      console.error("[moveCategory]", err);
+      setCategories(previous);
+      toast.error("Erro ao reordenar categoria");
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const handleMoveItem = async (
+    categoryId: string,
+    itemId: string,
+    direction: "up" | "down",
+  ) => {
+    const category = categories.find((c) => c.id === categoryId);
+    if (!category) return;
+
+    const updates = getReorderUpdates(category.items, itemId, direction);
+    if (!updates) return;
+
+    setReordering(true);
+    const previous = categories;
+    setCategories((prev) =>
+      sortCategories(
+        prev.map((c) =>
+          c.id === categoryId
+            ? { ...c, items: applyOrderUpdates(c.items, updates) }
+            : c,
+        ),
+      ),
+    );
+
+    try {
+      await Promise.all(
+        updates.map(({ id, order }) =>
+          updateMenuItem(tenantId, categoryId, id, { order }),
+        ),
+      );
+    } catch (err) {
+      console.error("[moveItem]", err);
+      setCategories(previous);
+      toast.error("Erro ao reordenar item");
+    } finally {
+      setReordering(false);
+    }
+  };
+
+  const sortedCategories = categories;
 
   return (
     <div className="space-y-4">
@@ -255,10 +339,18 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
       )}
 
       <div className="space-y-3">
-        {categories.map((category) => (
+        {sortedCategories.map((category, categoryIndex) => (
           <div key={category.id} className="rounded-lg border">
             {/* Category header */}
             <div className="flex items-center gap-2 p-4">
+              <ReorderButtons
+                onMoveUp={() => handleMoveCategory(category.id, "up")}
+                onMoveDown={() => handleMoveCategory(category.id, "down")}
+                canMoveUp={categoryIndex > 0}
+                canMoveDown={categoryIndex < sortedCategories.length - 1}
+                disabled={reordering}
+              />
+
               <button
                 type="button"
                 onClick={() => toggleExpand(category.id)}
@@ -317,11 +409,23 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
               <>
                 <Separator />
                 <div className="p-4 space-y-2">
-                  {category.items.map((item) => (
+                  {category.items.map((item, itemIndex) => (
                     <div
                       key={item.id}
                       className="flex items-center gap-3 rounded-md border p-3"
                     >
+                      <ReorderButtons
+                        onMoveUp={() =>
+                          handleMoveItem(category.id, item.id, "up")
+                        }
+                        onMoveDown={() =>
+                          handleMoveItem(category.id, item.id, "down")
+                        }
+                        canMoveUp={itemIndex > 0}
+                        canMoveDown={itemIndex < category.items.length - 1}
+                        disabled={reordering}
+                      />
+
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{item.name}</p>
                         {item.description && (
