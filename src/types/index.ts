@@ -1,0 +1,60 @@
+// ─── Tenant ────────────────────────────────────────────────────────────────
+
+export type TenantStatus = "trial" | "active" | "suspended" | "cancelled";
+
+export type UserRole = "super_admin" | "tenant_admin";
+
+export interface Tenant {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  logoUrl?: string;
+  address?: string;
+  whatsapp?: string;
+  status: TenantStatus;
+  ownerUid: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ─── Catalog ───────────────────────────────────────────────────────────────
+
+export interface Category {
+  id: string;
+  name: string;
+  order: number;
+  active: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface MenuItem {
+  id: string;
+  name: string;
+  description?: string;
+  /** Price stored in cents (e.g. R$ 12,90 = 1290) */
+  price: number;
+  imageUrl?: string;
+  available: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ─── Auth ──────────────────────────────────────────────────────────────────
+
+export interface AuthUser {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  tenantId?: string;
+  role?: UserRole;
+}
+
+// ─── SlugIndex ─────────────────────────────────────────────────────────────
+
+export interface SlugIndexEntry {
+  tenantId: string;
+  createdAt: Date;
+}

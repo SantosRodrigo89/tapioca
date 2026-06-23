@@ -1,0 +1,31 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // ─── Helpers ─────────────────────────────────────────────────────────────
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() && request.auth.token.role == 'super_admin';
+    }
+
+    function isTenantAdmin(tenantId) {
+      return isSignedIn() && request.auth.token.tenantId == tenantId;
+    }
+
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024; // 5MB limit
+    }
+
+    // ─── Tenant assets ───────────────────────────────────────────────────────
+    match /tenants/{tenantId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if (isTenantAdmin(tenantId) || isSuperAdmin()) && isValidImage();
+      allow delete: if isTenantAdmin(tenantId) || isSuperAdmin();
+    }
+  }
+}
