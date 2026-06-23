@@ -28,6 +28,7 @@ import { CategoryForm } from "@/components/admin/category-form";
 import { MenuItemForm } from "@/components/admin/menu-item-form";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { formatPrice } from "@/lib/utils";
+import { uploadMenuItemImage } from "@/lib/storage/upload";
 import type { CategoryWithItems } from "./page";
 import type { Category, MenuItem } from "@/types";
 import type { CreateCategoryInput } from "@/lib/schemas";
@@ -123,17 +124,29 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
   const handleCreateItem = async (
     categoryId: string,
     data: CreateMenuItemInput,
+    imageFile: File | null,
   ) => {
     try {
       const created = await createMenuItem(tenantId, categoryId, data);
+
+      let imageUrl = created.imageUrl;
+      if (imageFile) {
+        imageUrl = await uploadMenuItemImage(tenantId, created.id, imageFile);
+        await updateMenuItem(tenantId, categoryId, created.id, { imageUrl });
+      }
+
+      const itemWithImage = { ...created, imageUrl };
       setCategories((prev) =>
         prev.map((c) =>
-          c.id === categoryId ? { ...c, items: [...c.items, created] } : c,
+          c.id === categoryId
+            ? { ...c, items: [...c.items, itemWithImage] }
+            : c,
         ),
       );
       setDialog({ type: "none" });
       toast.success("Item criado");
-    } catch {
+    } catch (err) {
+      console.error("[createItem]", err);
       toast.error("Erro ao criar item");
     }
   };
@@ -142,16 +155,28 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
     categoryId: string,
     itemId: string,
     data: CreateMenuItemInput,
+    imageFile: File | null,
   ) => {
     try {
-      await updateMenuItem(tenantId, categoryId, itemId, data);
+      let imageUrl: string | undefined;
+      if (imageFile) {
+        imageUrl = await uploadMenuItemImage(tenantId, itemId, imageFile);
+      }
+
+      await updateMenuItem(tenantId, categoryId, itemId, {
+        ...data,
+        ...(imageUrl ? { imageUrl } : {}),
+      });
+
       setCategories((prev) =>
         prev.map((c) =>
           c.id === categoryId
             ? {
                 ...c,
                 items: c.items.map((i) =>
-                  i.id === itemId ? { ...i, ...data } : i,
+                  i.id === itemId
+                    ? { ...i, ...data, ...(imageUrl ? { imageUrl } : {}) }
+                    : i,
                 ),
               }
             : c,
@@ -159,7 +184,8 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
       );
       setDialog({ type: "none" });
       toast.success("Item atualizado");
-    } catch {
+    } catch (err) {
+      console.error("[updateItem]", err);
       toast.error("Erro ao atualizar item");
     }
   };
@@ -431,7 +457,9 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
               <DialogTitle>Novo item</DialogTitle>
             </DialogHeader>
             <MenuItemForm
-              onSubmit={(data) => handleCreateItem(dialog.categoryId, data)}
+              onSubmit={(data, imageFile) =>
+                handleCreateItem(dialog.categoryId, data, imageFile)
+              }
               onCancel={() => setDialog({ type: "none" })}
               submitLabel="Criar item"
             />
@@ -447,14 +475,20 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
               <DialogTitle>Editar item</DialogTitle>
             </DialogHeader>
             <MenuItemForm
+              currentImageUrl={dialog.item.imageUrl}
               defaultValues={{
                 name: dialog.item.name,
                 description: dialog.item.description,
                 price: dialog.item.price,
                 available: dialog.item.available,
               }}
-              onSubmit={(data) =>
-                handleUpdateItem(dialog.categoryId, dialog.item.id, data)
+              onSubmit={(data, imageFile) =>
+                handleUpdateItem(
+                  dialog.categoryId,
+                  dialog.item.id,
+                  data,
+                  imageFile,
+                )
               }
               onCancel={() => setDialog({ type: "none" })}
             />

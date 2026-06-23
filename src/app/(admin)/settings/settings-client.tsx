@@ -8,11 +8,13 @@ import { Copy, Check } from "lucide-react";
 import { refreshAuthToken } from "@/hooks/use-auth";
 import { UpdateTenantSchema, type UpdateTenantInput } from "@/lib/schemas";
 import { updateTenant } from "@/lib/repositories/tenant.repository";
+import { uploadTenantLogo } from "@/lib/storage/upload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { ImageUpload } from "@/components/admin/image-upload";
 import type { Tenant } from "@/types";
 
 interface SettingsClientProps {
@@ -21,6 +23,8 @@ interface SettingsClientProps {
 
 export function SettingsClient({ tenant }: SettingsClientProps) {
   const [copied, setCopied] = useState(false);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUrl, setLogoUrl] = useState(tenant.logoUrl);
   const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${tenant.slug}`;
 
   useEffect(() => {
@@ -43,9 +47,20 @@ export function SettingsClient({ tenant }: SettingsClientProps) {
 
   const onSubmit = async (data: UpdateTenantInput) => {
     try {
-      await updateTenant(tenant.id, data);
+      let newLogoUrl = logoUrl;
+      if (logoFile) {
+        newLogoUrl = await uploadTenantLogo(tenant.id, logoFile);
+        setLogoUrl(newLogoUrl);
+        setLogoFile(null);
+      }
+
+      await updateTenant(tenant.id, {
+        ...data,
+        ...(newLogoUrl ? { logoUrl: newLogoUrl } : {}),
+      });
       toast.success("Configurações salvas");
-    } catch {
+    } catch (err) {
+      console.error("[settings]", err);
       toast.error("Erro ao salvar configurações");
     }
   };
@@ -69,6 +84,13 @@ export function SettingsClient({ tenant }: SettingsClientProps) {
       <section className="space-y-4">
         <h2 className="text-lg font-semibold">Informações do restaurante</h2>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <ImageUpload
+            label="Logo do restaurante (opcional)"
+            currentUrl={logoUrl}
+            onFileChange={setLogoFile}
+            disabled={isSubmitting}
+          />
+
           <div className="space-y-1">
             <Label htmlFor="name">Nome do restaurante</Label>
             <Input id="name" {...register("name")} />
@@ -119,7 +141,7 @@ export function SettingsClient({ tenant }: SettingsClientProps) {
             </p>
           </div>
 
-          <Button type="submit" disabled={isSubmitting || !isDirty}>
+          <Button type="submit" disabled={isSubmitting || (!isDirty && !logoFile)}>
             {isSubmitting ? "Salvando…" : "Salvar alterações"}
           </Button>
         </form>

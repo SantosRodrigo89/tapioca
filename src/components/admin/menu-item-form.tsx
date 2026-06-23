@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateMenuItemSchema, type CreateMenuItemInput } from "@/lib/schemas";
@@ -7,20 +8,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { ImageUpload } from "@/components/admin/image-upload";
 
 interface MenuItemFormProps {
+  currentImageUrl?: string;
   defaultValues?: Partial<CreateMenuItemInput>;
-  onSubmit: (data: CreateMenuItemInput) => Promise<void>;
+  onSubmit: (data: CreateMenuItemInput, imageFile: File | null) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
 }
 
 export function MenuItemForm({
+  currentImageUrl,
   defaultValues,
   onSubmit,
   onCancel,
   submitLabel = "Salvar",
 }: MenuItemFormProps) {
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
   const {
     register,
     handleSubmit,
@@ -31,7 +37,10 @@ export function MenuItemForm({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={handleSubmit((data) => onSubmit(data, imageFile))}
+      className="space-y-4"
+    >
       <div className="space-y-1">
         <Label htmlFor="item-name">Nome</Label>
         <Input id="item-name" placeholder="Ex: X-Burguer" {...register("name")} />
@@ -71,12 +80,19 @@ export function MenuItemForm({
         </p>
       </div>
 
+      <ImageUpload
+        label="Foto do item (opcional)"
+        currentUrl={currentImageUrl}
+        onFileChange={setImageFile}
+        disabled={isSubmitting}
+      />
+
       <div className="flex items-center gap-2">
         <input
           id="item-available"
           type="checkbox"
           className="h-4 w-4 rounded border-input"
-          {...register("available")}
+          {...register("available", { setValueAs: (v) => v === true || v === "on" })}
         />
         <Label htmlFor="item-available" className="font-normal">
           Item disponível (visível no cardápio)
