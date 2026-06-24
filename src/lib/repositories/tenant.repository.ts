@@ -1,12 +1,17 @@
 import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
+import type { DaySchedule, TenantTheme } from "@/types";
 
 export interface UpdateTenantData {
   name?: string;
   description?: string;
   address?: string;
   whatsapp?: string;
-  logoUrl?: string;
+  logoUrl?: string | null;
+  bannerUrl?: string | null;
+  theme?: TenantTheme;
+  openingHours?: DaySchedule[];
+  highlightItemIds?: string[];
 }
 
 export async function updateTenant(

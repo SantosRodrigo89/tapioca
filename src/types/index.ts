@@ -4,14 +4,40 @@ export type TenantStatus = "trial" | "active" | "suspended" | "cancelled";
 
 export type UserRole = "super_admin" | "tenant_admin";
 
+export interface TenantTheme {
+  primaryColor: string;
+  primaryDarkColor: string;
+  secondaryColor: string;
+}
+
+export type WeekdayKey =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+export interface DaySchedule {
+  day: WeekdayKey;
+  closed: boolean;
+  open: string;
+  close: string;
+}
+
 export interface Tenant {
   id: string;
   slug: string;
   name: string;
   description?: string;
   logoUrl?: string;
+  bannerUrl?: string;
   address?: string;
   whatsapp?: string;
+  theme?: TenantTheme;
+  openingHours?: DaySchedule[];
+  highlightItemIds?: string[];
   status: TenantStatus;
   ownerUid: string;
   createdAt: Date;

@@ -2,6 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock, MapPin, MessageCircle } from "lucide-react";
 import { formatWhatsAppLink } from "@/lib/utils";
+import { formatTodayHours, isOpenNow } from "@/lib/utils/opening-hours";
 import type { Tenant } from "@/types";
 
 interface MenuHeroProps {
@@ -9,8 +10,13 @@ interface MenuHeroProps {
 }
 
 export function MenuHero({ tenant }: MenuHeroProps) {
-  const isOpen = tenant.status === "trial" || tenant.status === "active";
-  const coverImage = tenant.logoUrl;
+  const hoursOpen = isOpenNow(tenant.openingHours);
+  const isOpen =
+    hoursOpen !== null
+      ? hoursOpen
+      : tenant.status === "trial" || tenant.status === "active";
+  const coverImage = tenant.bannerUrl ?? tenant.logoUrl;
+  const todayHours = formatTodayHours(tenant.openingHours);
 
   return (
     <header className="relative">
@@ -103,10 +109,13 @@ export function MenuHero({ tenant }: MenuHeroProps) {
                 <span>{tenant.address}</span>
               </p>
             )}
-            {tenant.whatsapp && (
+            {(todayHours || tenant.whatsapp) && (
               <p className="flex items-center gap-2">
                 <Clock className="h-4 w-4 shrink-0 text-[var(--menu-primary)]" />
-                <span>Horário: consulte pelo WhatsApp</span>
+                <span>
+                  {todayHours ??
+                    "Horário: consulte pelo WhatsApp"}
+                </span>
               </p>
             )}
           </div>

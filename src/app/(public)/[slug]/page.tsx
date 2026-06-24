@@ -4,6 +4,7 @@ import { getTenantBySlugServer } from "@/lib/repositories/server/tenant.server";
 import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
 import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
 import { MenuHero } from "@/components/public/menu-hero";
+import { PublicTheme } from "@/components/public/public-theme";
 import { CategoryNav } from "@/components/public/category-nav";
 import { HighlightsSection } from "@/components/public/highlights-section";
 import { CategorySection } from "@/components/public/category-section";
@@ -32,9 +33,32 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     openGraph: {
       title: tenant.name,
       description: tenant.description,
-      images: tenant.logoUrl ? [tenant.logoUrl] : [],
+      images: tenant.bannerUrl
+        ? [tenant.bannerUrl]
+        : tenant.logoUrl
+          ? [tenant.logoUrl]
+          : [],
     },
   };
+}
+
+function resolveHighlights(
+  highlightItemIds: string[] | undefined,
+  categoriesWithItems: { items: MenuItem[] }[],
+): MenuItem[] {
+  if (highlightItemIds && highlightItemIds.length > 0) {
+    const itemMap = new Map<string, MenuItem>();
+    for (const cat of categoriesWithItems) {
+      for (const item of cat.items) {
+        itemMap.set(item.id, item);
+      }
+    }
+    return highlightItemIds
+      .map((id) => itemMap.get(id))
+      .filter((item): item is MenuItem => Boolean(item));
+  }
+
+  return pickHighlights(categoriesWithItems);
 }
 
 function pickHighlights(
@@ -93,10 +117,14 @@ export default async function PublicMenuPage({ params }: PageProps) {
   );
 
   const visibleCategories = categoriesWithItems.filter((c) => c.items.length > 0);
-  const highlights = pickHighlights(visibleCategories);
+  const highlights = resolveHighlights(
+    tenant.highlightItemIds,
+    visibleCategories,
+  );
 
   return (
     <>
+      <PublicTheme tenant={tenant} />
       <MenuHero tenant={tenant} />
 
       {visibleCategories.length > 0 && (

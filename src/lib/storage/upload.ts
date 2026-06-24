@@ -41,6 +41,14 @@ export async function uploadTenantLogo(
   return uploadImage(`tenants/${tenantId}/logo.${ext}`, file);
 }
 
+export async function uploadTenantBanner(
+  tenantId: string,
+  file: File,
+): Promise<string> {
+  const ext = extensionFromMime(file.type);
+  return uploadImage(`tenants/${tenantId}/banner.${ext}`, file);
+}
+
 export async function uploadMenuItemImage(
   tenantId: string,
   itemId: string,

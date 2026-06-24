@@ -1,6 +1,22 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
-import type { Tenant, TenantStatus } from "@/types";
+import type {
+  DaySchedule,
+  Tenant,
+  TenantStatus,
+  TenantTheme,
+} from "@/types";
+import { DEFAULT_TENANT_THEME } from "@/lib/utils/theme";
+
+function parseTheme(data: FirebaseFirestore.DocumentData): TenantTheme | undefined {
+  const theme = data.theme as Record<string, string> | undefined;
+  if (!theme?.primaryColor) return undefined;
+  return {
+    primaryColor: theme.primaryColor,
+    primaryDarkColor: theme.primaryDarkColor ?? DEFAULT_TENANT_THEME.primaryDarkColor,
+    secondaryColor: theme.secondaryColor ?? DEFAULT_TENANT_THEME.secondaryColor,
+  };
+}
 
 function docToTenant(id: string, data: FirebaseFirestore.DocumentData): Tenant {
   return {
@@ -9,8 +25,12 @@ function docToTenant(id: string, data: FirebaseFirestore.DocumentData): Tenant {
     name: data.name as string,
     description: data.description ?? undefined,
     logoUrl: data.logoUrl ?? undefined,
+    bannerUrl: data.bannerUrl ?? undefined,
     address: data.address ?? undefined,
     whatsapp: data.whatsapp ?? undefined,
+    theme: parseTheme(data),
+    openingHours: (data.openingHours as DaySchedule[] | undefined) ?? undefined,
+    highlightItemIds: (data.highlightItemIds as string[] | undefined) ?? undefined,
     status: data.status as TenantStatus,
     ownerUid: data.ownerUid as string,
     createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),

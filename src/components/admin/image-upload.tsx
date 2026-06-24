@@ -11,14 +11,20 @@ interface ImageUploadProps {
   label: string;
   currentUrl?: string | null;
   onFileChange: (file: File | null) => void;
+  onRemoveExisting?: () => void;
   disabled?: boolean;
+  previewClassName?: string;
+  aspect?: "square" | "banner";
 }
 
 export function ImageUpload({
   label,
   currentUrl,
   onFileChange,
+  onRemoveExisting,
   disabled,
+  previewClassName,
+  aspect = "square",
 }: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [preview, setPreview] = useState<string | null>(currentUrl ?? null);
@@ -45,26 +51,36 @@ export function ImageUpload({
   };
 
   const handleClear = () => {
+    const wasExisting =
+      preview && !preview.startsWith("blob:") && Boolean(currentUrl);
     setPreview(null);
     setError(null);
     onFileChange(null);
+    if (wasExisting) onRemoveExisting?.();
     if (inputRef.current) inputRef.current.value = "";
   };
 
   const isBlobPreview = preview?.startsWith("blob:") ?? false;
+  const previewBoxClass =
+    previewClassName ??
+    (aspect === "banner"
+      ? "h-24 w-full max-w-md"
+      : "h-28 w-28 shrink-0");
 
   return (
     <div className="space-y-2">
       <Label>{label}</Label>
       <div className="flex items-start gap-4">
         {preview ? (
-          <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-md border">
+          <div
+            className={`relative overflow-hidden rounded-md border ${previewBoxClass}`}
+          >
             <Image
               src={preview}
               alt="Preview"
               fill
               className="object-cover"
-              sizes="112px"
+              sizes={aspect === "banner" ? "448px" : "112px"}
               unoptimized={isBlobPreview}
             />
             {!disabled && (
@@ -81,7 +97,9 @@ export function ImageUpload({
             )}
           </div>
         ) : (
-          <div className="flex h-28 w-28 shrink-0 items-center justify-center rounded-md border border-dashed bg-muted/50">
+          <div
+            className={`flex shrink-0 items-center justify-center rounded-md border border-dashed bg-muted/50 ${previewBoxClass}`}
+          >
             <ImageIcon className="h-8 w-8 text-muted-foreground" />
           </div>
         )}

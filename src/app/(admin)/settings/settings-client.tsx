@@ -16,13 +16,20 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { MenuQrCode } from "@/components/admin/menu-qr-code";
+import { AppearanceSettings } from "@/components/admin/appearance-settings";
+import { HoursSettings } from "@/components/admin/hours-settings";
+import {
+  HighlightsSettings,
+  type CategoryWithItems,
+} from "@/components/admin/highlights-settings";
 import type { Tenant } from "@/types";
 
 interface SettingsClientProps {
   tenant: Tenant;
+  categories: CategoryWithItems[];
 }
 
-export function SettingsClient({ tenant }: SettingsClientProps) {
+export function SettingsClient({ tenant, categories }: SettingsClientProps) {
   const [copied, setCopied] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState(tenant.logoUrl);
@@ -154,6 +161,18 @@ export function SettingsClient({ tenant }: SettingsClientProps) {
           </Button>
         </form>
       </section>
+
+      <Separator />
+
+      <AppearanceSettings tenant={tenant} />
+
+      <Separator />
+
+      <HoursSettings tenant={tenant} />
+
+      <Separator />
+
+      <HighlightsSettings tenant={tenant} categories={categories} />
 
       <Separator />
 
