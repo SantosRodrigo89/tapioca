@@ -46,11 +46,22 @@ export interface Tenant {
 
 // ─── Catalog ───────────────────────────────────────────────────────────────
 
+export interface TimeWindow {
+  start: string;
+  end: string;
+}
+
+export interface AvailabilitySchedule {
+  enabled: boolean;
+  windows: TimeWindow[];
+}
+
 export interface Category {
   id: string;
   name: string;
   order: number;
   active: boolean;
+  availability?: AvailabilitySchedule;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -63,6 +74,7 @@ export interface MenuItem {
   price: number;
   imageUrl?: string;
   available: boolean;
+  availability?: AvailabilitySchedule;
   order: number;
   createdAt: Date;
   updatedAt: Date;

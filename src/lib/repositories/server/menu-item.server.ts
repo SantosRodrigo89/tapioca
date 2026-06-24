@@ -1,5 +1,13 @@
 import { adminDb } from "@/lib/firebase/admin";
-import type { MenuItem } from "@/types";
+import type { MenuItem, AvailabilitySchedule } from "@/types";
+
+function parseAvailability(
+  data: FirebaseFirestore.DocumentData,
+): AvailabilitySchedule | undefined {
+  const raw = data.availability as AvailabilitySchedule | undefined;
+  if (!raw?.enabled) return undefined;
+  return raw;
+}
 
 function docToMenuItem(
   id: string,
@@ -12,6 +20,7 @@ function docToMenuItem(
     price: data.price as number,
     imageUrl: data.imageUrl ?? undefined,
     available: data.available as boolean,
+    availability: parseAvailability(data),
     order: data.order as number,
     createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),
     updatedAt: (data.updatedAt as FirebaseFirestore.Timestamp).toDate(),

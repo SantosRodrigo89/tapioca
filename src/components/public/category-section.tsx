@@ -28,7 +28,12 @@ export function CategorySection({
       </h2>
       <div className="flex flex-col gap-3 sm:gap-4">
         {items.map((item) => (
-          <MenuItemCard key={item.id} item={item} whatsapp={whatsapp} />
+          <MenuItemCard
+            key={item.id}
+            item={item}
+            category={category}
+            whatsapp={whatsapp}
+          />
         ))}
       </div>
     </section>

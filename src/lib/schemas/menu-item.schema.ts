@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AvailabilityScheduleSchema } from "./availability.schema";
 
 export const MenuItemSchema = z.object({
   id: z.string(),
@@ -26,6 +27,7 @@ export const CreateMenuItemSchema = z.object({
     .int()
     .nonnegative("Preço não pode ser negativo"),
   available: z.boolean(),
+  availability: AvailabilityScheduleSchema.optional(),
 });
 
 export const UpdateMenuItemSchema = z.object({
@@ -44,6 +46,7 @@ export const UpdateMenuItemSchema = z.object({
     .nonnegative("Preço não pode ser negativo")
     .optional(),
   available: z.boolean().optional(),
+  availability: AvailabilityScheduleSchema.optional(),
   order: z.number().int().nonnegative().optional(),
   imageUrl: z.string().url().optional().nullable(),
 });

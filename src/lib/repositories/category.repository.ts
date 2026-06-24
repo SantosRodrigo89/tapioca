@@ -20,12 +20,23 @@ function timestampToDate(value: unknown): Date {
   return new Date();
 }
 
+import type { AvailabilitySchedule } from "@/types";
+
+function parseAvailability(
+  data: Record<string, unknown>,
+): AvailabilitySchedule | undefined {
+  const raw = data.availability as AvailabilitySchedule | undefined;
+  if (!raw?.enabled) return undefined;
+  return raw;
+}
+
 function docToCategory(id: string, data: Record<string, unknown>): Category {
   return {
     id,
     name: data.name as string,
     order: data.order as number,
     active: data.active as boolean,
+    availability: parseAvailability(data),
     createdAt: timestampToDate(data.createdAt),
     updatedAt: timestampToDate(data.updatedAt),
   };
@@ -61,7 +72,12 @@ export async function getCategoryById(
 
 export async function createCategory(
   tenantId: string,
-  data: { name: string; active?: boolean; order?: number },
+  data: {
+    name: string;
+    active?: boolean;
+    order?: number;
+    availability?: AvailabilitySchedule;
+  },
 ): Promise<Category> {
   const existing = await getCategoriesByTenant(tenantId);
   const nextOrder =
@@ -73,6 +89,7 @@ export async function createCategory(
     name: data.name,
     order: nextOrder,
     active: data.active ?? true,
+    ...(data.availability?.enabled ? { availability: data.availability } : {}),
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
@@ -82,6 +99,7 @@ export async function createCategory(
     name: data.name,
     order: nextOrder,
     active: data.active ?? true,
+    availability: data.availability?.enabled ? data.availability : undefined,
     createdAt: new Date(),
     updatedAt: new Date(),
   };
@@ -90,12 +108,25 @@ export async function createCategory(
 export async function updateCategory(
   tenantId: string,
   categoryId: string,
-  data: { name?: string; active?: boolean; order?: number },
+  data: {
+    name?: string;
+    active?: boolean;
+    order?: number;
+    availability?: AvailabilitySchedule | null;
+  },
 ): Promise<void> {
-  await updateDoc(doc(categoriesRef(tenantId), categoryId), {
+  const payload: Record<string, unknown> = {
     ...data,
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  if (data.availability === null) {
+    payload.availability = null;
+  } else if (data.availability && !data.availability.enabled) {
+    payload.availability = null;
+  }
+
+  await updateDoc(doc(categoriesRef(tenantId), categoryId), payload);
 }
 
 export async function deleteCategory(

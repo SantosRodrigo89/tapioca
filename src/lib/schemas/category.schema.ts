@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AvailabilityScheduleSchema } from "./availability.schema";
 
 export const CategorySchema = z.object({
   id: z.string(),
@@ -15,6 +16,7 @@ export const CreateCategorySchema = z.object({
     .min(2, "Nome deve ter pelo menos 2 caracteres")
     .max(50, "Nome deve ter no máximo 50 caracteres"),
   active: z.boolean(),
+  availability: AvailabilityScheduleSchema.optional(),
 });
 
 export const UpdateCategorySchema = z.object({
@@ -25,6 +27,7 @@ export const UpdateCategorySchema = z.object({
     .optional(),
   active: z.boolean().optional(),
   order: z.number().int().nonnegative().optional(),
+  availability: AvailabilityScheduleSchema.optional(),
 });
 
 export type Category = z.infer<typeof CategorySchema>;

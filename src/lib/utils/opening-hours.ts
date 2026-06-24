@@ -42,12 +42,12 @@ export function getCurrentWeekdayInBrazil(): WeekdayKey {
   return map[weekday] ?? "monday";
 }
 
-function parseMinutes(time: string): number {
+export function parseMinutes(time: string): number {
   const [h, m] = time.split(":").map(Number);
   return h! * 60 + m!;
 }
 
-function getCurrentMinutesInBrazil(): number {
+export function getCurrentMinutesInBrazil(): number {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TZ,
     hour: "2-digit",

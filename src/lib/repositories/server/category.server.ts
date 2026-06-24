@@ -1,5 +1,13 @@
 import { adminDb } from "@/lib/firebase/admin";
-import type { Category } from "@/types";
+import type { Category, AvailabilitySchedule } from "@/types";
+
+function parseAvailability(
+  data: FirebaseFirestore.DocumentData,
+): AvailabilitySchedule | undefined {
+  const raw = data.availability as AvailabilitySchedule | undefined;
+  if (!raw?.enabled) return undefined;
+  return raw;
+}
 
 function docToCategory(
   id: string,
@@ -10,6 +18,7 @@ function docToCategory(
     name: data.name as string,
     order: data.order as number,
     active: data.active as boolean,
+    availability: parseAvailability(data),
     createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),
     updatedAt: (data.updatedAt as FirebaseFirestore.Timestamp).toDate(),
   };

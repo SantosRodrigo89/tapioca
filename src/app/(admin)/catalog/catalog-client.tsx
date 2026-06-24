@@ -15,7 +15,7 @@ import {
   SortableContext,
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronRight, Clock } from "lucide-react";
 import { refreshAuthToken } from "@/hooks/use-auth";
 import {
   createCategory,
@@ -52,6 +52,10 @@ import { MenuItemForm } from "@/components/admin/menu-item-form";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { ItemThumbnail } from "@/components/admin/item-thumbnail";
 import { formatPrice } from "@/lib/utils";
+import {
+  formatAvailabilitySummary,
+  getItemAvailabilityStatus,
+} from "@/lib/utils/availability";
 import { uploadMenuItemImage } from "@/lib/storage/upload";
 import type { CategoryWithItems } from "./page";
 import type { Category, MenuItem } from "@/types";
@@ -148,10 +152,20 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
     data: CreateCategoryInput,
   ) => {
     try {
-      await updateCategory(tenantId, categoryId, data);
+      const { availability, ...rest } = data;
+      await updateCategory(tenantId, categoryId, {
+        ...rest,
+        availability: availability?.enabled ? availability : null,
+      });
       setCategories((prev) =>
         prev.map((c) =>
-          c.id === categoryId ? { ...c, ...data } : c,
+          c.id === categoryId
+            ? {
+                ...c,
+                ...rest,
+                availability: availability?.enabled ? availability : undefined,
+              }
+            : c,
         ),
       );
       setDialog({ type: "none" });
@@ -217,6 +231,7 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
 
       await updateMenuItem(tenantId, categoryId, itemId, {
         ...data,
+        availability: data.availability?.enabled ? data.availability : null,
         ...(imageUrl ? { imageUrl } : {}),
       });
 
@@ -227,7 +242,14 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
                 ...c,
                 items: c.items.map((i) =>
                   i.id === itemId
-                    ? { ...i, ...data, ...(imageUrl ? { imageUrl } : {}) }
+                    ? {
+                        ...i,
+                        ...data,
+                        availability: data.availability?.enabled
+                          ? data.availability
+                          : undefined,
+                        ...(imageUrl ? { imageUrl } : {}),
+                      }
                     : i,
                 ),
               }
@@ -454,6 +476,12 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
                       {category.items.length} item
                       {category.items.length !== 1 ? "s" : ""}
                     </span>
+                    {formatAvailabilitySummary(category.availability) && (
+                      <span className="inline-flex items-center gap-1 text-xs text-muted-foreground shrink-0">
+                        <Clock className="h-3 w-3" />
+                        {formatAvailabilitySummary(category.availability)}
+                      </span>
+                    )}
 
                     <Button
                       size="icon"
@@ -517,6 +545,28 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
                                 <p className="text-sm font-semibold mt-0.5">
                                   {formatPrice(item.price)}
                                 </p>
+                                {(() => {
+                                  const scheduleLabel =
+                                    formatAvailabilitySummary(item.availability) ??
+                                    (!item.availability?.enabled
+                                      ? formatAvailabilitySummary(
+                                          category.availability,
+                                        )
+                                      : null);
+                                  const status = getItemAvailabilityStatus(
+                                    item,
+                                    category,
+                                  );
+                                  return scheduleLabel ? (
+                                    <p className="mt-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
+                                      <Clock className="h-3 w-3 shrink-0" />
+                                      <span className="truncate">
+                                        {scheduleLabel}
+                                        {!status.orderable && " · fora do horário"}
+                                      </span>
+                                    </p>
+                                  ) : null;
+                                })()}
                               </div>
 
                               <button
@@ -635,6 +685,7 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
               defaultValues={{
                 name: dialog.category.name,
                 active: dialog.category.active,
+                availability: dialog.category.availability,
               }}
               onSubmit={(data) =>
                 handleUpdateCategory(dialog.category.id, data)
@@ -653,6 +704,9 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
               <DialogTitle>Novo item</DialogTitle>
             </DialogHeader>
             <MenuItemForm
+              categoryAvailability={
+                categories.find((c) => c.id === dialog.categoryId)?.availability
+              }
               onSubmit={(data, imageFile) =>
                 handleCreateItem(dialog.categoryId, data, imageFile)
               }
@@ -672,11 +726,15 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
             </DialogHeader>
             <MenuItemForm
               currentImageUrl={dialog.item.imageUrl}
+              categoryAvailability={
+                categories.find((c) => c.id === dialog.categoryId)?.availability
+              }
               defaultValues={{
                 name: dialog.item.name,
                 description: dialog.item.description,
                 price: dialog.item.price,
                 available: dialog.item.available,
+                availability: dialog.item.availability,
               }}
               onSubmit={(data, imageFile) =>
                 handleUpdateItem(

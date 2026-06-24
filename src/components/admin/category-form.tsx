@@ -1,8 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateCategorySchema, type CreateCategoryInput } from "@/lib/schemas";
+import { AvailabilityScheduleFields } from "@/components/admin/availability-schedule-fields";
+import type { AvailabilitySchedule } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +23,10 @@ export function CategoryForm({
   onCancel,
   submitLabel = "Salvar",
 }: CategoryFormProps) {
+  const [availability, setAvailability] = useState<
+    AvailabilitySchedule | undefined
+  >(defaultValues?.availability);
+
   const {
     register,
     handleSubmit,
@@ -30,7 +37,12 @@ export function CategoryForm({
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+    <form
+      onSubmit={handleSubmit((data) =>
+        onSubmit({ ...data, availability }),
+      )}
+      className="space-y-4"
+    >
       <div className="space-y-1">
         <Label htmlFor="cat-name">Nome</Label>
         <Input
@@ -54,6 +66,12 @@ export function CategoryForm({
           Categoria ativa (visível no cardápio)
         </Label>
       </div>
+
+      <AvailabilityScheduleFields
+        value={availability}
+        onChange={setAvailability}
+        disabled={isSubmitting}
+      />
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>

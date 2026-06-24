@@ -1,22 +1,30 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Clock, Plus } from "lucide-react";
 import { formatPrice, formatWhatsAppOrderLink } from "@/lib/utils";
-import type { MenuItem } from "@/types";
+import { getItemAvailabilityStatus } from "@/lib/utils/availability";
+import type { Category, MenuItem } from "@/types";
 
 interface MenuItemCardProps {
   item: MenuItem;
+  category: Category;
   whatsapp?: string;
 }
 
 export function MenuItemCard({
   item,
+  category,
   whatsapp,
 }: MenuItemCardProps) {
+  const status = getItemAvailabilityStatus(item, category);
   const imageSize = "h-[104px] w-[104px] sm:h-[112px] sm:w-[112px]";
 
   return (
-    <article className="menu-card menu-animate-in flex gap-3 p-3 sm:gap-4 sm:p-4">
+    <article
+      className={`menu-card menu-animate-in flex gap-3 p-3 sm:gap-4 sm:p-4 ${
+        !status.orderable ? "opacity-75" : ""
+      }`}
+    >
       <div
         className={`relative ${imageSize} shrink-0 overflow-hidden rounded-xl bg-[var(--menu-surface)]`}
       >
@@ -53,9 +61,15 @@ export function MenuItemCard({
               {item.description}
             </p>
           )}
+          {!status.orderable && status.label && (
+            <p className="inline-flex items-center gap-1 text-xs font-medium text-[#999]">
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              {status.label}
+            </p>
+          )}
         </div>
 
-        {whatsapp ? (
+        {whatsapp && status.orderable ? (
           <Link
             href={formatWhatsAppOrderLink(
               whatsapp,
@@ -69,6 +83,10 @@ export function MenuItemCard({
             <Plus className="h-4 w-4" />
             Adicionar
           </Link>
+        ) : whatsapp ? (
+          <span className="text-xs font-medium text-[#999]">
+            Fora do horário de pedido
+          </span>
         ) : (
           <span className="text-xs text-[#999]">Pedidos indisponíveis</span>
         )}

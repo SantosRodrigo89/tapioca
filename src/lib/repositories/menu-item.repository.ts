@@ -20,6 +20,16 @@ function timestampToDate(value: unknown): Date {
   return new Date();
 }
 
+import type { AvailabilitySchedule } from "@/types";
+
+function parseAvailability(
+  data: Record<string, unknown>,
+): AvailabilitySchedule | undefined {
+  const raw = data.availability as AvailabilitySchedule | undefined;
+  if (!raw?.enabled) return undefined;
+  return raw;
+}
+
 function docToMenuItem(id: string, data: Record<string, unknown>): MenuItem {
   return {
     id,
@@ -28,6 +38,7 @@ function docToMenuItem(id: string, data: Record<string, unknown>): MenuItem {
     price: data.price as number,
     imageUrl: data.imageUrl as string | undefined,
     available: data.available as boolean,
+    availability: parseAvailability(data),
     order: data.order as number,
     createdAt: timestampToDate(data.createdAt),
     updatedAt: timestampToDate(data.updatedAt),
@@ -73,6 +84,7 @@ export async function createMenuItem(
     price: number;
     imageUrl?: string;
     available?: boolean;
+    availability?: AvailabilitySchedule;
     order?: number;
   },
 ): Promise<MenuItem> {
@@ -88,6 +100,7 @@ export async function createMenuItem(
     price: data.price,
     imageUrl: data.imageUrl ?? null,
     available: data.available ?? true,
+    ...(data.availability?.enabled ? { availability: data.availability } : {}),
     order: nextOrder,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -100,6 +113,7 @@ export async function createMenuItem(
     price: data.price,
     imageUrl: data.imageUrl,
     available: data.available ?? true,
+    availability: data.availability?.enabled ? data.availability : undefined,
     order: nextOrder,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -116,13 +130,22 @@ export async function updateMenuItem(
     price?: number;
     imageUrl?: string | null;
     available?: boolean;
+    availability?: AvailabilitySchedule | null;
     order?: number;
   },
 ): Promise<void> {
-  await updateDoc(doc(itemsRef(tenantId, categoryId), itemId), {
+  const payload: Record<string, unknown> = {
     ...data,
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  if (data.availability === null) {
+    payload.availability = null;
+  } else if (data.availability && !data.availability.enabled) {
+    payload.availability = null;
+  }
+
+  await updateDoc(doc(itemsRef(tenantId, categoryId), itemId), payload);
 }
 
 export async function deleteMenuItem(

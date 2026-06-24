@@ -6,7 +6,7 @@ import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.se
 import { MenuHero } from "@/components/public/menu-hero";
 import { PublicTheme } from "@/components/public/public-theme";
 import { CategoryNav } from "@/components/public/category-nav";
-import { HighlightsSection } from "@/components/public/highlights-section";
+import { HighlightsSection, type HighlightEntry } from "@/components/public/highlights-section";
 import { CategorySection } from "@/components/public/category-section";
 import { UnavailablePage } from "@/components/public/unavailable-page";
 import { Logo } from "@/components/brand/logo";
@@ -42,35 +42,41 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   };
 }
 
+type CategoryWithItems = Category & { items: MenuItem[] };
+
 function resolveHighlights(
   highlightItemIds: string[] | undefined,
-  categoriesWithItems: { items: MenuItem[] }[],
-): MenuItem[] {
+  categoriesWithItems: CategoryWithItems[],
+): HighlightEntry[] {
   if (highlightItemIds && highlightItemIds.length > 0) {
-    const itemMap = new Map<string, MenuItem>();
-    for (const cat of categoriesWithItems) {
-      for (const item of cat.items) {
-        itemMap.set(item.id, item);
-      }
-    }
     return highlightItemIds
-      .map((id) => itemMap.get(id))
-      .filter((item): item is MenuItem => Boolean(item));
+      .map((id) => {
+        for (const cat of categoriesWithItems) {
+          const item = cat.items.find((i) => i.id === id);
+          if (item) {
+            const { items: _items, ...category } = cat;
+            return { item, category };
+          }
+        }
+        return null;
+      })
+      .filter((entry): entry is HighlightEntry => entry !== null);
   }
 
   return pickHighlights(categoriesWithItems);
 }
 
 function pickHighlights(
-  categoriesWithItems: { items: MenuItem[] }[],
+  categoriesWithItems: CategoryWithItems[],
   limit = 6,
-): MenuItem[] {
-  const withImage: MenuItem[] = [];
+): HighlightEntry[] {
+  const withImage: HighlightEntry[] = [];
 
   for (const cat of categoriesWithItems) {
-    for (const item of cat.items) {
+    const { items, ...category } = cat;
+    for (const item of items) {
       if (item.imageUrl) {
-        withImage.push(item);
+        withImage.push({ item, category });
         if (withImage.length >= limit) return withImage;
       }
     }
@@ -78,10 +84,11 @@ function pickHighlights(
 
   if (withImage.length >= 2) return withImage;
 
-  const fallback: MenuItem[] = [];
+  const fallback: HighlightEntry[] = [];
   for (const cat of categoriesWithItems) {
-    for (const item of cat.items) {
-      fallback.push(item);
+    const { items, ...category } = cat;
+    for (const item of items) {
+      fallback.push({ item, category });
       if (fallback.length >= limit) return fallback;
     }
   }
@@ -143,7 +150,7 @@ export default async function PublicMenuPage({ params }: PageProps) {
           </p>
         ) : (
           <>
-            <HighlightsSection items={highlights} whatsapp={tenant.whatsapp} />
+            <HighlightsSection entries={highlights} whatsapp={tenant.whatsapp} />
 
             {visibleCategories.map((cat) => (
               <CategorySection

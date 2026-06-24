@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateMenuItemSchema, type CreateMenuItemInput } from "@/lib/schemas";
+import { AvailabilityScheduleFields } from "@/components/admin/availability-schedule-fields";
+import type { AvailabilitySchedule } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +16,7 @@ import { PriceInput } from "@/components/admin/price-input";
 interface MenuItemFormProps {
   currentImageUrl?: string;
   defaultValues?: Partial<CreateMenuItemInput>;
+  categoryAvailability?: AvailabilitySchedule;
   onSubmit: (data: CreateMenuItemInput, imageFile: File | null) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
@@ -22,11 +25,15 @@ interface MenuItemFormProps {
 export function MenuItemForm({
   currentImageUrl,
   defaultValues,
+  categoryAvailability,
   onSubmit,
   onCancel,
   submitLabel = "Salvar",
 }: MenuItemFormProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [availability, setAvailability] = useState<
+    AvailabilitySchedule | undefined
+  >(defaultValues?.availability);
 
   const {
     register,
@@ -40,7 +47,9 @@ export function MenuItemForm({
 
   return (
     <form
-      onSubmit={handleSubmit((data) => onSubmit(data, imageFile))}
+      onSubmit={handleSubmit((data) =>
+        onSubmit({ ...data, availability }, imageFile),
+      )}
       className="space-y-4"
     >
       <div className="space-y-1">
@@ -101,6 +110,17 @@ export function MenuItemForm({
           Item disponível (visível no cardápio)
         </Label>
       </div>
+
+      <AvailabilityScheduleFields
+        value={availability}
+        onChange={setAvailability}
+        disabled={isSubmitting}
+        inheritHint={
+          categoryAvailability?.enabled
+            ? `Sem horário próprio, usa o da categoria (${categoryAvailability.windows.map((w) => `${w.start}–${w.end}`).join(", ")}).`
+            : "Sem horário próprio, fica disponível o dia todo (quando ativo)."
+        }
+      />
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={onCancel}>
