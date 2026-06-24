@@ -1,4 +1,5 @@
 import { adminDb } from "@/lib/firebase/admin";
+import { FieldValue } from "firebase-admin/firestore";
 import type { Tenant, TenantStatus } from "@/types";
 
 function docToTenant(id: string, data: FirebaseFirestore.DocumentData): Tenant {
@@ -28,4 +29,23 @@ export async function getTenantBySlugServer(slug: string): Promise<Tenant | null
   if (!indexSnap.exists) return null;
   const { tenantId } = indexSnap.data() as { tenantId: string };
   return getTenantByIdServer(tenantId);
+}
+
+export async function listTenantsServer(): Promise<Tenant[]> {
+  const snap = await adminDb
+    .collection("tenants")
+    .orderBy("createdAt", "desc")
+    .get();
+
+  return snap.docs.map((doc) => docToTenant(doc.id, doc.data()));
+}
+
+export async function updateTenantStatusServer(
+  tenantId: string,
+  status: TenantStatus,
+): Promise<void> {
+  await adminDb.doc(`tenants/${tenantId}`).update({
+    status,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
 }

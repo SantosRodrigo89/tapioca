@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
+import { isSuperAdmin } from "@/lib/auth/roles";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
 import { Sidebar } from "@/components/admin/sidebar";
 import { AdminHeader } from "@/components/admin/header";
@@ -18,6 +19,9 @@ export default async function AdminLayout({
 
   const tenantId = sessionUser.tenantId as string | undefined;
   if (!tenantId) {
+    if (isSuperAdmin(sessionUser)) {
+      redirect("/super");
+    }
     redirect("/auth/login");
   }
 

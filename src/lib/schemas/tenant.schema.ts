@@ -85,7 +85,12 @@ export const SlugSchema = z
     message: "Este slug é reservado e não pode ser utilizado",
   });
 
+export const UpdateTenantStatusSchema = z.object({
+  status: TenantStatusSchema,
+});
+
 export type TenantStatus = z.infer<typeof TenantStatusSchema>;
 export type Tenant = z.infer<typeof TenantSchema>;
 export type CreateTenantInput = z.infer<typeof CreateTenantSchema>;
 export type UpdateTenantInput = z.infer<typeof UpdateTenantSchema>;
+export type UpdateTenantStatusInput = z.infer<typeof UpdateTenantStatusSchema>;

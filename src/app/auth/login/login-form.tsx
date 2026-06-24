@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
+import { getPostLoginPath } from "@/lib/auth/redirect";
 import { LoginSchema, type LoginInput } from "@/lib/schemas/auth.schema";
 
 export function LoginForm() {
@@ -26,8 +27,8 @@ export function LoginForm() {
   const onSubmit = async (data: LoginInput) => {
     setServerError(null);
     try {
-      await signIn(data.email, data.password);
-      router.push(redirect);
+      const authUser = await signIn(data.email, data.password);
+      router.push(getPostLoginPath(authUser.role, redirect));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro ao fazer login";
       setServerError(

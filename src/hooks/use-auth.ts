@@ -46,7 +46,7 @@ export async function refreshAuthToken(): Promise<void> {
 interface UseAuthReturn {
   user: AuthUser | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<void>;
+  signIn: (email: string, password: string) => Promise<AuthUser>;
   signUp: (email: string, password: string, displayName: string) => Promise<string>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -70,11 +70,12 @@ export function useAuth(): UseAuthReturn {
     return unsubscribe;
   }, []);
 
-  const signIn = async (email: string, password: string): Promise<void> => {
+  const signIn = async (email: string, password: string): Promise<AuthUser> => {
     const auth = getClientAuth();
     const credential = await signInWithEmailAndPassword(auth, email, password);
     // Force refresh so custom claims from signup are present in the Firestore client token
     const idToken = await credential.user.getIdToken(true);
+    const authUser = await firebaseUserToAuthUser(credential.user);
 
     const res = await fetch("/api/auth/session", {
       method: "POST",
@@ -86,6 +87,8 @@ export function useAuth(): UseAuthReturn {
       const data = (await res.json()) as { error?: string };
       throw new Error(data.error ?? "Falha ao criar sessão");
     }
+
+    return authUser;
   };
 
   const signUp = async (
