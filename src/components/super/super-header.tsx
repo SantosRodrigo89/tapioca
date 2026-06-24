@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { LogOut, Shield } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,9 +29,12 @@ export function SuperHeader() {
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card px-4 md:px-6">
-      <div className="flex items-center gap-2 text-sm font-semibold">
-        <Shield className="h-4 w-4" />
-        Super Admin
+      <div className="flex items-center gap-3">
+        <Logo size="sm" href="/super" />
+        <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+          <Shield className="h-4 w-4" />
+          Super Admin
+        </div>
       </div>
 
       <div className="flex-1" />

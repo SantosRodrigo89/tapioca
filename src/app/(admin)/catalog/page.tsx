@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
@@ -25,9 +26,11 @@ export default async function CatalogPage() {
   );
 
   return (
-    <CatalogClient
-      tenantId={tenantId}
-      initialCategories={categoriesWithItems}
-    />
+    <Suspense>
+      <CatalogClient
+        tenantId={tenantId}
+        initialCategories={categoriesWithItems}
+      />
+    </Suspense>
   );
 }

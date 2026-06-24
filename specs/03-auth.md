@@ -111,18 +111,13 @@ Destrói a sessão.
 
 **Response:** `200 OK`
 
-### `POST /api/auth/claims`
+### Custom claims no signup
 
-Seta custom claims após signup. Chamado internamente pelo servidor.
+As custom claims são setadas por `POST /api/tenants` via Admin SDK após criar o documento do tenant:
 
-**Request body:**
 ```json
-{ "uid": "<Firebase UID>", "role": "tenant_admin", "tenantId": "<tenantId>" }
+{ "role": "tenant_admin", "tenantId": "<tenantId>" }
 ```
-
-**Processo:**
-1. Verifica que o chamador é o próprio servidor (não exposto ao cliente diretamente)
-2. `adminAuth.setCustomUserClaims(uid, { role, tenantId })`
 
 ## Middleware Next.js
 

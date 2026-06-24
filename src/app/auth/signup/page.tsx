@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { Logo } from "@/components/brand/logo";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
@@ -57,11 +58,14 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">Criar conta</h1>
-          <p className="text-sm text-muted-foreground">
-            Comece a usar o Tapioca gratuitamente
-          </p>
+        <div className="flex flex-col items-center space-y-4">
+          <Logo size="md" href="/" priority />
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">Criar conta</h1>
+            <p className="text-sm text-muted-foreground">
+              Comece gratuitamente
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

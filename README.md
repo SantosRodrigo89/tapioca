@@ -8,6 +8,7 @@ SaaS de cardápio digital multi-tenant para restaurantes, bares e lanchonetes.
 - **Firebase** (Auth, Firestore, Storage)
 - **shadcn/ui** + Radix UI
 - **Zod** + **React Hook Form**
+- **@dnd-kit** (drag-and-drop no catálogo)
 
 ## Estrutura
 
@@ -16,9 +17,12 @@ src/
 ├── app/
 │   ├── (admin)/          # Painel do restaurante (autenticado)
 │   ├── (public)/[slug]/  # Cardápio público via slug
+│   ├── super/            # Painel Super Admin
 │   └── auth/             # Login, signup, forgot-password
+├── assets/brand/         # Logo (fonte única)
 ├── components/
 │   ├── admin/            # Componentes do painel admin
+│   ├── brand/            # Logo e identidade
 │   ├── public/           # Componentes do cardápio público
 │   └── ui/               # shadcn/ui components
 ├── lib/
@@ -41,6 +45,16 @@ npm install
 npm run dev
 ```
 
+### Logo
+
+A fonte do logo é `src/assets/brand/logo.png`. Após trocar o arquivo, rode:
+
+```bash
+npm run sync:logo
+```
+
+Isso copia para `public/logo.png` e `src/app/icon.png` (favicon).
+
 ### Com Firebase Emulator
 
 ```bash
@@ -50,4 +64,4 @@ NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true npm run dev
 
 ## Especificação
 
-A especificação completa do produto (SDD) está disponível no canvas `menudigital-sdd-specs.canvas.tsx`.
+A especificação completa do produto (SDD) está em `specs/`.

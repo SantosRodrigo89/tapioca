@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/hooks/use-auth";
 import {
   ForgotPasswordSchema,
@@ -36,17 +37,20 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <div className="w-full max-w-sm space-y-4 text-center">
-          <div className="space-y-1">
-            <h1 className="text-2xl font-bold tracking-tight">Email enviado</h1>
-            <p className="text-sm text-muted-foreground">
-              Verifique sua caixa de entrada e siga as instruções para redefinir
-              sua senha.
-            </p>
+        <div className="w-full max-w-sm space-y-6">
+          <div className="flex flex-col items-center space-y-4">
+            <Logo size="md" href="/" />
+            <div className="text-center space-y-1">
+              <h1 className="text-2xl font-bold tracking-tight">Email enviado</h1>
+              <p className="text-sm text-muted-foreground">
+                Verifique sua caixa de entrada e siga as instruções para redefinir
+                sua senha.
+              </p>
+            </div>
           </div>
           <Link
             href="/auth/login"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="inline-flex h-10 w-full items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             Voltar para o login
           </Link>
@@ -58,13 +62,16 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center space-y-1">
-          <h1 className="text-2xl font-bold tracking-tight">
-            Recuperar senha
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Enviaremos um link para redefinir sua senha
-          </p>
+        <div className="flex flex-col items-center space-y-4">
+          <Logo size="md" href="/" />
+          <div className="text-center space-y-1">
+            <h1 className="text-2xl font-bold tracking-tight">
+              Recuperar senha
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Enviaremos um link para redefinir sua senha
+            </p>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

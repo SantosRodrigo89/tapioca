@@ -8,6 +8,7 @@ export const dynamic = "force-dynamic";
 import { MenuHeader } from "@/components/public/menu-header";
 import { CategorySection } from "@/components/public/category-section";
 import { UnavailablePage } from "@/components/public/unavailable-page";
+import { Logo } from "@/components/brand/logo";
 import type { Category, MenuItem } from "@/types";
 
 interface PageProps {
@@ -96,8 +97,8 @@ export default async function PublicMenuPage({ params }: PageProps) {
         )}
       </main>
 
-      <footer className="text-center py-6 text-xs text-muted-foreground/60">
-        Powered by Tapioca
+      <footer className="flex flex-col items-center gap-2 py-6 text-muted-foreground/60">
+        <Logo size="xs" href="/" className="opacity-60" />
       </footer>
     </div>
   );

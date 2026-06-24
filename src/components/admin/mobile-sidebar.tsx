@@ -7,6 +7,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { SidebarNav } from "@/components/admin/sidebar-nav";
+import { Logo } from "@/components/brand/logo";
 
 interface MobileSidebarProps {
   open: boolean;
@@ -23,7 +24,8 @@ export function MobileSidebar({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="left" className="p-0">
         <SheetHeader className="border-b px-4 py-4 text-left">
-          <SheetTitle className="text-sm font-semibold">Tapioca</SheetTitle>
+          <SheetTitle className="sr-only">Menu</SheetTitle>
+          <Logo size="sm" href="/dashboard" />
         </SheetHeader>
         <SidebarNav
           tenantSlug={tenantSlug}

@@ -101,7 +101,7 @@ src/app/
 |---|---|---|
 | `name` | texto | obrigatório, min 2, max 100 caracteres |
 | `description` | textarea | opcional, max 300 caracteres |
-| `price` | number (centavos) | obrigatório, min 0 |
+| `price` | moeda (R$) | obrigatório, min 0; persistido em centavos no Firestore |
 | `imageUrl` | file upload | opcional, image/*, max 5 MB |
 | `available` | checkbox | padrão `true` |
 

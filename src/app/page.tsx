@@ -1,10 +1,11 @@
 import Link from "next/link";
+import { Logo } from "@/components/brand/logo";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background px-4 text-center">
-      <div className="space-y-4 max-w-md">
-        <h1 className="text-4xl font-bold tracking-tight">Tapioca</h1>
+      <div className="space-y-6 max-w-md">
+        <Logo size="lg" href="/" priority className="mx-auto" />
         <p className="text-muted-foreground text-lg">
           Cardápio digital para restaurantes, bares e lanchonetes.
         </p>

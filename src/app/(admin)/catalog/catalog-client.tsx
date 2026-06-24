@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import {
   DndContext,
@@ -83,6 +83,7 @@ function sortCategories(cats: CategoryWithItems[]): CategoryWithItems[] {
 
 export function CatalogClient({ tenantId, initialCategories }: CatalogClientProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [categories, setCategories] = useState(() =>
     sortCategories(initialCategories),
   );
@@ -102,6 +103,13 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
   useEffect(() => {
     void refreshAuthToken().catch(console.error);
   }, []);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "new-category") {
+      setDialog({ type: "new-category" });
+      router.replace("/catalog", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const toggleExpand = (id: string) =>
     setExpandedIds((prev) => {
@@ -378,8 +386,6 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
     }
   };
 
-  const sortedCategories = categories;
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -409,11 +415,11 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
         onDragEnd={handleDragEnd}
       >
         <SortableContext
-          items={sortedCategories.map((c) => categoryDndId(c.id))}
+          items={categories.map((c) => categoryDndId(c.id))}
           strategy={verticalListSortingStrategy}
         >
           <div className="space-y-3">
-            {sortedCategories.map((category) => (
+            {categories.map((category) => (
               <SortableCategoryCard
                 key={category.id}
                 id={categoryDndId(category.id)}

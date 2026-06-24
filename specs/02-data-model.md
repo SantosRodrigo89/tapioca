@@ -79,7 +79,7 @@ Items individuais do cardápio.
 | `id` | `string` | ✅ | Igual ao document ID |
 | `name` | `string` | ✅ | Nome do item |
 | `description` | `string` | ❌ | Descrição do item |
-| `price` | `number` | ✅ | Preço em centavos (ex: R$ 12,90 = `1290`) |
+| `price` | `number` | ✅ | Preço armazenado em centavos (ex: R$ 12,90 = `1290`); formulário exibe em R$ |
 | `imageUrl` | `string` | ❌ | URL da imagem no Storage |
 | `available` | `boolean` | ✅ | Se `false`, não aparece no cardápio público |
 | `order` | `number` | ✅ | Posição dentro da categoria (crescente) |
