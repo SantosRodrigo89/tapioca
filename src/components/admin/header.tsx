@@ -15,9 +15,10 @@ import { toast } from "sonner";
 
 interface AdminHeaderProps {
   tenantName: string;
+  onMenuClick?: () => void;
 }
 
-export function AdminHeader({ tenantName }: AdminHeaderProps) {
+export function AdminHeader({ tenantName, onMenuClick }: AdminHeaderProps) {
   const router = useRouter();
   const { user, signOut } = useAuth();
 
@@ -32,7 +33,13 @@ export function AdminHeader({ tenantName }: AdminHeaderProps) {
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card px-4 md:px-6">
-      <Button variant="ghost" size="icon" className="md:hidden" aria-label="Menu">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden"
+        aria-label="Menu"
+        onClick={onMenuClick}
+      >
         <Menu className="h-5 w-5" />
       </Button>
 
