@@ -29,6 +29,7 @@ import {
 import { CategoryForm } from "@/components/admin/category-form";
 import { MenuItemForm } from "@/components/admin/menu-item-form";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
+import { ItemThumbnail } from "@/components/admin/item-thumbnail";
 import { formatPrice } from "@/lib/utils";
 import { uploadMenuItemImage } from "@/lib/storage/upload";
 import type { CategoryWithItems } from "./page";
@@ -425,6 +426,8 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
                         canMoveDown={itemIndex < category.items.length - 1}
                         disabled={reordering}
                       />
+
+                      <ItemThumbnail src={item.imageUrl} alt={item.name} />
 
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{item.name}</p>
