@@ -3,6 +3,18 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import {
+  DndContext,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
 import { Plus, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { refreshAuthToken } from "@/hooks/use-auth";
 import {
@@ -18,8 +30,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { ReorderButtons } from "@/components/admin/reorder-buttons";
-import { applyOrderUpdates, getReorderUpdates } from "@/lib/utils/reorder";
+import {
+  SortableCategoryCard,
+  SortableItemRow,
+} from "@/components/admin/catalog-sortable";
+import {
+  applyOrderUpdates,
+  categoryDndId,
+  getDragReorderUpdates,
+  itemDndId,
+  parseDndId,
+} from "@/lib/utils/reorder";
 import {
   Dialog,
   DialogContent,
@@ -70,6 +91,12 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
   );
   const [dialog, setDialog] = useState<DialogState>({ type: "none" });
   const [reordering, setReordering] = useState(false);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+  );
 
   // Ensure Firestore client token includes custom claims (tenantId) for writes
   useEffect(() => {
@@ -250,11 +277,15 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
     }
   };
 
-  const handleMoveCategory = async (
-    categoryId: string,
-    direction: "up" | "down",
+  const persistCategoryOrder = async (
+    activeCategoryId: string,
+    overCategoryId: string,
   ) => {
-    const updates = getReorderUpdates(categories, categoryId, direction);
+    const updates = getDragReorderUpdates(
+      categories,
+      activeCategoryId,
+      overCategoryId,
+    );
     if (!updates) return;
 
     setReordering(true);
@@ -268,7 +299,7 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
         ),
       );
     } catch (err) {
-      console.error("[moveCategory]", err);
+      console.error("[reorderCategory]", err);
       setCategories(previous);
       toast.error("Erro ao reordenar categoria");
     } finally {
@@ -276,15 +307,19 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
     }
   };
 
-  const handleMoveItem = async (
+  const persistItemOrder = async (
     categoryId: string,
-    itemId: string,
-    direction: "up" | "down",
+    activeItemId: string,
+    overItemId: string,
   ) => {
     const category = categories.find((c) => c.id === categoryId);
     if (!category) return;
 
-    const updates = getReorderUpdates(category.items, itemId, direction);
+    const updates = getDragReorderUpdates(
+      category.items,
+      activeItemId,
+      overItemId,
+    );
     if (!updates) return;
 
     setReordering(true);
@@ -306,11 +341,40 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
         ),
       );
     } catch (err) {
-      console.error("[moveItem]", err);
+      console.error("[reorderItem]", err);
       setCategories(previous);
       toast.error("Erro ao reordenar item");
     } finally {
       setReordering(false);
+    }
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id || reordering) return;
+
+    const activeParsed = parseDndId(String(active.id));
+    const overParsed = parseDndId(String(over.id));
+    if (!activeParsed || !overParsed) return;
+
+    if (
+      activeParsed.type === "category" &&
+      overParsed.type === "category"
+    ) {
+      void persistCategoryOrder(
+        activeParsed.categoryId,
+        overParsed.categoryId,
+      );
+      return;
+    }
+
+    if (activeParsed.type === "item" && overParsed.type === "item") {
+      if (activeParsed.categoryId !== overParsed.categoryId) return;
+      void persistItemOrder(
+        activeParsed.categoryId,
+        activeParsed.itemId,
+        overParsed.itemId,
+      );
     }
   };
 
@@ -339,182 +403,201 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
         </div>
       )}
 
-      <div className="space-y-3">
-        {sortedCategories.map((category, categoryIndex) => (
-          <div key={category.id} className="rounded-lg border">
-            {/* Category header */}
-            <div className="flex items-center gap-2 p-4">
-              <ReorderButtons
-                onMoveUp={() => handleMoveCategory(category.id, "up")}
-                onMoveDown={() => handleMoveCategory(category.id, "down")}
-                canMoveUp={categoryIndex > 0}
-                canMoveDown={categoryIndex < sortedCategories.length - 1}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext
+          items={sortedCategories.map((c) => categoryDndId(c.id))}
+          strategy={verticalListSortingStrategy}
+        >
+          <div className="space-y-3">
+            {sortedCategories.map((category) => (
+              <SortableCategoryCard
+                key={category.id}
+                id={categoryDndId(category.id)}
                 disabled={reordering}
-              />
-
-              <button
-                type="button"
-                onClick={() => toggleExpand(category.id)}
-                className="mr-1 text-muted-foreground hover:text-foreground"
-                aria-label={expandedIds.has(category.id) ? "Recolher" : "Expandir"}
-              >
-                {expandedIds.has(category.id) ? (
-                  <ChevronDown className="h-4 w-4" />
-                ) : (
-                  <ChevronRight className="h-4 w-4" />
-                )}
-              </button>
-
-              <span className="font-medium flex-1 truncate">{category.name}</span>
-
-              {!category.active && (
-                <Badge variant="secondary" className="shrink-0">
-                  Inativa
-                </Badge>
-              )}
-              <span className="text-xs text-muted-foreground shrink-0">
-                {category.items.length} item
-                {category.items.length !== 1 ? "s" : ""}
-              </span>
-
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 shrink-0"
-                onClick={() =>
-                  setDialog({ type: "edit-category", category })
-                }
-                aria-label="Editar categoria"
-              >
-                <Pencil className="h-4 w-4" />
-              </Button>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
-                onClick={() =>
-                  setDialog({
-                    type: "delete-category",
-                    categoryId: category.id,
-                    name: category.name,
-                  })
-                }
-                aria-label="Excluir categoria"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {/* Items */}
-            {expandedIds.has(category.id) && (
-              <>
-                <Separator />
-                <div className="p-4 space-y-2">
-                  {category.items.map((item, itemIndex) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center gap-3 rounded-md border p-3"
+                header={
+                  <div className="flex flex-1 items-center gap-2 min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(category.id)}
+                      className="mr-1 text-muted-foreground hover:text-foreground"
+                      aria-label={
+                        expandedIds.has(category.id) ? "Recolher" : "Expandir"
+                      }
                     >
-                      <ReorderButtons
-                        onMoveUp={() =>
-                          handleMoveItem(category.id, item.id, "up")
-                        }
-                        onMoveDown={() =>
-                          handleMoveItem(category.id, item.id, "down")
-                        }
-                        canMoveUp={itemIndex > 0}
-                        canMoveDown={itemIndex < category.items.length - 1}
-                        disabled={reordering}
-                      />
+                      {expandedIds.has(category.id) ? (
+                        <ChevronDown className="h-4 w-4" />
+                      ) : (
+                        <ChevronRight className="h-4 w-4" />
+                      )}
+                    </button>
 
-                      <ItemThumbnail src={item.imageUrl} alt={item.name} />
+                    <span className="font-medium flex-1 truncate">
+                      {category.name}
+                    </span>
 
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.name}</p>
-                        {item.description && (
-                          <p className="text-xs text-muted-foreground truncate">
-                            {item.description}
-                          </p>
-                        )}
-                        <p className="text-sm font-semibold mt-0.5">
-                          {formatPrice(item.price)}
-                        </p>
+                    {!category.active && (
+                      <Badge variant="secondary" className="shrink-0">
+                        Inativa
+                      </Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground shrink-0">
+                      {category.items.length} item
+                      {category.items.length !== 1 ? "s" : ""}
+                    </span>
+
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 shrink-0"
+                      onClick={() =>
+                        setDialog({ type: "edit-category", category })
+                      }
+                      aria-label="Editar categoria"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                      onClick={() =>
+                        setDialog({
+                          type: "delete-category",
+                          categoryId: category.id,
+                          name: category.name,
+                        })
+                      }
+                      aria-label="Excluir categoria"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                }
+                body={
+                  expandedIds.has(category.id) ? (
+                    <>
+                      <Separator />
+                      <div className="p-4 space-y-2">
+                        <SortableContext
+                          items={category.items.map((item) =>
+                            itemDndId(category.id, item.id),
+                          )}
+                          strategy={verticalListSortingStrategy}
+                        >
+                          {category.items.map((item) => (
+                            <SortableItemRow
+                              key={item.id}
+                              id={itemDndId(category.id, item.id)}
+                              disabled={reordering}
+                            >
+                              <ItemThumbnail
+                                src={item.imageUrl}
+                                alt={item.name}
+                              />
+
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate">
+                                  {item.name}
+                                </p>
+                                {item.description && (
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {item.description}
+                                  </p>
+                                )}
+                                <p className="text-sm font-semibold mt-0.5">
+                                  {formatPrice(item.price)}
+                                </p>
+                              </div>
+
+                              <button
+                                type="button"
+                                role="switch"
+                                aria-checked={item.available}
+                                onClick={() =>
+                                  handleToggleAvailable(
+                                    category.id,
+                                    item.id,
+                                    !item.available,
+                                  )
+                                }
+                                className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
+                                  item.available ? "bg-primary" : "bg-input"
+                                }`}
+                                title={
+                                  item.available ? "Disponível" : "Indisponível"
+                                }
+                              >
+                                <span
+                                  className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                                    item.available
+                                      ? "translate-x-4"
+                                      : "translate-x-0.5"
+                                  }`}
+                                />
+                              </button>
+
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 shrink-0"
+                                onClick={() =>
+                                  setDialog({
+                                    type: "edit-item",
+                                    categoryId: category.id,
+                                    item,
+                                  })
+                                }
+                                aria-label="Editar item"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
+                                onClick={() =>
+                                  setDialog({
+                                    type: "delete-item",
+                                    categoryId: category.id,
+                                    itemId: item.id,
+                                    name: item.name,
+                                  })
+                                }
+                                aria-label="Excluir item"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </SortableItemRow>
+                          ))}
+                        </SortableContext>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full mt-2"
+                          onClick={() =>
+                            setDialog({
+                              type: "new-item",
+                              categoryId: category.id,
+                            })
+                          }
+                        >
+                          <Plus className="mr-2 h-4 w-4" />
+                          Adicionar item
+                        </Button>
                       </div>
-
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={item.available}
-                        onClick={() =>
-                          handleToggleAvailable(
-                            category.id,
-                            item.id,
-                            !item.available,
-                          )
-                        }
-                        className={`relative inline-flex h-5 w-9 shrink-0 items-center rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                          item.available ? "bg-primary" : "bg-input"
-                        }`}
-                        title={item.available ? "Disponível" : "Indisponível"}
-                      >
-                        <span
-                          className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
-                            item.available ? "translate-x-4" : "translate-x-0.5"
-                          }`}
-                        />
-                      </button>
-
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 shrink-0"
-                        onClick={() =>
-                          setDialog({
-                            type: "edit-item",
-                            categoryId: category.id,
-                            item,
-                          })
-                        }
-                        aria-label="Editar item"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
-                        onClick={() =>
-                          setDialog({
-                            type: "delete-item",
-                            categoryId: category.id,
-                            itemId: item.id,
-                            name: item.name,
-                          })
-                        }
-                        aria-label="Excluir item"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full mt-2"
-                    onClick={() =>
-                      setDialog({ type: "new-item", categoryId: category.id })
-                    }
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Adicionar item
-                  </Button>
-                </div>
-              </>
-            )}
+                    </>
+                  ) : undefined
+                }
+              />
+            ))}
           </div>
-        ))}
-      </div>
+        </SortableContext>
+      </DndContext>
 
       {/* ── Dialogs ── */}
 
