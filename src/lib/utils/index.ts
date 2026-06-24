@@ -27,3 +27,10 @@ export function formatWhatsAppLink(phone: string): string {
   const digits = phone.replace(/\D/g, "");
   return `https://wa.me/${digits}`;
 }
+
+export function formatWhatsAppOrderLink(
+  phone: string,
+  message: string,
+): string {
+  return `${formatWhatsAppLink(phone)}?text=${encodeURIComponent(message)}`;
+}
