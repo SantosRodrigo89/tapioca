@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { CreateMenuItemSchema, type CreateMenuItemInput } from "@/lib/schemas";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { PriceInput } from "@/components/admin/price-input";
 
 interface MenuItemFormProps {
   currentImageUrl?: string;
@@ -29,6 +30,7 @@ export function MenuItemForm({
 
   const {
     register,
+    control,
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<CreateMenuItemInput>({
@@ -63,21 +65,22 @@ export function MenuItemForm({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="item-price">Preço (em centavos)</Label>
-        <Input
-          id="item-price"
-          type="number"
-          min="0"
-          step="1"
-          placeholder="Ex: 1290 (= R$ 12,90)"
-          {...register("price", { valueAsNumber: true })}
+        <Label htmlFor="item-price">Preço</Label>
+        <Controller
+          name="price"
+          control={control}
+          render={({ field }) => (
+            <PriceInput
+              id="item-price"
+              value={field.value ?? 0}
+              onChange={field.onChange}
+              disabled={isSubmitting}
+            />
+          )}
         />
         {errors.price && (
           <p className="text-xs text-destructive">{errors.price.message}</p>
         )}
-        <p className="text-xs text-muted-foreground">
-          Informe o valor em centavos. Ex: R$ 12,90 = 1290
-        </p>
       </div>
 
       <ImageUpload

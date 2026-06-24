@@ -22,8 +22,8 @@ export const CreateMenuItemSchema = z.object({
     .max(300, "Descrição deve ter no máximo 300 caracteres")
     .optional(),
   price: z
-    .number({ error: "Preço deve ser um número" })
-    .int("Preço deve ser em centavos (número inteiro)")
+    .number({ error: "Preço inválido" })
+    .int()
     .nonnegative("Preço não pode ser negativo"),
   available: z.boolean(),
 });
@@ -39,8 +39,8 @@ export const UpdateMenuItemSchema = z.object({
     .max(300, "Descrição deve ter no máximo 300 caracteres")
     .optional(),
   price: z
-    .number({ error: "Preço deve ser um número" })
-    .int("Preço deve ser em centavos (número inteiro)")
+    .number({ error: "Preço inválido" })
+    .int()
     .nonnegative("Preço não pode ser negativo")
     .optional(),
   available: z.boolean().optional(),

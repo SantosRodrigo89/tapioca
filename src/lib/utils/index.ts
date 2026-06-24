@@ -1,4 +1,9 @@
 export { cn } from "./cn";
+export {
+  centsToDigits,
+  digitsToCents,
+  formatDigitsAsPrice,
+} from "./price";
 
 export function formatPrice(cents: number): string {
   return new Intl.NumberFormat("pt-BR", {
