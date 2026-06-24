@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { MenuQrCode } from "@/components/admin/menu-qr-code";
 import type { Tenant } from "@/types";
 
 interface SettingsClientProps {
@@ -25,7 +26,14 @@ export function SettingsClient({ tenant }: SettingsClientProps) {
   const [copied, setCopied] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUrl, setLogoUrl] = useState(tenant.logoUrl);
-  const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${tenant.slug}`;
+  const [publicUrl, setPublicUrl] = useState("");
+
+  useEffect(() => {
+    const base =
+      process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ||
+      window.location.origin;
+    setPublicUrl(`${base}/${tenant.slug}`);
+  }, [tenant.slug]);
 
   useEffect(() => {
     void refreshAuthToken().catch(console.error);
@@ -177,6 +185,7 @@ export function SettingsClient({ tenant }: SettingsClientProps) {
             </Button>
           </div>
         </div>
+        <MenuQrCode url={publicUrl} slug={tenant.slug} />
       </section>
     </div>
   );
