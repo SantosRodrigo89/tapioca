@@ -96,3 +96,5 @@ export interface SlugIndexEntry {
   tenantId: string;
   createdAt: Date;
 }
+
+export type { SiteConfig, SiteSectionConfig, SiteSectionId, GalleryImage } from "./site";

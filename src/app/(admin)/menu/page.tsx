@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
 
-export default function CatalogRedirectPage() {
+export default function MenuIndexPage() {
   redirect("/menu/products");
 }

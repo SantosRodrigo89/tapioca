@@ -57,8 +57,9 @@ import {
   getItemAvailabilityStatus,
 } from "@/lib/utils/availability";
 import { uploadMenuItemImage } from "@/lib/storage/upload";
-import type { CategoryWithItems } from "./page";
 import type { Category, MenuItem } from "@/types";
+
+type CategoryWithItems = Category & { items: MenuItem[] };
 import type { CreateCategoryInput } from "@/lib/schemas";
 import type { CreateMenuItemInput } from "@/lib/schemas";
 
@@ -111,7 +112,7 @@ export function CatalogClient({ tenantId, initialCategories }: CatalogClientProp
   useEffect(() => {
     if (searchParams.get("action") === "new-category") {
       setDialog({ type: "new-category" });
-      router.replace("/catalog", { scroll: false });
+      router.replace("/menu/products", { scroll: false });
     }
   }, [searchParams, router]);
 

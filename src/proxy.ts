@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const ADMIN_ROUTES = ["/dashboard", "/catalog", "/settings", "/super"];
+const ADMIN_ROUTES = [
+  "/dashboard",
+  "/site",
+  "/menu",
+  "/catalog",
+  "/settings",
+  "/super",
+];
 
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
@@ -10,9 +17,6 @@ export function proxy(request: NextRequest): NextResponse {
     return NextResponse.next();
   }
 
-  // Firebase Auth session cookie verification happens in individual page/route handlers
-  // using the Admin SDK, which cannot run in Edge proxy. This proxy handles redirect
-  // logic only — actual auth verification is in server components.
   const sessionCookie = request.cookies.get("__session")?.value;
 
   if (!sessionCookie) {
@@ -25,5 +29,12 @@ export function proxy(request: NextRequest): NextResponse {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/catalog/:path*", "/settings/:path*", "/super/:path*"],
+  matcher: [
+    "/dashboard/:path*",
+    "/site/:path*",
+    "/menu/:path*",
+    "/catalog/:path*",
+    "/settings/:path*",
+    "/super/:path*",
+  ],
 };

@@ -4,6 +4,8 @@ const RESERVED_SLUGS = [
   "auth",
   "dashboard",
   "catalog",
+  "site",
+  "menu",
   "settings",
   "super",
   "api",

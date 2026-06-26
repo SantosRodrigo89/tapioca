@@ -2,19 +2,37 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, UtensilsCrossed, Settings, ExternalLink } from "lucide-react";
+import {
+  LayoutDashboard,
+  Globe,
+  UtensilsCrossed,
+  Settings,
+  ExternalLink,
+  FolderOpen,
+  Package,
+  Star,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navLinks = [
+const mainLinks = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/catalog", label: "Cardápio", icon: UtensilsCrossed },
-  { href: "/settings", label: "Configurações", icon: Settings },
-];
+  { href: "/site", label: "Presença Digital", icon: Globe },
+] as const;
+
+const menuLinks = [
+  { href: "/menu/categories", label: "Categorias", icon: FolderOpen },
+  { href: "/menu/products", label: "Produtos", icon: Package },
+  { href: "/menu/highlights", label: "Destaques", icon: Star },
+] as const;
 
 interface SidebarNavProps {
   tenantSlug: string;
   onNavigate?: () => void;
   className?: string;
+}
+
+function isActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(href + "/");
 }
 
 export function SidebarNav({
@@ -23,37 +41,85 @@ export function SidebarNav({
   className,
 }: SidebarNavProps) {
   const pathname = usePathname();
+  const menuActive = pathname.startsWith("/menu");
 
   return (
     <div className={cn("flex flex-col flex-1", className)}>
       <nav className="flex flex-col gap-1 p-2 flex-1">
-        {navLinks.map(({ href, label, icon: Icon }) => (
+        {mainLinks.map(({ href, label, icon: Icon }) => (
           <Link
             key={href}
             href={href}
             onClick={onNavigate}
             className={cn(
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-              pathname === href || pathname.startsWith(href + "/")
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+              isActive(pathname, href)
+                ? "bg-accent text-accent-foreground"
+                : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
             )}
           >
             <Icon className="h-4 w-4 shrink-0" />
             {label}
           </Link>
         ))}
+
+        <div className="pt-2">
+          <div
+            className={cn(
+              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium",
+              menuActive
+                ? "text-foreground"
+                : "text-muted-foreground",
+            )}
+          >
+            <UtensilsCrossed className="h-4 w-4 shrink-0" />
+            Cardápio
+          </div>
+          <div className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l pl-2">
+            {menuLinks.map(({ href, label, icon: Icon }) => (
+              <Link
+                key={href}
+                href={href}
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-2.5 rounded-md px-3 py-1.5 text-sm transition-colors",
+                  isActive(pathname, href)
+                    ? "bg-accent text-accent-foreground font-medium"
+                    : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+                )}
+              >
+                <Icon className="h-3.5 w-3.5 shrink-0" />
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        <Link
+          href="/settings"
+          onClick={onNavigate}
+          className={cn(
+            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            isActive(pathname, "/settings")
+              ? "bg-accent text-accent-foreground"
+              : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground",
+          )}
+        >
+          <Settings className="h-4 w-4 shrink-0" />
+          Configurações
+        </Link>
       </nav>
+
       <div className="border-t p-2">
         <Link
           href={`/${tenantSlug}`}
           target="_blank"
           rel="noopener noreferrer"
           onClick={onNavigate}
-          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+          className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground transition-colors"
         >
           <ExternalLink className="h-4 w-4 shrink-0" />
-          Ver cardápio público
+          Ver site público
         </Link>
       </div>
     </div>
