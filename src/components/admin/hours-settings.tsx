@@ -18,9 +18,10 @@ import type { Tenant } from "@/types";
 
 interface HoursSettingsProps {
   tenant: Tenant;
+  hideHeader?: boolean;
 }
 
-export function HoursSettings({ tenant }: HoursSettingsProps) {
+export function HoursSettings({ tenant, hideHeader }: HoursSettingsProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hours, setHours] = useState<DaySchedule[]>(
     tenant.openingHours ?? defaultOpeningHours(),
@@ -55,12 +56,14 @@ export function HoursSettings({ tenant }: HoursSettingsProps) {
 
   return (
     <section className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">Horário de funcionamento</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Define se o restaurante aparece aberto ou fechado no cardápio.
-        </p>
-      </div>
+      {!hideHeader && (
+        <div>
+          <h2 className="text-lg font-semibold">Horário de funcionamento</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Define se o restaurante aparece aberto ou fechado no cardápio.
+          </p>
+        </div>
+      )}
 
       <div className="space-y-2">
         {WEEKDAYS.map(({ key, label }) => {

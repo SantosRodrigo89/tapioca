@@ -10,47 +10,13 @@ import { updateTenant } from "@/lib/repositories/tenant.repository";
 import { uploadTenantBanner } from "@/lib/storage/upload";
 import { DEFAULT_TENANT_THEME } from "@/lib/utils/theme";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/admin/image-upload";
+import { ColorField } from "@/features/presenca-digital/color-field";
 import type { Tenant } from "@/types";
 
 interface AppearanceSettingsProps {
   tenant: Tenant;
-}
-
-function ColorField({
-  label,
-  value,
-  onChange,
-  disabled,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-}) {
-  return (
-    <div className="space-y-1">
-      <Label>{label}</Label>
-      <div className="flex items-center gap-3">
-        <input
-          type="color"
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.value)}
-          className="h-10 w-14 cursor-pointer rounded-md border border-input bg-transparent p-1 disabled:cursor-not-allowed disabled:opacity-50"
-        />
-        <Input
-          value={value}
-          disabled={disabled}
-          onChange={(e) => onChange(e.target.value)}
-          className="w-28 font-mono text-sm uppercase"
-          maxLength={7}
-        />
-      </div>
-    </div>
-  );
 }
 
 export function AppearanceSettings({ tenant }: AppearanceSettingsProps) {
