@@ -1,13 +1,14 @@
-import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import logoImage from "@/assets/brand/logo.png";
+import { BRAND_NAME, BRAND_TAGLINE } from "@/lib/brand";
+
+// TODO: substituir wordmark por logo Mesio em src/assets/brand/logo.png
 
 const sizeClasses = {
-  xs: "h-7",
-  sm: "h-9",
-  md: "h-14",
-  lg: "h-32",
+  xs: "text-sm font-bold tracking-tight",
+  sm: "text-lg font-bold tracking-tight",
+  md: "text-3xl font-bold tracking-tight",
+  lg: "text-6xl font-bold tracking-tight",
 } as const;
 
 interface LogoProps {
@@ -21,24 +22,28 @@ export function Logo({
   size = "md",
   href,
   className,
-  priority,
 }: LogoProps) {
-  const image = (
-    <Image
-      src={logoImage}
-      alt="Tapioca — Cardápio Digital"
-      priority={priority}
-      className={cn("w-auto object-contain", sizeClasses[size], className)}
-    />
+  const wordmark = (
+    <span
+      role="img"
+      aria-label={`${BRAND_NAME} — ${BRAND_TAGLINE}`}
+      className={cn(
+        "inline-flex shrink-0 text-foreground",
+        sizeClasses[size],
+        className,
+      )}
+    >
+      {BRAND_NAME}
+    </span>
   );
 
   if (href) {
     return (
       <Link href={href} className="inline-flex shrink-0">
-        {image}
+        {wordmark}
       </Link>
     );
   }
 
-  return <span className="inline-flex shrink-0">{image}</span>;
+  return wordmark;
 }

@@ -1,6 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 
+// TODO: reativar quando o logo Mesio final existir em src/assets/brand/logo.png
+// O componente Logo usa wordmark em texto até o asset estar disponível.
+
 const root = process.cwd();
 const source = path.join(root, "src/assets/brand/logo.png");
 const targets = [
@@ -9,8 +12,12 @@ const targets = [
 ];
 
 if (!fs.existsSync(source)) {
-  console.error("Logo não encontrado:", source);
-  process.exit(1);
+  console.warn(
+    "Logo Mesio ainda não disponível em",
+    path.relative(root, source),
+    "— sync ignorado.",
+  );
+  process.exit(0);
 }
 
 for (const target of targets) {

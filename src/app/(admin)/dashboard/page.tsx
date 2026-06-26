@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Plus, ExternalLink } from "lucide-react";
+import { getPublicUrlDisplay } from "@/lib/brand";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -35,6 +36,10 @@ export default async function DashboardPage() {
   const availableItems = itemCounts.flat().filter((i) => i.available).length;
 
   const publicUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? ""}/${tenant.slug}`;
+  const publicUrlDisplay = getPublicUrlDisplay(
+    tenant.slug,
+    process.env.NEXT_PUBLIC_APP_URL,
+  );
 
   return (
     <div className="space-y-6">
@@ -45,7 +50,7 @@ export default async function DashboardPage() {
             <TenantStatusBadge status={tenant.status} />
           </div>
           <p className="text-sm text-muted-foreground">
-            cardápio.app/{tenant.slug}
+            {publicUrlDisplay}
           </p>
         </div>
         <Button asChild variant="outline" size="sm">

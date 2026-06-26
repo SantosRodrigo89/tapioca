@@ -2,7 +2,7 @@
 
 ## Produto
 
-**Tapioca** é um SaaS web de cardápio digital para restaurantes, bares e lanchonetes.
+**Mesio** é uma plataforma moderna para restaurantes — presença digital, site e gestão da presença online.
 
 ## Personas
 
@@ -10,7 +10,7 @@
 |---|---|
 | **Admin Tenant** | Proprietário ou gerente do estabelecimento. Faz login, configura o restaurante, gerencia categorias e itens do cardápio. |
 | **Cliente Final** | Consumidor do estabelecimento. Acessa o cardápio público via URL com slug ou QR Code, sem necessidade de login. |
-| **Super Admin** | Operador da plataforma Tapioca. Gerencia tenants, pode suspender contas e fazer operações privilegiadas. |
+| **Super Admin** | Operador da plataforma Mesio. Gerencia tenants, pode suspender contas e fazer operações privilegiadas. |
 
 ## Fluxos Principais
 
@@ -42,7 +42,7 @@
 
 ### Fluxo 4 — Cardápio Público
 
-1. Cliente acessa `/{slug}` (ex: `tapioca.app/burger-house`)
+1. Cliente acessa `/{slug}` (ex: `mesio.app/burger-house`)
 2. Sistema busca `slugIndex/{slug}` para obter o `tenantId`
 3. Sistema busca dados do tenant e categorias ativas com items disponíveis
 4. Cardápio é renderizado em Server Component (SSR/SSG) sem necessidade de login

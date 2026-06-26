@@ -1,6 +1,8 @@
-# Tapioca
+# Mesio
 
-SaaS de cardápio digital multi-tenant para restaurantes, bares e lanchonetes. Cada estabelecimento ganha um link público (`/{slug}`), painel de gestão e cardápio otimizado para mobile.
+Plataforma moderna para restaurantes. Cada estabelecimento ganha um link público (`/{slug}`), painel de gestão e presença digital otimizada para mobile.
+
+**Slogan:** Sua presença digital começa aqui.
 
 ## O que o produto faz
 
@@ -65,7 +67,7 @@ SaaS de cardápio digital multi-tenant para restaurantes, bares e lanchonetes. C
 
 ```bash
 git clone <repo>
-cd tapioca
+cd mesio
 npm install
 cp .env.example .env.local
 ```
@@ -83,18 +85,20 @@ Acesse [http://localhost:3000](http://localhost:3000).
 | Comando | Descrição |
 |---|---|
 | `npm run dev` | Servidor de desenvolvimento |
-| `npm run build` | Build de produção (sincroniza logo antes) |
+| `npm run build` | Build de produção (sincroniza logo se disponível) |
 | `npm run start` | Serve o build |
 | `npm run lint` | ESLint |
-| `npm run sync:logo` | Copia `src/assets/brand/logo.png` → `public/logo.png` e `src/app/icon.png` |
+| `npm run sync:logo` | Copia `src/assets/brand/logo.png` → `public/logo.png` (quando o asset existir) |
 
 ### Logo
 
-A fonte única do logo é `src/assets/brand/logo.png`. Após substituir o arquivo:
+O wordmark temporário "Mesio" é renderizado em texto até o logo final estar disponível. A fonte do logo será `src/assets/brand/logo.png`. Após adicionar o arquivo:
 
 ```bash
 npm run sync:logo
 ```
+
+Atualize também `src/components/brand/logo.tsx` e `src/app/icon.tsx` para usar o asset final.
 
 ### Firebase Emulator (opcional)
 
@@ -129,6 +133,7 @@ src/
 │   ├── public/           # Hero, categorias, destaques, cards
 │   └── ui/               # shadcn/ui
 ├── lib/
+│   ├── brand.ts            # Constantes de marca (Mesio)
 │   ├── firebase/         # Client SDK + Admin SDK
 │   ├── repositories/     # Acesso ao Firestore (client + server)
 │   ├── schemas/          # Validação Zod

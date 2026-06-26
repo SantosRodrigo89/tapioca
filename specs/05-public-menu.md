@@ -91,7 +91,7 @@ Layout:
 - Navegação por categorias (tabs horizontais ou âncoras)
 - Lista de seções, uma por categoria
 - Cada seção: título da categoria + grid de cards de items
-- Footer com "Powered by Tapioca" (opcional)
+- Footer com logo Mesio e slogan "Sua presença digital começa aqui."
 
 ## Componente `MenuItemCard`
 

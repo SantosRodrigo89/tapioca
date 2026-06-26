@@ -10,6 +10,7 @@ import { HighlightsSection, type HighlightEntry } from "@/components/public/high
 import { CategorySection } from "@/components/public/category-section";
 import { UnavailablePage } from "@/components/public/unavailable-page";
 import { Logo } from "@/components/brand/logo";
+import { BRAND_TAGLINE } from "@/lib/brand";
 import type { Category, MenuItem } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -167,7 +168,7 @@ export default async function PublicMenuPage({ params }: PageProps) {
       <footer className="border-t border-[var(--menu-border)] bg-[var(--menu-surface)] py-8">
         <div className="flex flex-col items-center gap-2 text-[#999]">
           <Logo size="xs" href="/" className="opacity-50" />
-          <p className="text-xs">Cardápio digital</p>
+          <p className="text-xs">{BRAND_TAGLINE}</p>
         </div>
       </footer>
     </>

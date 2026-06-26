@@ -1,14 +1,13 @@
 import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
+import { BRAND_TAGLINE } from "@/lib/brand";
 
 export default function HomePage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background px-4 text-center">
       <div className="space-y-6 max-w-md">
         <Logo size="lg" href="/" priority className="mx-auto" />
-        <p className="text-muted-foreground text-lg">
-          Cardápio digital para restaurantes, bares e lanchonetes.
-        </p>
+        <p className="text-muted-foreground text-lg">{BRAND_TAGLINE}</p>
         <div className="flex items-center justify-center gap-3 pt-2">
           <Link
             href="/auth/signup"
