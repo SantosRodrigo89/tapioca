@@ -1,5 +1,6 @@
 import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
+import { stripUndefined } from "@/lib/firestore/sanitize";
 import {
   createDefaultSiteConfig,
   mergeSiteConfigPatch,
@@ -34,7 +35,7 @@ export async function updateSiteConfig(
   existing?: SiteConfig,
 ): Promise<void> {
   const base = existing ?? createDefaultSiteConfig();
-  const siteConfig = mergeSiteConfigPatch(base, patch);
+  const siteConfig = stripUndefined(mergeSiteConfigPatch(base, patch));
 
   await updateDoc(doc(getClientDb(), "tenants", tenantId), {
     siteConfig,

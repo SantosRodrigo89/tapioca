@@ -107,20 +107,31 @@ export function getResolvedSiteConfig(tenant: Tenant): SiteConfig {
   return resolveSiteConfig(tenant, tenant.siteConfig);
 }
 
+function mergePartial<T extends object>(existing: T, patch?: Partial<T>): T {
+  if (!patch) return existing;
+  const merged = { ...existing };
+  for (const [key, value] of Object.entries(patch) as [keyof T, T[keyof T]][]) {
+    if (value !== undefined) {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
 export function mergeSiteConfigPatch(
   existing: SiteConfig,
   patch: Partial<SiteConfig>,
 ): SiteConfig {
   return {
     sections: patch.sections ?? existing.sections,
-    identity: { ...existing.identity, ...patch.identity },
-    hero: { ...existing.hero, ...patch.hero },
-    about: { ...existing.about, ...patch.about },
+    identity: mergePartial(existing.identity, patch.identity),
+    hero: mergePartial(existing.hero, patch.hero),
+    about: mergePartial(existing.about, patch.about),
     differentials: patch.differentials ?? existing.differentials,
-    featured: { ...existing.featured, ...patch.featured },
-    contact: { ...existing.contact, ...patch.contact },
-    location: { ...existing.location, ...patch.location },
-    seo: { ...existing.seo, ...patch.seo },
+    featured: mergePartial(existing.featured, patch.featured),
+    contact: mergePartial(existing.contact, patch.contact),
+    location: mergePartial(existing.location, patch.location),
+    seo: mergePartial(existing.seo, patch.seo),
     faq: patch.faq ?? existing.faq,
     testimonials: patch.testimonials ?? existing.testimonials,
   };
