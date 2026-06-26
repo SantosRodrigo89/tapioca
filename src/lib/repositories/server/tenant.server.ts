@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { parseSiteConfigFromFirestore } from "@/lib/firestore/site-config";
 import type {
   DaySchedule,
   Tenant,
@@ -31,6 +32,7 @@ function docToTenant(id: string, data: FirebaseFirestore.DocumentData): Tenant {
     theme: parseTheme(data),
     openingHours: (data.openingHours as DaySchedule[] | undefined) ?? undefined,
     highlightItemIds: (data.highlightItemIds as string[] | undefined) ?? undefined,
+    siteConfig: parseSiteConfigFromFirestore(data.siteConfig),
     status: data.status as TenantStatus,
     ownerUid: data.ownerUid as string,
     createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),

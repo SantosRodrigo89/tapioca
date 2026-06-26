@@ -1,3 +1,5 @@
+import type { SiteConfig } from "./site";
+
 // ─── Tenant ────────────────────────────────────────────────────────────────
 
 export type TenantStatus = "trial" | "active" | "suspended" | "cancelled";
@@ -38,6 +40,7 @@ export interface Tenant {
   theme?: TenantTheme;
   openingHours?: DaySchedule[];
   highlightItemIds?: string[];
+  siteConfig?: SiteConfig;
   status: TenantStatus;
   ownerUid: string;
   createdAt: Date;

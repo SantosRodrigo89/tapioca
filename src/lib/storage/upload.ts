@@ -57,3 +57,12 @@ export async function uploadMenuItemImage(
   const ext = extensionFromMime(file.type);
   return uploadImage(`tenants/${tenantId}/items/${itemId}.${ext}`, file);
 }
+
+export async function uploadGalleryImage(
+  tenantId: string,
+  imageId: string,
+  file: File,
+): Promise<string> {
+  const ext = extensionFromMime(file.type);
+  return uploadImage(`tenants/${tenantId}/gallery/${imageId}.${ext}`, file);
+}

@@ -1,6 +1,10 @@
 import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
-import type { DaySchedule, TenantTheme } from "@/types";
+import {
+  createDefaultSiteConfig,
+  mergeSiteConfigPatch,
+} from "@/services/site.service";
+import type { DaySchedule, SiteConfig, TenantTheme } from "@/types";
 
 export interface UpdateTenantData {
   name?: string;
@@ -20,6 +24,20 @@ export async function updateTenant(
 ): Promise<void> {
   await updateDoc(doc(getClientDb(), "tenants", tenantId), {
     ...data,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+export async function updateSiteConfig(
+  tenantId: string,
+  patch: Partial<SiteConfig>,
+  existing?: SiteConfig,
+): Promise<void> {
+  const base = existing ?? createDefaultSiteConfig();
+  const siteConfig = mergeSiteConfigPatch(base, patch);
+
+  await updateDoc(doc(getClientDb(), "tenants", tenantId), {
+    siteConfig,
     updatedAt: serverTimestamp(),
   });
 }

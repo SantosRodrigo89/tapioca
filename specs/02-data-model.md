@@ -12,6 +12,8 @@ tenants/
       {categoryId}/         # categoria do cardápio
         items/
           {itemId}          # item do cardápio
+    gallery/
+      {imageId}             # imagem da galeria do site
 ```
 
 ## Collection: `slugIndex`
@@ -44,6 +46,7 @@ Documento principal de cada restaurante (tenant).
 | `ownerUid` | `string` | ✅ | UID do Firebase Auth do proprietário |
 | `createdAt` | `Timestamp` | ✅ | Data de criação |
 | `updatedAt` | `Timestamp` | ✅ | Data da última atualização |
+| `siteConfig` | `SiteConfig` | ❌ | Configuração do site público (seções, conteúdo, SEO) |
 
 **Caminho:** `tenants/{tenantId}`
 
@@ -90,13 +93,31 @@ Items individuais do cardápio.
 
 **Índice:** `available ASC, order ASC`
 
+## Subcollection: `tenants/{tenantId}/gallery`
+
+Imagens exibidas na seção galeria do site público.
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | `string` | ✅ | Igual ao document ID |
+| `url` | `string` | ✅ | URL da imagem no Storage |
+| `caption` | `string` | ❌ | Legenda opcional |
+| `order` | `number` | ✅ | Posição de exibição (crescente) |
+| `createdAt` | `Timestamp` | ✅ | Data de criação |
+
+**Regras:** leitura pública, escrita apenas pelo tenant admin ou super admin.
+
+**Índice:** `order ASC`
+
 ## Firebase Storage
 
 Estrutura de paths:
 
 ```
 tenants/{tenantId}/logo.{ext}
+tenants/{tenantId}/banner.{ext}
 tenants/{tenantId}/items/{itemId}.{ext}
+tenants/{tenantId}/gallery/{imageId}.{ext}
 ```
 
 **Regras:** leitura pública, escrita apenas pelo tenant admin ou super admin. Restrição de tipo (`image/*`) e tamanho (máx 5 MB).
@@ -113,8 +134,9 @@ tenants/{tenantId}/items/{itemId}.{ext}
 
 Os tipos em `src/types/index.ts` mapeiam diretamente este modelo:
 
-- `Tenant` → `tenants/{id}`
+- `Tenant` → `tenants/{id}` (inclui `siteConfig` opcional)
 - `Category` → `categories/{id}`
 - `MenuItem` → `items/{id}`
+- `GalleryImage` → `gallery/{id}`
 - `SlugIndexEntry` → `slugIndex/{slug}`
 - `AuthUser` → usuário Firebase Auth com claims

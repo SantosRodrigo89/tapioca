@@ -103,6 +103,29 @@ export function resolveSiteConfig(
   return merged;
 }
 
+export function getResolvedSiteConfig(tenant: Tenant): SiteConfig {
+  return resolveSiteConfig(tenant, tenant.siteConfig);
+}
+
+export function mergeSiteConfigPatch(
+  existing: SiteConfig,
+  patch: Partial<SiteConfig>,
+): SiteConfig {
+  return {
+    sections: patch.sections ?? existing.sections,
+    identity: { ...existing.identity, ...patch.identity },
+    hero: { ...existing.hero, ...patch.hero },
+    about: { ...existing.about, ...patch.about },
+    differentials: patch.differentials ?? existing.differentials,
+    featured: { ...existing.featured, ...patch.featured },
+    contact: { ...existing.contact, ...patch.contact },
+    location: { ...existing.location, ...patch.location },
+    seo: { ...existing.seo, ...patch.seo },
+    faq: patch.faq ?? existing.faq,
+    testimonials: patch.testimonials ?? existing.testimonials,
+  };
+}
+
 /** Returns enabled sections sorted by order */
 export function resolveEnabledSections(
   siteConfig: SiteConfig,

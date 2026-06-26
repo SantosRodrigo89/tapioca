@@ -4,12 +4,10 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
 import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
-import { CatalogClient } from "@/app/(admin)/catalog/catalog-client";
-import type { Category, MenuItem } from "@/types";
+import { ProductsPanel } from "@/features/cardapio/products-panel";
+import type { CategoryWithItems } from "@/features/cardapio/types";
 
 export const metadata: Metadata = { title: "Produtos" };
-
-type CategoryWithItems = Category & { items: MenuItem[] };
 
 export default async function MenuProductsPage() {
   const sessionUser = await getSessionUser();
@@ -27,7 +25,7 @@ export default async function MenuProductsPage() {
 
   return (
     <Suspense>
-      <CatalogClient
+      <ProductsPanel
         tenantId={tenantId}
         initialCategories={categoriesWithItems}
       />
