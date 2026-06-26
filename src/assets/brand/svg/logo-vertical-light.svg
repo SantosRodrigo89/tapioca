@@ -1,0 +1,10 @@
+<svg width="80" height="72" viewBox="0 0 80 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>Mesio</title>
+  <g transform="translate(24, 0)">
+    <rect x="5" y="10" width="7" height="18" rx="3.5" fill="#FFFFFF"/>
+    <rect x="20" y="10" width="7" height="18" rx="3.5" fill="#FFFFFF"/>
+    <path d="M8.5 10.5C8.5 6.5 11.5 4 16 4C20.5 4 23.5 6.5 23.5 10.5C23.5 12.5 22 13.5 20.5 12.5C19 11.5 17.5 9.5 16 9.5C14.5 9.5 13 11.5 11.5 12.5C10 13.5 8.5 12.5 8.5 10.5Z" fill="#F4B400"/>
+    <circle cx="16" cy="17.5" r="2.25" fill="#F4B400"/>
+  </g>
+  <text x="40" y="58" text-anchor="middle" font-family="Plus Jakarta Sans, Inter, system-ui, sans-serif" font-size="20" font-weight="600" letter-spacing="-0.02em" fill="#FFFFFF">Mesio</text>
+</svg>

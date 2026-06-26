@@ -9,7 +9,31 @@ export const BRAND_KEYWORDS = [
   "gestão online",
   "Mesio",
 ];
+
+export const BRAND_COLORS = {
+  primary: "#F4B400",
+  secondary: "#18181B",
+  background: "#FFFFFF",
+  neutral: "#F4F4F5",
+  success: "#22C55E",
+} as const;
+
+export const BRAND_TYPOGRAPHY = {
+  primary: "Plus Jakarta Sans",
+  fallback: "Inter, system-ui, sans-serif",
+} as const;
+
 export const BRAND_DOMAIN_FALLBACK = "mesio.app";
+
+/** Minimum display sizes (px) */
+export const BRAND_MIN_SIZES = {
+  icon: 16,
+  logoHorizontal: 80,
+  logoVertical: 64,
+} as const;
+
+/** Clear space = height of one pillar in the mark */
+export const BRAND_CLEAR_SPACE_RATIO = 0.25;
 
 export function getPublicUrlDisplay(slug: string, baseUrl?: string): string {
   if (baseUrl) {

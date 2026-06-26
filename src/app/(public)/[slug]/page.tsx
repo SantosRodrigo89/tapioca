@@ -167,7 +167,7 @@ export default async function PublicMenuPage({ params }: PageProps) {
 
       <footer className="border-t border-[var(--menu-border)] bg-[var(--menu-surface)] py-8">
         <div className="flex flex-col items-center gap-2 text-[#999]">
-          <Logo size="xs" href="/" className="opacity-50" />
+          <Logo size="xs" href="/" showWordmark={false} className="opacity-70" />
           <p className="text-xs">{BRAND_TAGLINE}</p>
         </div>
       </footer>

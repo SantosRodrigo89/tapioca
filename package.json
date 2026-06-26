@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npm run sync:logo && next build",
+    "build": "npm run export:brand && next build",
     "start": "next start",
     "lint": "eslint",
-    "sync:logo": "node scripts/sync-logo.mjs"
+    "sync:logo": "node scripts/sync-logo.mjs",
+    "export:brand": "node scripts/export-brand-assets.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

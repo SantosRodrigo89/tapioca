@@ -88,17 +88,18 @@ Acesse [http://localhost:3000](http://localhost:3000).
 | `npm run build` | Build de produção (sincroniza logo se disponível) |
 | `npm run start` | Serve o build |
 | `npm run lint` | ESLint |
-| `npm run sync:logo` | Copia `src/assets/brand/logo.png` → `public/logo.png` (quando o asset existir) |
+| `npm run export:brand` | Gera PNGs, favicon e app icon a partir dos SVGs |
+| `npm run sync:logo` | Copia logo horizontal para `public/logo.png` |
 
-### Logo
+### Identidade visual
 
-O wordmark temporário "Mesio" é renderizado em texto até o logo final estar disponível. A fonte do logo será `src/assets/brand/logo.png`. Após adicionar o arquivo:
+Documentação completa em [`src/assets/brand/BRAND-GUIDELINES.md`](src/assets/brand/BRAND-GUIDELINES.md).
+
+Vetores em `src/assets/brand/svg/`. Para regenerar todos os PNGs:
 
 ```bash
-npm run sync:logo
+npm run export:brand
 ```
-
-Atualize também `src/components/brand/logo.tsx` e `src/app/icon.tsx` para usar o asset final.
 
 ### Firebase Emulator (opcional)
 

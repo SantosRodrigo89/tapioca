@@ -1,10 +1,24 @@
-# Logo Mesio
+# Mesio Brand Assets
 
-TODO: inserir o logo final em `logo.png` nesta pasta.
+Identidade visual completa em [`BRAND-GUIDELINES.md`](BRAND-GUIDELINES.md).
 
-Após adicionar o arquivo:
+## Estrutura
 
-1. Atualizar `src/components/brand/logo.tsx` para usar a imagem em vez do wordmark temporário.
-2. Executar `npm run sync:logo` para copiar para `public/logo.png`.
+```
+svg/          # Vetores (fonte da verdade)
+png/          # Raster transparente (gerado)
+BRAND-GUIDELINES.md
+```
 
-O favicon é gerado por `src/app/icon.tsx` até o logo final estar disponível.
+## Regenerar PNGs e favicons
+
+```bash
+npm run export:brand
+```
+
+Isso gera favicon (`src/app/icon.png`), Apple touch icon (`src/app/apple-icon.png`) e todos os tamanhos em `png/`.
+
+## Componentes React
+
+- `src/components/brand/mesio-mark.tsx` — símbolo SVG
+- `src/components/brand/logo.tsx` — lockup completo
