@@ -77,3 +77,7 @@
 .public-menu .scrollbar-hide::-webkit-scrollbar {
   display: none;
 }
+
+.public-menu .landing-section {
+  scroll-margin-top: 1rem;
+}

@@ -1,16 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTenantBySlugServer } from "@/lib/repositories/server/tenant.server";
-import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
-import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
-import { MenuHero } from "@/components/public/menu-hero";
 import { PublicTheme } from "@/components/public/public-theme";
-import { CategoryNav } from "@/components/public/category-nav";
-import { HighlightsSection, type HighlightEntry } from "@/components/public/highlights-section";
-import { CategorySection } from "@/components/public/category-section";
 import { UnavailablePage } from "@/components/public/unavailable-page";
-import { Logo } from "@/components/brand/logo";
-import { BRAND_TAGLINE } from "@/lib/brand";
+import type { LandingPageData } from "@/lib/site/landing-types";
+import { resolveHighlights } from "@/lib/site/resolve-highlights";
+import { renderLandingSections } from "@/lib/site/sections";
+import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
+import { getGalleryByTenantServer } from "@/lib/repositories/server/gallery.server";
+import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
+import { getTenantBySlugServer } from "@/lib/repositories/server/tenant.server";
+import { getResolvedSiteConfig } from "@/services/site.service";
 import type { Category, MenuItem } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -27,77 +26,52 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     return { title: "Cardápio não encontrado" };
   }
 
-  return {
-    title: `${tenant.name} — Cardápio`,
-    description:
-      tenant.description ?? `Veja o cardápio completo de ${tenant.name}`,
+  const siteConfig = getResolvedSiteConfig(tenant);
+  const title = siteConfig.seo.title ?? tenant.name;
+  const description =
+    siteConfig.seo.description ??
+    tenant.description ??
+    `Veja o cardápio completo de ${tenant.name}`;
+
+  const ogImageUrl =
+    siteConfig.seo.ogImageUrl ?? tenant.bannerUrl ?? tenant.logoUrl ?? undefined;
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+
+  const metadata: Metadata = {
+    title,
+    description,
     openGraph: {
-      title: tenant.name,
-      description: tenant.description,
-      images: tenant.bannerUrl
-        ? [tenant.bannerUrl]
-        : tenant.logoUrl
-          ? [tenant.logoUrl]
-          : [],
+      title,
+      description,
+      type: "website",
+      locale: "pt_BR",
+      ...(ogImageUrl ? { images: [ogImageUrl] } : {}),
     },
   };
-}
 
-type CategoryWithItems = Category & { items: MenuItem[] };
-
-function resolveHighlights(
-  highlightItemIds: string[] | undefined,
-  categoriesWithItems: CategoryWithItems[],
-): HighlightEntry[] {
-  if (highlightItemIds && highlightItemIds.length > 0) {
-    return highlightItemIds
-      .map((id) => {
-        for (const cat of categoriesWithItems) {
-          const item = cat.items.find((i) => i.id === id);
-          if (item) {
-            const { items: _items, ...category } = cat;
-            return { item, category };
-          }
-        }
-        return null;
-      })
-      .filter((entry): entry is HighlightEntry => entry !== null);
+  if (ogImageUrl) {
+    metadata.twitter = {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImageUrl],
+    };
   }
 
-  return pickHighlights(categoriesWithItems);
-}
-
-function pickHighlights(
-  categoriesWithItems: CategoryWithItems[],
-  limit = 6,
-): HighlightEntry[] {
-  const withImage: HighlightEntry[] = [];
-
-  for (const cat of categoriesWithItems) {
-    const { items, ...category } = cat;
-    for (const item of items) {
-      if (item.imageUrl) {
-        withImage.push({ item, category });
-        if (withImage.length >= limit) return withImage;
-      }
-    }
+  if (baseUrl) {
+    metadata.alternates = {
+      canonical: `${baseUrl}/${slug}`,
+    };
   }
 
-  if (withImage.length >= 2) return withImage;
-
-  const fallback: HighlightEntry[] = [];
-  for (const cat of categoriesWithItems) {
-    const { items, ...category } = cat;
-    for (const item of items) {
-      fallback.push({ item, category });
-      if (fallback.length >= limit) return fallback;
-    }
+  if (siteConfig.seo.keywords?.length) {
+    metadata.keywords = siteConfig.seo.keywords;
   }
 
-  return fallback.length >= 2 ? fallback : [];
+  return metadata;
 }
 
-export default async function PublicMenuPage({ params }: PageProps) {
+export default async function PublicLandingPage({ params }: PageProps) {
   const { slug } = await params;
   const tenant = await getTenantBySlugServer(slug);
 
@@ -109,9 +83,12 @@ export default async function PublicMenuPage({ params }: PageProps) {
     return <UnavailablePage status={tenant.status} name={tenant.name} />;
   }
 
-  const categories = await getCategoriesByTenantServer(tenant.id, {
-    activeOnly: true,
-  });
+  const siteConfig = getResolvedSiteConfig(tenant);
+
+  const [categories, gallery] = await Promise.all([
+    getCategoriesByTenantServer(tenant.id, { activeOnly: true }),
+    getGalleryByTenantServer(tenant.id),
+  ]);
 
   const categoriesWithItems = await Promise.all(
     categories.map(async (cat: Category) => {
@@ -124,53 +101,30 @@ export default async function PublicMenuPage({ params }: PageProps) {
     }),
   );
 
-  const visibleCategories = categoriesWithItems.filter((c) => c.items.length > 0);
+  const visibleCategories = categoriesWithItems.filter(
+    (c) => c.items.length > 0,
+  );
   const highlights = resolveHighlights(
-    tenant.highlightItemIds,
+    siteConfig,
+    tenant,
     visibleCategories,
   );
+  const whatsapp = siteConfig.contact.whatsapp ?? tenant.whatsapp;
+
+  const pageData: LandingPageData = {
+    tenant,
+    siteConfig,
+    gallery,
+    categoriesWithItems,
+    visibleCategories,
+    highlights,
+    whatsapp,
+  };
 
   return (
     <>
-      <PublicTheme tenant={tenant} />
-      <MenuHero tenant={tenant} />
-
-      {visibleCategories.length > 0 && (
-        <CategoryNav
-          categories={visibleCategories.map((c) => ({
-            id: c.id,
-            name: c.name,
-          }))}
-        />
-      )}
-
-      <main className="mx-auto max-w-3xl space-y-10 px-4 py-6 pb-10 sm:py-8">
-        {visibleCategories.length === 0 ? (
-          <p className="py-16 text-center text-sm text-[#777]">
-            Nenhum item disponível no momento.
-          </p>
-        ) : (
-          <>
-            <HighlightsSection entries={highlights} whatsapp={tenant.whatsapp} />
-
-            {visibleCategories.map((cat) => (
-              <CategorySection
-                key={cat.id}
-                category={cat}
-                items={cat.items}
-                whatsapp={tenant.whatsapp}
-              />
-            ))}
-          </>
-        )}
-      </main>
-
-      <footer className="border-t border-[var(--menu-border)] bg-[var(--menu-surface)] py-8">
-        <div className="flex flex-col items-center gap-2 text-[#999]">
-          <Logo size="xs" href="/" showWordmark={false} className="opacity-70" />
-          <p className="text-xs">{BRAND_TAGLINE}</p>
-        </div>
-      </footer>
+      <PublicTheme tenant={tenant} siteConfig={siteConfig} />
+      {renderLandingSections(pageData)}
     </>
   );
 }

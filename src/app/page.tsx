@@ -5,9 +5,14 @@ import { BRAND_TAGLINE } from "@/lib/brand";
 export default function HomePage() {
   return (
     <main className="min-h-screen flex flex-col items-center justify-center bg-background px-4 text-center">
-      <div className="space-y-6 max-w-md">
+      <div className="max-w-lg space-y-8">
         <Logo size="lg" href="/" priority className="mx-auto" />
-        <p className="text-muted-foreground text-lg">{BRAND_TAGLINE}</p>
+        <div className="space-y-2">
+          <p className="text-muted-foreground text-lg">{BRAND_TAGLINE}</p>
+          <p className="text-muted-foreground/80 text-sm">
+            Site, cardápio digital e presença online em minutos.
+          </p>
+        </div>
         <div className="flex items-center justify-center gap-3 pt-2">
           <Link
             href="/auth/signup"

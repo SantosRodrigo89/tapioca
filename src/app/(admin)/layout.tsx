@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { isSuperAdmin } from "@/lib/auth/roles";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
-import { AdminShell } from "@/components/admin/admin-shell";
+import { AdminShell } from "@/layouts/admin-shell";
 
 export default async function AdminLayout({
   children,

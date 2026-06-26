@@ -89,7 +89,7 @@ export function SiteEditor({
   }, []);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-8">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">Presença Digital</h1>
         <p className="text-sm text-muted-foreground">
@@ -97,7 +97,7 @@ export function SiteEditor({
         </p>
       </div>
 
-      <div className="flex flex-col gap-6 md:flex-row">
+      <div className="flex flex-col gap-8 md:flex-row">
         <nav className="flex w-full gap-1 overflow-x-auto pb-1 md:w-48 md:shrink-0 md:flex-col md:overflow-visible md:pb-0">
           {TABS.map(({ id, label }) => (
             <button
@@ -116,7 +116,7 @@ export function SiteEditor({
           ))}
         </nav>
 
-        <div className="min-w-0 flex-1 rounded-xl border border-border/60 bg-card p-6">
+        <div className="min-w-0 flex-1 rounded-xl border border-border/60 bg-card p-8">
           {activeTab === "appearance" && (
             <AppearanceTab
               tenant={tenant}
