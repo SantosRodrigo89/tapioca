@@ -135,7 +135,7 @@ export function renderLandingSections(data: LandingPageData) {
   const sections = resolveEnabledSections(data.siteConfig);
 
   return (
-    <div className="space-y-16 pb-10">
+    <div className="space-y-16">
       {sections.map((section) => {
         const render = SECTION_COMPONENTS[section.id];
         if (!render) return null;
