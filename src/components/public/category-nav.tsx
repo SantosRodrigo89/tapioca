@@ -51,24 +51,37 @@ export function CategoryNav({ categories }: CategoryNavProps) {
     return () => observer.disconnect();
   }, [categories]);
 
+  function handleClick(
+    e: React.MouseEvent<HTMLAnchorElement>,
+    catId: string,
+  ) {
+    e.preventDefault();
+    const target = document.getElementById(`cat-${catId}`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveId(catId);
+    }
+  }
+
   if (categories.length === 0) return null;
 
   return (
     <nav
       aria-label="Categorias do cardápio"
-      className="sticky top-0 z-30 border-b border-[var(--menu-border)] bg-white/95 backdrop-blur-md"
+      className="sticky top-0 z-30 border-b border-[var(--menu-border)] bg-white/90 shadow-sm backdrop-blur-xl"
     >
       <div
         ref={navRef}
-        className="scrollbar-hide mx-auto flex max-w-3xl gap-2 overflow-x-auto px-4 py-3"
+        className="scrollbar-hide flex gap-2 overflow-x-auto px-4 py-3 sm:px-0"
       >
         {categories.map((cat) => (
           <a
             key={cat.id}
             href={`#cat-${cat.id}`}
             data-cat={cat.id}
+            onClick={(e) => handleClick(e, cat.id)}
             className={cn(
-              "menu-pill shrink-0",
+              "menu-pill shrink-0 transition-all duration-300",
               activeId === cat.id && "menu-pill-active",
             )}
           >

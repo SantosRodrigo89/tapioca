@@ -98,3 +98,27 @@ export function formatTodayHours(openingHours?: DaySchedule[]): string | null {
 export function formatWeekHoursSummary(openingHours: DaySchedule[]): string {
   return openingHours.map(formatDaySchedule).join(" · ");
 }
+
+function formatHourLabel(time: string): string {
+  const [h, m] = time.split(":").map(Number);
+  if (m === 0) return `${h}h`;
+  return `${h}h${String(m).padStart(2, "0")}`;
+}
+
+/** Human-friendly label for today's closing time, e.g. "Aberto até 22h". */
+export function formatTodayClosingLabel(
+  openingHours?: DaySchedule[],
+): string | null {
+  if (!openingHours || openingHours.length === 0) return null;
+
+  const today = getCurrentWeekdayInBrazil();
+  const schedule = openingHours.find((d) => d.day === today);
+  if (!schedule) return null;
+  if (schedule.closed) return "Fechado hoje";
+
+  const open = isOpenNow(openingHours);
+  if (open === false) return "Fechado agora";
+  if (open === true) return `Aberto até ${formatHourLabel(schedule.close)}`;
+
+  return `${schedule.open} – ${schedule.close}`;
+}

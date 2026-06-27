@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface GallerySectionProps {
@@ -13,37 +14,38 @@ export function GallerySection({ data }: GallerySectionProps) {
   return (
     <section
       aria-labelledby="gallery-heading"
-      className="landing-section menu-animate-in mx-auto max-w-4xl px-4"
+      className="landing-section"
     >
-      <h2
-        id="gallery-heading"
-        className="mb-8 text-2xl font-semibold text-[var(--menu-secondary)] sm:text-3xl"
-      >
-        Galeria
-      </h2>
+      <ScrollReveal>
+        <h2 id="gallery-heading" className="landing-heading mb-10 sm:mb-12">
+          Galeria
+        </h2>
+      </ScrollReveal>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
-        {gallery.map((image) => (
-          <figure
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 sm:gap-6">
+        {gallery.map((image, index) => (
+          <ScrollReveal
             key={image.id}
+            delay={index * 60}
+            as="figure"
             className="menu-card group overflow-hidden"
           >
-            <div className="relative aspect-square">
+            <div className="relative aspect-[4/5]">
               <Image
                 src={image.url}
                 alt={image.caption ?? "Foto da galeria"}
                 fill
                 loading="lazy"
                 sizes="(max-width: 640px) 50vw, 280px"
-                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>
             {image.caption && (
-              <figcaption className="px-3 py-2 text-xs text-[#666]">
+              <figcaption className="px-4 py-3 text-sm text-[#666]">
                 {image.caption}
               </figcaption>
             )}
-          </figure>
+          </ScrollReveal>
         ))}
       </div>
     </section>

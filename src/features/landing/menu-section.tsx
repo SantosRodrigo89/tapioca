@@ -1,5 +1,6 @@
 import { CategoryNav } from "@/components/public/category-nav";
 import { CategorySection } from "@/components/public/category-section";
+import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface MenuSectionProps {
@@ -10,7 +11,7 @@ export function MenuSection({ data }: MenuSectionProps) {
   const { visibleCategories, whatsapp } = data;
 
   return (
-    <>
+    <div className="relative">
       {visibleCategories.length > 0 && (
         <CategoryNav
           categories={visibleCategories.map((c) => ({
@@ -23,10 +24,19 @@ export function MenuSection({ data }: MenuSectionProps) {
       <section
         id="cardapio"
         aria-label="Cardápio"
-        className="landing-section mx-auto max-w-3xl space-y-10 px-4 py-6 sm:py-8"
+        className="landing-section space-y-12"
       >
+        <ScrollReveal>
+          <div className="space-y-2 text-center sm:text-left">
+            <h2 className="landing-heading">Cardápio</h2>
+            <p className="landing-subheading">
+              Escolha seus pratos favoritos e peça pelo WhatsApp
+            </p>
+          </div>
+        </ScrollReveal>
+
         {visibleCategories.length === 0 ? (
-          <p className="py-16 text-center text-sm text-[#777]">
+          <p className="py-16 text-center text-base text-[#777]">
             Nenhum item disponível no momento.
           </p>
         ) : (
@@ -40,6 +50,6 @@ export function MenuSection({ data }: MenuSectionProps) {
           ))
         )}
       </section>
-    </>
+    </div>
   );
 }

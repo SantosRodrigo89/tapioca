@@ -19,6 +19,16 @@ export const LAZY_SECTIONS = [
   "footer",
 ] as const satisfies readonly SiteSectionId[];
 
+const BANDED_SECTIONS = new Set<SiteSectionId>([
+  "about",
+  "differentials",
+  "featured",
+  "menu",
+  "gallery",
+  "contact",
+  "location",
+]);
+
 const AboutSection = dynamic(
   () =>
     import("@/features/landing/about-section").then((m) => ({
@@ -131,16 +141,42 @@ export const SECTION_COMPONENTS: Partial<
   ),
 };
 
-export function renderLandingSections(data: LandingPageData) {
-  const sections = resolveEnabledSections(data.siteConfig);
+function wrapInBand(
+  sectionId: SiteSectionId,
+  content: React.ReactNode,
+  bandIndex: number,
+) {
+  if (!BANDED_SECTIONS.has(sectionId)) return content;
+
+  const variant =
+    bandIndex % 2 === 0
+      ? "landing-section-band--white"
+      : "landing-section-band--surface";
 
   return (
-    <div className="space-y-16">
+    <div className={`landing-section-band ${variant}`}>
+      <div className="landing-container">{content}</div>
+    </div>
+  );
+}
+
+export function renderLandingSections(data: LandingPageData) {
+  const sections = resolveEnabledSections(data.siteConfig);
+  let bandIndex = 0;
+
+  return (
+    <>
       {sections.map((section) => {
         const render = SECTION_COMPONENTS[section.id];
         if (!render) return null;
-        return <Fragment key={section.id}>{render(data)}</Fragment>;
+
+        const content = render(data);
+        const wrapped = BANDED_SECTIONS.has(section.id)
+          ? wrapInBand(section.id, content, bandIndex++)
+          : content;
+
+        return <Fragment key={section.id}>{wrapped}</Fragment>;
       })}
-    </div>
+    </>
   );
 }

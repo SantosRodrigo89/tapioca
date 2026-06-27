@@ -17,11 +17,11 @@ export function MenuItemCard({
   whatsapp,
 }: MenuItemCardProps) {
   const status = getItemAvailabilityStatus(item, category);
-  const imageSize = "h-[104px] w-[104px] sm:h-[112px] sm:w-[112px]";
+  const imageSize = "h-32 w-32 sm:h-40 sm:w-40";
 
   return (
     <article
-      className={`menu-card menu-animate-in flex gap-3 p-3 sm:gap-4 sm:p-4 ${
+      className={`menu-card flex gap-4 p-4 sm:gap-5 sm:p-5 ${
         !status.orderable ? "opacity-75" : ""
       }`}
     >
@@ -33,7 +33,7 @@ export function MenuItemCard({
             src={item.imageUrl}
             alt={item.name}
             fill
-            sizes="112px"
+            sizes="160px"
             className="object-cover"
           />
         ) : (
@@ -43,21 +43,13 @@ export function MenuItemCard({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
-        <div className="space-y-1">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="text-base font-semibold leading-snug text-[var(--menu-secondary)] sm:text-lg">
-              {item.name}
-            </h3>
-            <p
-              className="shrink-0 text-lg font-bold sm:text-xl"
-              style={{ color: "var(--menu-primary-dark)" }}
-            >
-              {formatPrice(item.price)}
-            </p>
-          </div>
+      <div className="flex min-w-0 flex-1 flex-col justify-between gap-3">
+        <div className="space-y-2">
+          <h3 className="text-lg font-semibold leading-snug text-[var(--menu-secondary)] sm:text-xl">
+            {item.name}
+          </h3>
           {item.description && (
-            <p className="line-clamp-2 text-sm leading-relaxed text-[#777]">
+            <p className="line-clamp-2 text-sm leading-relaxed text-[#777] sm:text-base">
               {item.description}
             </p>
           )}
@@ -69,27 +61,36 @@ export function MenuItemCard({
           )}
         </div>
 
-        {whatsapp && status.orderable ? (
-          <Link
-            href={formatWhatsAppOrderLink(
-              whatsapp,
-              `Olá! Gostaria de pedir: ${item.name}`,
-            )}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex w-fit items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-[var(--menu-secondary)] transition-opacity hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: "var(--menu-primary)" }}
+        <div className="flex items-center justify-between gap-3">
+          <p
+            className="text-xl font-bold sm:text-2xl"
+            style={{ color: "var(--menu-primary-dark)" }}
           >
-            <Plus className="h-4 w-4" />
-            Adicionar
-          </Link>
-        ) : whatsapp ? (
-          <span className="text-xs font-medium text-[#999]">
-            Fora do horário de pedido
-          </span>
-        ) : (
-          <span className="text-xs text-[#999]">Pedidos indisponíveis</span>
-        )}
+            {formatPrice(item.price)}
+          </p>
+
+          {whatsapp && status.orderable ? (
+            <Link
+              href={formatWhatsAppOrderLink(
+                whatsapp,
+                `Olá! Gostaria de pedir: ${item.name}`,
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-[var(--menu-secondary)] transition-all hover:opacity-90 active:scale-[0.98] sm:rounded-full"
+              style={{ backgroundColor: "var(--menu-primary)" }}
+            >
+              <Plus className="h-4 w-4" />
+              Adicionar
+            </Link>
+          ) : whatsapp ? (
+            <span className="text-xs font-medium text-[#999]">
+              Fora do horário
+            </span>
+          ) : (
+            <span className="text-xs text-[#999]">Indisponível</span>
+          )}
+        </div>
       </div>
     </article>
   );

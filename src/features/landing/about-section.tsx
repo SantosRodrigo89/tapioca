@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { ReadMoreText } from "@/components/public/read-more-text";
+import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface AboutSectionProps {
@@ -13,21 +15,17 @@ export function AboutSection({ data }: AboutSectionProps) {
   if (!description && !about.imageUrl) return null;
 
   return (
-    <section
-      aria-labelledby="about-heading"
-      className="landing-section menu-animate-in mx-auto max-w-3xl px-4"
-    >
-      <div className="space-y-6">
-        <h2
-          id="about-heading"
-          className="text-2xl font-semibold text-[var(--menu-secondary)] sm:text-3xl"
-        >
+    <section aria-labelledby="about-heading" id="sobre" className="landing-section">
+      <ScrollReveal>
+        <h2 id="about-heading" className="landing-heading mb-10 sm:mb-12">
           {title}
         </h2>
+      </ScrollReveal>
 
-        <div className="flex flex-col gap-6 sm:flex-row sm:items-start">
-          {about.imageUrl && (
-            <div className="relative aspect-[4/3] w-full shrink-0 overflow-hidden rounded-2xl sm:w-2/5">
+      <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:gap-12">
+        {about.imageUrl && (
+          <ScrollReveal className="sm:w-2/5" delay={100}>
+            <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl shadow-lg">
               <Image
                 src={about.imageUrl}
                 alt=""
@@ -36,13 +34,13 @@ export function AboutSection({ data }: AboutSectionProps) {
                 className="object-cover"
               />
             </div>
-          )}
-          {description && (
-            <p className="flex-1 text-base leading-relaxed text-[#666] whitespace-pre-line">
-              {description}
-            </p>
-          )}
-        </div>
+          </ScrollReveal>
+        )}
+        {description && (
+          <ScrollReveal className="flex-1" delay={200}>
+            <ReadMoreText text={description} />
+          </ScrollReveal>
+        )}
       </div>
     </section>
   );

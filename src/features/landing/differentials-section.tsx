@@ -1,3 +1,4 @@
+import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface DifferentialsSectionProps {
@@ -12,35 +13,39 @@ export function DifferentialsSection({ data }: DifferentialsSectionProps) {
   return (
     <section
       aria-labelledby="differentials-heading"
-      className="landing-section menu-animate-in mx-auto max-w-4xl px-4"
+      className="landing-section"
     >
-      <h2
-        id="differentials-heading"
-        className="mb-8 text-center text-2xl font-semibold text-[var(--menu-secondary)] sm:text-3xl"
-      >
-        Por que escolher a gente
-      </h2>
+      <ScrollReveal>
+        <h2
+          id="differentials-heading"
+          className="landing-heading mb-10 text-center sm:mb-12"
+        >
+          Por que escolher a gente
+        </h2>
+      </ScrollReveal>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {differentials.map((diff) => (
-          <article
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        {differentials.map((diff, index) => (
+          <ScrollReveal
             key={diff.id}
-            className="menu-card space-y-3 p-5 text-center sm:text-left"
+            delay={index * 80}
+            as="article"
+            className="menu-card flex h-full flex-col items-center gap-4 p-6 text-center sm:items-start sm:p-8 sm:text-left"
           >
             {diff.icon && (
-              <span className="text-3xl" role="img" aria-hidden>
+              <span className="text-4xl" role="img" aria-hidden>
                 {diff.icon}
               </span>
             )}
-            <h3 className="text-lg font-semibold text-[var(--menu-secondary)]">
+            <h3 className="text-lg font-semibold text-[var(--menu-secondary)] sm:text-xl">
               {diff.title}
             </h3>
             {diff.description && (
-              <p className="text-sm leading-relaxed text-[#666]">
+              <p className="line-clamp-2 text-sm leading-relaxed text-[#666] sm:text-base">
                 {diff.description}
               </p>
             )}
-          </article>
+          </ScrollReveal>
         ))}
       </div>
     </section>

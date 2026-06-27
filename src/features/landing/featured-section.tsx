@@ -9,14 +9,9 @@ export function FeaturedSection({ data }: FeaturedSectionProps) {
   if (data.highlights.length === 0) return null;
 
   return (
-    <section
-      aria-label="Destaques"
-      className="landing-section mx-auto max-w-3xl px-4"
-    >
-      <HighlightsSection
-        entries={data.highlights}
-        whatsapp={data.whatsapp}
-      />
-    </section>
+    <HighlightsSection
+      entries={data.highlights}
+      whatsapp={data.whatsapp}
+    />
   );
 }

@@ -12,6 +12,68 @@
   color: var(--menu-secondary);
 }
 
+/* ─── Layout utilities ─────────────────────────────────────────────────── */
+
+.public-menu .landing-container {
+  margin-inline: auto;
+  max-width: 64rem;
+  padding-inline: 1rem;
+}
+
+@media (min-width: 640px) {
+  .public-menu .landing-container {
+    padding-inline: 1.5rem;
+  }
+}
+
+.public-menu .landing-section-band {
+  padding-block: 5rem;
+}
+
+@media (min-width: 640px) {
+  .public-menu .landing-section-band {
+    padding-block: 7rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .public-menu .landing-section-band {
+    padding-block: 8rem;
+  }
+}
+
+.public-menu .landing-section-band--white {
+  background-color: #ffffff;
+}
+
+.public-menu .landing-section-band--surface {
+  background-color: var(--menu-surface);
+}
+
+/* ─── Typography ───────────────────────────────────────────────────────── */
+
+.public-menu .landing-heading {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  color: var(--menu-secondary);
+}
+
+@media (min-width: 640px) {
+  .public-menu .landing-heading {
+    font-size: 2.5rem;
+  }
+}
+
+.public-menu .landing-subheading {
+  font-size: 1.125rem;
+  line-height: 1.6;
+  color: #666666;
+}
+
+/* ─── Animations ───────────────────────────────────────────────────────── */
+
 @keyframes menu-fade-in {
   from {
     opacity: 0;
@@ -27,20 +89,51 @@
   animation: menu-fade-in 0.45s ease-out both;
 }
 
+.public-menu .scroll-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.public-menu .scroll-reveal.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .public-menu .menu-animate-in {
+    animation: none;
+  }
+
+  .public-menu .scroll-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .public-menu .menu-card {
+    transition: none;
+  }
+}
+
+/* ─── Cards & pills ────────────────────────────────────────────────────── */
+
 .public-menu .menu-card {
   border-radius: 16px;
   border: 1px solid var(--menu-border);
   background: #ffffff;
   box-shadow: 0 1px 3px rgb(0 0 0 / 0.04);
   transition:
-    box-shadow 0.2s ease,
-    transform 0.2s ease;
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
 }
 
 @media (hover: hover) {
   .public-menu .menu-card:hover {
     box-shadow: 0 8px 24px rgb(0 0 0 / 0.08);
-    transform: translateY(-2px);
+    transform: translateY(-2px) scale(1.01);
   }
 }
 
@@ -53,7 +146,7 @@
   font-weight: 500;
   padding: 8px 16px;
   white-space: nowrap;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .public-menu .menu-pill:hover {
@@ -69,6 +162,8 @@
   box-shadow: 0 2px 8px rgb(244 180 0 / 0.35);
 }
 
+/* ─── Misc ─────────────────────────────────────────────────────────────── */
+
 .public-menu .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -79,5 +174,5 @@
 }
 
 .public-menu .landing-section {
-  scroll-margin-top: 1rem;
+  scroll-margin-top: 4rem;
 }
