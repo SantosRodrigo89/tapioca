@@ -61,6 +61,7 @@ Ver roadmap no documento de arquitetura da Fase 2.
 - Entrega 4: wizard `/super/restaurants/new`, `POST /api/super/tenants`, criação de tenant + convite + audit log
 - Entrega 5: aceite em `/auth/invite/[token]`, `POST /api/invites/[token]/accept`, claims + `ownerUid`
 - Entrega 6: módulo `/super/invites` com reenviar, cancelar, copiar link e detalhes
+- Entrega 7: CRUD de planos em `/super/plans` (edição dos 4 planos fixos + audit `plan_changed`)
 
 Listagem: `listTenantsPaginatedServer()` + query params em `/super/restaurants`.
 Cadastro: `createTenantWithInviteServer()` — tenant com `ownerUid` vazio até aceite do convite.

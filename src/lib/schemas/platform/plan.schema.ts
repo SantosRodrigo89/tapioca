@@ -15,4 +15,26 @@ export const PlanSchema = z.object({
   features: z.record(z.string(), z.boolean()),
 });
 
+export const UpdatePlanFormSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Nome é obrigatório")
+    .max(50, "Nome deve ter no máximo 50 caracteres"),
+  description: z
+    .string()
+    .max(500, "Descrição deve ter no máximo 500 caracteres"),
+  priceCents: z.number().int().min(0, "Preço inválido"),
+  color: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "Use uma cor hexadecimal válida (#RRGGBB)"),
+  order: z.number().int().min(0, "Ordem inválida"),
+  status: PlanStatusSchema,
+});
+
+export type UpdatePlanFormInput = z.infer<typeof UpdatePlanFormSchema>;
+
+export const UpdatePlanParamsSchema = z.object({
+  planId: PlanIdSchema,
+});
+
 export const UpdatePlanSchema = PlanSchema.partial().omit({ id: true });

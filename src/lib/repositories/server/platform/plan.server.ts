@@ -42,3 +42,25 @@ export async function upsertPlanServer(
     { merge: true },
   );
 }
+
+export async function updatePlanServer(
+  planId: string,
+  updates: Partial<Omit<Plan, "id" | "createdAt" | "updatedAt">>,
+): Promise<Plan> {
+  const existing = await getPlanByIdServer(planId);
+  if (!existing) {
+    throw new Error("PLAN_NOT_FOUND");
+  }
+
+  const merged: Omit<Plan, "createdAt" | "updatedAt"> = {
+    ...existing,
+    ...updates,
+    id: existing.id,
+    features: updates.features ?? existing.features,
+  };
+
+  await upsertPlanServer(merged);
+  const updated = await getPlanByIdServer(planId);
+  if (!updated) throw new Error("PLAN_NOT_FOUND");
+  return updated;
+}
