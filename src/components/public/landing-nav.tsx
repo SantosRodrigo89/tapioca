@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { MessageCircle } from "lucide-react";
 import { LandingButton } from "@/components/public/landing";
@@ -23,6 +23,7 @@ export function LandingNav({
   whatsapp,
   heroSelector = "#landing-hero",
 }: LandingNavProps) {
+  const headerRef = useRef<HTMLElement>(null);
   const [activeId, setActiveId] = useState(items[0]?.targetId ?? "");
   const [isOverHero, setIsOverHero] = useState(true);
 
@@ -41,6 +42,29 @@ export function LandingNav({
     observer.observe(hero);
     return () => observer.disconnect();
   }, [heroSelector]);
+
+  useEffect(() => {
+    const header = headerRef.current;
+    if (!header) return;
+
+    const root = header.closest(".public-menu") as HTMLElement | null;
+    if (!root) return;
+
+    const navRoot = root;
+    const navHeader = header;
+
+    function syncNavOffset() {
+      navRoot.style.setProperty(
+        "--landing-nav-offset",
+        `${navHeader.offsetHeight}px`,
+      );
+    }
+
+    syncNavOffset();
+    const ro = new ResizeObserver(syncNavOffset);
+    ro.observe(header);
+    return () => ro.disconnect();
+  }, [isOverHero, items.length, whatsapp]);
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -87,23 +111,17 @@ export function LandingNav({
 
   return (
     <header
+      ref={headerRef}
       className={cn(
         "landing-nav fixed top-0 z-50 w-full transition-all duration-300",
         isOverHero ? "landing-nav--overlay" : "landing-nav--solid",
-        showBrand && "landing-nav--has-brand",
+        showBrand && "landing-nav--with-brand",
       )}
     >
-      <div
-        className={cn(
-          "landing-container landing-nav-inner",
-          showBrand
-            ? "landing-nav-inner--stacked"
-            : "landing-nav-inner--row",
-        )}
-      >
+      <div className="landing-container landing-nav-inner landing-nav-inner--row">
         {/* Brand — aparece após sair do hero */}
         {showBrand && (
-          <div className="landing-nav-brand flex min-w-0 items-center gap-2.5">
+          <div className="landing-nav-brand flex min-w-0 shrink-0 items-center gap-2.5">
             <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-[var(--menu-border)] bg-white shadow-sm">
               {tenantLogo ? (
                 <Image
@@ -123,7 +141,7 @@ export function LandingNav({
                 </div>
               )}
             </div>
-            <span className="truncate text-sm font-semibold text-[var(--menu-secondary)] sm:text-base">
+            <span className="landing-nav-brand-name truncate text-sm font-semibold text-[var(--menu-secondary)] sm:text-base">
               {tenantName}
             </span>
           </div>
@@ -133,7 +151,7 @@ export function LandingNav({
         {hasNavLinks && (
           <nav
             aria-label="Navegação da página"
-            className="landing-nav-links scrollbar-hide min-w-0 overflow-x-auto"
+            className="landing-nav-links scrollbar-hide min-w-0 flex-1 overflow-x-auto"
           >
             <div
               className={cn(
@@ -162,14 +180,14 @@ export function LandingNav({
           </nav>
         )}
 
-        {/* CTA WhatsApp — desktop, após sair do hero */}
+        {/* CTA WhatsApp — apenas desktop */}
         {whatsapp && showBrand && (
           <LandingButton
             href={formatWhatsAppLink(whatsapp)}
             variant="primary"
             size="sm"
             icon={<MessageCircle className="h-4 w-4 shrink-0" aria-hidden />}
-            className="landing-nav-whatsapp hidden shrink-0 sm:inline-flex"
+            className="landing-nav-whatsapp shrink-0"
             ariaLabel="Pedir pelo WhatsApp"
           >
             WhatsApp
