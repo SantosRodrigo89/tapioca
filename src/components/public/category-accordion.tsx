@@ -20,7 +20,7 @@ type PendingScrollAdjust = {
 };
 
 export function CategoryAccordion({ categories }: CategoryAccordionProps) {
-  const [openId, setOpenId] = useState(categories[0]?.id ?? "");
+  const [openId, setOpenId] = useState("");
   const pendingAdjustRef = useRef<PendingScrollAdjust | null>(null);
 
   function compensatePanelScroll() {
