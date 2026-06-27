@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { prepareAdminDocWrite } from "@/lib/firestore/sanitize";
 import { BRAND_DOMAIN_FALLBACK } from "@/lib/brand";
 import type { PlatformSettings } from "@/types/platform/platform-settings";
 import { getDefaultPlanId } from "@/lib/platform/plans/default-plans";
@@ -46,11 +47,10 @@ export async function getPlatformSettingsServer(): Promise<PlatformSettings> {
 export async function upsertPlatformSettingsServer(
   settings: Omit<PlatformSettings, "updatedAt">,
 ): Promise<void> {
-  await adminDb.doc(PLATFORM_SETTINGS_DOC).set(
-    {
-      ...settings,
-      updatedAt: FieldValue.serverTimestamp(),
-    },
-    { merge: true },
-  );
+  const payload = prepareAdminDocWrite({
+    ...settings,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+
+  await adminDb.doc(PLATFORM_SETTINGS_DOC).set(payload, { merge: true });
 }

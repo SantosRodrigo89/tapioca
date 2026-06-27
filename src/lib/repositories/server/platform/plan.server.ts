@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { prepareAdminDocWrite } from "@/lib/firestore/sanitize";
 import type { Plan } from "@/types/platform/plan";
 
 function docToPlan(id: string, data: FirebaseFirestore.DocumentData): Plan {
@@ -33,14 +34,13 @@ export async function upsertPlanServer(
 ): Promise<void> {
   const ref = adminDb.doc(`plans/${plan.id}`);
   const existing = await ref.get();
-  await ref.set(
-    {
-      ...plan,
-      updatedAt: FieldValue.serverTimestamp(),
-      ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
-    },
-    { merge: true },
-  );
+  const payload = prepareAdminDocWrite({
+    ...plan,
+    updatedAt: FieldValue.serverTimestamp(),
+    ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
+  });
+
+  await ref.set(payload, { merge: true });
 }
 
 export async function updatePlanServer(
@@ -52,8 +52,9 @@ export async function updatePlanServer(
     throw new Error("PLAN_NOT_FOUND");
   }
 
+  const { createdAt: _c, updatedAt: _u, ...existingFields } = existing;
   const merged: Omit<Plan, "createdAt" | "updatedAt"> = {
-    ...existing,
+    ...existingFields,
     ...updates,
     id: existing.id,
     features: updates.features ?? existing.features,

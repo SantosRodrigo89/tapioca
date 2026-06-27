@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { prepareAdminDocWrite } from "@/lib/firestore/sanitize";
 import type { SiteTemplate } from "@/types/platform/template";
 
 function docToTemplate(
@@ -42,14 +43,13 @@ export async function upsertTemplateServer(
 ): Promise<void> {
   const ref = adminDb.doc(`templates/${template.id}`);
   const existing = await ref.get();
-  await ref.set(
-    {
-      ...template,
-      updatedAt: FieldValue.serverTimestamp(),
-      ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
-    },
-    { merge: true },
-  );
+  const payload = prepareAdminDocWrite({
+    ...template,
+    updatedAt: FieldValue.serverTimestamp(),
+    ...(existing.exists ? {} : { createdAt: FieldValue.serverTimestamp() }),
+  });
+
+  await ref.set(payload, { merge: true });
 }
 
 export async function updateTemplateServer(
@@ -61,8 +61,9 @@ export async function updateTemplateServer(
     throw new Error("TEMPLATE_NOT_FOUND");
   }
 
+  const { createdAt: _c, updatedAt: _u, ...existingFields } = existing;
   const merged: Omit<SiteTemplate, "createdAt" | "updatedAt"> = {
-    ...existing,
+    ...existingFields,
     ...updates,
     id: existing.id,
     siteConfigPreset: updates.siteConfigPreset ?? existing.siteConfigPreset,

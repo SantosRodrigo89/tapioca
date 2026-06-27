@@ -10,6 +10,23 @@ import {
   buildProductionContentSecurityPolicy,
   CSP_HEADER_ENFORCE,
 } from "@/lib/security/content-security-policy";
+import { prepareAdminDocWrite } from "@/lib/firestore/sanitize";
+
+describe("prepareAdminDocWrite", () => {
+  it("removes id, timestamps and undefined before Firestore admin writes", () => {
+    const payload = prepareAdminDocWrite({
+      id: "restaurante",
+      name: "Restaurante",
+      thumbnailUrl: undefined,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    expect(payload).toEqual({ name: "Restaurante" });
+    expect(payload).not.toHaveProperty("id");
+    expect(payload).not.toHaveProperty("thumbnailUrl");
+  });
+});
 
 describe("content-security-policy", () => {
   it("uses enforce header directives without unsafe-eval in production", () => {

@@ -26,3 +26,15 @@ export function stripUndefined<T>(value: T): T {
   }
   return result as T;
 }
+
+/** Strips id/timestamps and undefined values before Admin SDK writes. */
+export function prepareAdminDocWrite<T extends Record<string, unknown>>(
+  data: T,
+  exclude: (keyof T)[] = ["id", "createdAt", "updatedAt"],
+): Record<string, unknown> {
+  const copy = { ...data };
+  for (const key of exclude) {
+    delete copy[key];
+  }
+  return stripUndefined(copy) as Record<string, unknown>;
+}
