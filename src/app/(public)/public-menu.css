@@ -197,6 +197,10 @@
 
 /* ─── Menu items grid ────────────────────────────────────────────────────── */
 
+.public-menu .menu-categories {
+  overflow-anchor: none;
+}
+
 .public-menu .menu-items-grid .menu-card {
   height: 100%;
 }
