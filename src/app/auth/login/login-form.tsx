@@ -98,13 +98,7 @@ export function LoginForm() {
       </button>
 
       <p className="text-center text-sm text-muted-foreground">
-        Não tem uma conta?{" "}
-        <Link
-          href="/auth/signup"
-          className="font-medium text-foreground underline-offset-4 hover:underline"
-        >
-          Cadastre-se
-        </Link>
+        Restaurante novo? Use o link de convite enviado à sua equipe.
       </p>
     </form>
   );

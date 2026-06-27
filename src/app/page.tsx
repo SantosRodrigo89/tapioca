@@ -13,16 +13,10 @@ export default function HomePage() {
             Site, cardápio digital e presença online em minutos.
           </p>
         </div>
-        <div className="flex items-center justify-center gap-3 pt-2">
-          <Link
-            href="/auth/signup"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            Começar grátis
-          </Link>
+        <div className="flex items-center justify-center pt-2">
           <Link
             href="/auth/login"
-            className="inline-flex h-10 items-center justify-center rounded-md border border-input bg-background px-6 text-sm font-medium shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
             Entrar
           </Link>

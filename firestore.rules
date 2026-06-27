@@ -30,7 +30,8 @@ service cloud.firestore {
     // ─── tenants ─────────────────────────────────────────────────────────────
     match /tenants/{tenantId} {
       allow read: if true;
-      allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerUid;
+      // Criação apenas via Admin SDK (Super Admin / convite)
+      allow create: if false;
       // slug, ownerUid and SaaS fields are immutable for tenant admins
       allow update: if isOwnerOrSuperAdmin(tenantId)
         && request.resource.data.slug == resource.data.slug

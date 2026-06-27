@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { BRAND_DOMAIN_FALLBACK } from "@/lib/brand";
 import type { PlatformSettings } from "@/types/platform/platform-settings";
 import { getDefaultPlanId } from "@/lib/platform/plans/default-plans";
 
@@ -8,8 +9,8 @@ export const PLATFORM_SETTINGS_DOC = "platform/settings";
 export function getDefaultPlatformSettings(): Omit<PlatformSettings, "updatedAt"> {
   return {
     platformName: "Mesio",
-    contactEmail: "contato@mesio.app",
-    domain: "mesio.app",
+    contactEmail: `contato@${BRAND_DOMAIN_FALLBACK}`,
+    domain: BRAND_DOMAIN_FALLBACK,
     timezone: "America/Sao_Paulo",
     defaultPlanId: getDefaultPlanId(),
     trialDays: 14,

@@ -25,7 +25,7 @@ export const BRAND_TYPOGRAPHY = {
   fallback: "Inter, system-ui, sans-serif",
 } as const;
 
-export const BRAND_DOMAIN_FALLBACK = "mesio.app";
+export const BRAND_DOMAIN_FALLBACK = "mesio.com.br";
 
 /** Minimum display sizes (px) */
 export const BRAND_MIN_SIZES = {

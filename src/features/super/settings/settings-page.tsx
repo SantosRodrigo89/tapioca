@@ -219,7 +219,7 @@ export function SettingsPage({
 
           <div className="space-y-1">
             <Label htmlFor="domain">Domínio principal</Label>
-            <Input id="domain" placeholder="mesio.app" {...register("domain")} />
+            <Input id="domain" placeholder="mesio.com.br" {...register("domain")} />
             {errors.domain && (
               <p className="text-xs text-destructive">{errors.domain.message}</p>
             )}
