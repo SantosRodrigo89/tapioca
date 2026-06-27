@@ -80,11 +80,29 @@ export async function createInviteServer(
 export async function updateInviteStatusServer(
   inviteId: string,
   status: TenantInvite["status"],
-  extra?: { acceptedAt?: Date },
+  extra?: { acceptedAt?: Date; sentAt?: Date; expiresAt?: Date; token?: string },
 ): Promise<void> {
   await adminDb.doc(`invites/${inviteId}`).update({
     status,
     ...(extra?.acceptedAt ? { acceptedAt: extra.acceptedAt } : {}),
+    ...(extra?.sentAt ? { sentAt: extra.sentAt } : {}),
+    ...(extra?.expiresAt ? { expiresAt: extra.expiresAt } : {}),
+    ...(extra?.token ? { token: extra.token } : {}),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+export async function updateInviteResendServer(
+  inviteId: string,
+  token: string,
+  sentAt: Date,
+  expiresAt: Date,
+): Promise<void> {
+  await adminDb.doc(`invites/${inviteId}`).update({
+    token,
+    status: "pending",
+    sentAt,
+    expiresAt,
     updatedAt: FieldValue.serverTimestamp(),
   });
 }

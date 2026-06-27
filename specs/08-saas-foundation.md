@@ -59,6 +59,9 @@ Ver roadmap no documento de arquitetura da Fase 2.
 - Entregas 0–2: tipos, seed, shell, dashboard
 - Entrega 3: listagem de restaurantes com busca, filtros por status, ordenação, paginação (20/página) e colunas completas
 - Entrega 4: wizard `/super/restaurants/new`, `POST /api/super/tenants`, criação de tenant + convite + audit log
+- Entrega 5: aceite em `/auth/invite/[token]`, `POST /api/invites/[token]/accept`, claims + `ownerUid`
+- Entrega 6: módulo `/super/invites` com reenviar, cancelar, copiar link e detalhes
 
 Listagem: `listTenantsPaginatedServer()` + query params em `/super/restaurants`.
-Cadastro: `createTenantWithInviteServer()` — tenant com `ownerUid` vazio até aceite do convite (Entrega 5).
+Cadastro: `createTenantWithInviteServer()` — tenant com `ownerUid` vazio até aceite do convite.
+Aceite: `acceptInviteServer()` — cria usuário Firebase ou usa sessão existente.

@@ -11,8 +11,8 @@ export function getPostLoginPath(
   if (
     redirect &&
     redirect.startsWith("/") &&
-    !redirect.startsWith("/auth") &&
-    !redirect.startsWith("/super")
+    (redirect.startsWith("/auth/invite/") ||
+      (!redirect.startsWith("/auth") && !redirect.startsWith("/super")))
   ) {
     return redirect;
   }

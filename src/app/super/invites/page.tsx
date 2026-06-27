@@ -1,18 +1,18 @@
 import type { Metadata } from "next";
-import { SuperPageHeader } from "@/components/super/super-page-header";
+import { listInvitesServer } from "@/lib/repositories/server/platform/invite.server";
+import { resolveInviteExpiry } from "@/services/platform/invite.service";
+import { InvitesPage } from "@/features/super/invites/invites-page";
+import { serializeInviteForClient } from "@/features/super/invites/invite-types";
 
 export const metadata: Metadata = { title: "Convites — Super Admin" };
 
-export default function SuperInvitesPage() {
+export default async function SuperInvitesRoute() {
+  const invites = await listInvitesServer();
+  const resolved = await Promise.all(invites.map(resolveInviteExpiry));
+
   return (
-    <div className="space-y-6">
-      <SuperPageHeader
-        title="Convites"
-        description="Gerencie convites enviados aos administradores de restaurantes."
-      />
-      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        Módulo de convites — próxima entrega.
-      </div>
-    </div>
+    <InvitesPage
+      initialInvites={resolved.map(serializeInviteForClient)}
+    />
   );
 }
