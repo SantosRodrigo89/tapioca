@@ -12,13 +12,9 @@ interface CategoryWithItems extends Category {
 
 interface CategoryAccordionProps {
   categories: CategoryWithItems[];
-  whatsapp?: string;
 }
 
-export function CategoryAccordion({
-  categories,
-  whatsapp,
-}: CategoryAccordionProps) {
+export function CategoryAccordion({ categories }: CategoryAccordionProps) {
   const [openId, setOpenId] = useState(categories[0]?.id ?? "");
 
   function toggleCategory(catId: string) {
@@ -72,7 +68,6 @@ export function CategoryAccordion({
                       key={item.id}
                       item={item}
                       category={category}
-                      whatsapp={whatsapp}
                     />
                   ))}
                 </div>

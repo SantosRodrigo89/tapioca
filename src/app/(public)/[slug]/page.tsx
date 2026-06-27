@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { PublicTheme } from "@/components/public/public-theme";
+import { ProductDetailProvider } from "@/components/public/product-detail-context";
 import { UnavailablePage } from "@/components/public/unavailable-page";
+import { resolveProductDrawerActions } from "@/lib/site/product-experience";
 import type { LandingPageData } from "@/lib/site/landing-types";
 import { resolveHighlights } from "@/lib/site/resolve-highlights";
 import { renderLandingSections } from "@/lib/site/sections";
@@ -110,6 +112,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
     visibleCategories,
   );
   const whatsapp = siteConfig.contact.whatsapp ?? tenant.whatsapp;
+  const drawerActions = resolveProductDrawerActions(siteConfig, whatsapp);
 
   const pageData: LandingPageData = {
     tenant,
@@ -122,9 +125,14 @@ export default async function PublicLandingPage({ params }: PageProps) {
   };
 
   return (
-    <>
+    <ProductDetailProvider
+      tenantSlug={slug}
+      whatsapp={whatsapp}
+      drawerActions={drawerActions}
+      categories={categoriesWithItems}
+    >
       <PublicTheme tenant={tenant} siteConfig={siteConfig} />
       {renderLandingSections(pageData)}
-    </>
+    </ProductDetailProvider>
   );
 }

@@ -96,6 +96,12 @@ export interface SiteTestimonial {
   imageUrl?: string;
 }
 
+export interface SiteMenuExperience {
+  productDrawerActions?: ProductDrawerActionId[];
+}
+
+export type ProductDrawerActionId = "share" | "copy-link" | "whatsapp";
+
 export interface SiteConfig {
   sections: SiteSectionConfig[];
   identity: SiteIdentity;
@@ -108,6 +114,7 @@ export interface SiteConfig {
   seo: SiteSeo;
   faq: SiteFaqItem[];
   testimonials: SiteTestimonial[];
+  menuExperience?: SiteMenuExperience;
 }
 
 // ─── Gallery (subcollection) ───────────────────────────────────────────────

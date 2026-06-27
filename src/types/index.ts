@@ -1,6 +1,8 @@
 import type { SiteConfig } from "./site";
 import type { ConfigurationGroup } from "./catalog-config";
+import type { MenuItemBadge } from "./menu-item-badge";
 
+export type { MenuItemBadge } from "./menu-item-badge";
 export type {
   ConfigurationGroup,
   ConfigurationOption,
@@ -86,6 +88,7 @@ export interface MenuItem {
   available: boolean;
   availability?: AvailabilitySchedule;
   configurationGroups?: ConfigurationGroup[];
+  badge?: MenuItemBadge;
   order: number;
   createdAt: Date;
   updatedAt: Date;

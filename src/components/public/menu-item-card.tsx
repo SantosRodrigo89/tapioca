@@ -1,40 +1,113 @@
+"use client";
+
 import Image from "next/image";
-import Link from "next/link";
-import { Clock, Plus } from "lucide-react";
-import { formatWhatsAppOrderLink } from "@/lib/utils";
+import { Clock } from "lucide-react";
+import { getConfigurationCardHints } from "@/lib/catalog/configuration-hints";
 import { formatMenuItemPrice } from "@/lib/pricing";
 import { getItemAvailabilityStatus } from "@/lib/utils/availability";
 import type { Category, MenuItem } from "@/types";
+import { ProductItemBadge } from "./product-item-badge";
+import { useProductDetail } from "./product-detail-context";
 
 interface MenuItemCardProps {
   item: MenuItem;
   category: Category;
-  whatsapp?: string;
+  variant?: "grid" | "featured";
 }
 
 export function MenuItemCard({
   item,
   category,
-  whatsapp,
+  variant = "grid",
 }: MenuItemCardProps) {
+  const { openProduct } = useProductDetail();
   const status = getItemAvailabilityStatus(item, category);
-  const imageSize = "h-32 w-32 sm:h-40 sm:w-40";
+  const hints = getConfigurationCardHints(item);
+
+  function handleOpen() {
+    openProduct(item, category);
+  }
+
+  if (variant === "featured") {
+    return (
+      <button
+        type="button"
+        onClick={handleOpen}
+        aria-label={`Ver detalhes de ${item.name}`}
+        className={`product-card product-card--featured menu-card w-[260px] shrink-0 overflow-hidden text-left sm:w-[280px] ${
+          !status.orderable ? "opacity-75" : ""
+        }`}
+      >
+        <div className="relative h-[180px] bg-[var(--menu-surface)] sm:h-[200px]">
+          {item.imageUrl ? (
+            <Image
+              src={item.imageUrl}
+              alt=""
+              fill
+              sizes="280px"
+              className="object-cover"
+            />
+          ) : (
+            <div className="flex h-full items-center justify-center text-sm text-[#999]">
+              Sem foto
+            </div>
+          )}
+          {item.badge && (
+            <div className="absolute left-3 top-3">
+              <ProductItemBadge badge={item.badge} />
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-2.5 p-4">
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-[var(--menu-secondary)] sm:text-lg">
+            {item.name}
+          </h3>
+
+          {item.description && (
+            <p className="line-clamp-2 text-sm leading-relaxed text-[#777]">
+              {item.description}
+            </p>
+          )}
+
+          <p
+            className="text-xl font-bold"
+            style={{ color: "var(--menu-primary-dark)" }}
+          >
+            {formatMenuItemPrice(item)}
+          </p>
+
+          {hints.length > 0 && (
+            <p className="line-clamp-1 text-xs text-[#999]">{hints[0]}</p>
+          )}
+
+          {!status.orderable && status.label && (
+            <p className="inline-flex items-center gap-1 text-xs font-medium text-[#999]">
+              <Clock className="h-3 w-3 shrink-0" />
+              <span className="line-clamp-1">{status.label}</span>
+            </p>
+          )}
+        </div>
+      </button>
+    );
+  }
 
   return (
-    <article
-      className={`menu-card flex h-full gap-4 p-4 sm:gap-5 sm:p-5 ${
+    <button
+      type="button"
+      onClick={handleOpen}
+      aria-label={`Ver detalhes de ${item.name}`}
+      className={`product-card menu-card flex h-full w-full flex-col overflow-hidden text-left ${
         !status.orderable ? "opacity-75" : ""
       }`}
     >
-      <div
-        className={`relative ${imageSize} shrink-0 overflow-hidden rounded-xl bg-[var(--menu-surface)]`}
-      >
+      <div className="relative aspect-[4/3] w-full bg-[var(--menu-surface)]">
         {item.imageUrl ? (
           <Image
             src={item.imageUrl}
-            alt={item.name}
+            alt=""
             fill
-            sizes="160px"
+            sizes="(max-width: 640px) 100vw, 320px"
             className="object-cover"
           />
         ) : (
@@ -42,27 +115,25 @@ export function MenuItemCard({
             Sem foto
           </div>
         )}
+        {item.badge && (
+          <div className="absolute left-3 top-3">
+            <ProductItemBadge badge={item.badge} />
+          </div>
+        )}
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col justify-between gap-3">
-        <div className="space-y-2">
-          <h3 className="text-lg font-semibold leading-snug text-[var(--menu-secondary)] sm:text-xl">
-            {item.name}
-          </h3>
-          {item.description && (
-            <p className="line-clamp-2 text-sm leading-relaxed text-[#777] sm:text-base">
-              {item.description}
-            </p>
-          )}
-          {!status.orderable && status.label && (
-            <p className="inline-flex items-center gap-1 text-xs font-medium text-[#999]">
-              <Clock className="h-3.5 w-3.5 shrink-0" />
-              {status.label}
-            </p>
-          )}
-        </div>
+      <div className="flex flex-1 flex-col gap-2.5 p-4 sm:p-5">
+        <h3 className="text-lg font-semibold leading-snug text-[var(--menu-secondary)] sm:text-xl">
+          {item.name}
+        </h3>
 
-        <div className="flex items-center justify-between gap-3">
+        {item.description && (
+          <p className="line-clamp-2 flex-1 text-sm leading-relaxed text-[#777] sm:text-base">
+            {item.description}
+          </p>
+        )}
+
+        <div className="mt-auto space-y-2">
           <p
             className="text-xl font-bold sm:text-2xl"
             style={{ color: "var(--menu-primary-dark)" }}
@@ -70,29 +141,20 @@ export function MenuItemCard({
             {formatMenuItemPrice(item)}
           </p>
 
-          {whatsapp && status.orderable ? (
-            <Link
-              href={formatWhatsAppOrderLink(
-                whatsapp,
-                `Olá! Gostaria de pedir: ${item.name}`,
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-[var(--menu-secondary)] transition-all hover:opacity-90 active:scale-[0.98] sm:rounded-full"
-              style={{ backgroundColor: "var(--menu-primary)" }}
-            >
-              <Plus className="h-4 w-4" />
-              Adicionar
-            </Link>
-          ) : whatsapp ? (
-            <span className="text-xs font-medium text-[#999]">
-              Fora do horário
-            </span>
-          ) : (
-            <span className="text-xs text-[#999]">Indisponível</span>
+          {hints.map((hint) => (
+            <p key={hint} className="text-xs text-[#999]">
+              {hint}
+            </p>
+          ))}
+
+          {!status.orderable && status.label && (
+            <p className="inline-flex items-center gap-1 text-xs font-medium text-[#999]">
+              <Clock className="h-3.5 w-3.5 shrink-0" />
+              {status.label}
+            </p>
           )}
         </div>
       </div>
-    </article>
+    </button>
   );
 }

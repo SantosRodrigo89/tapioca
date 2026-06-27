@@ -200,3 +200,38 @@
 .public-menu .menu-items-grid .menu-card {
   height: 100%;
 }
+
+/* ─── Product cards ─────────────────────────────────────────────────────── */
+
+.public-menu .product-card {
+  cursor: pointer;
+  border: none;
+  padding: 0;
+  text-align: left;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.public-menu .product-card:focus-visible {
+  outline: 2px solid var(--menu-primary);
+  outline-offset: 2px;
+}
+
+@media (hover: hover) {
+  .public-menu .product-card.menu-card:hover {
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.1);
+    transform: translateY(-3px) scale(1);
+  }
+}
+
+.public-menu .product-card:active {
+  transform: translateY(-1px);
+}
+
+.public-menu .product-detail-sheet {
+  background-color: #ffffff;
+}
+
+.public-menu .product-detail-scroll {
+  scrollbar-width: thin;
+}

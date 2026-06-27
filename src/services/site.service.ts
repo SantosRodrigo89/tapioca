@@ -45,6 +45,9 @@ export function createDefaultSiteConfig(): SiteConfig {
     seo: {},
     faq: [],
     testimonials: [],
+    menuExperience: {
+      productDrawerActions: ["share", "copy-link", "whatsapp"],
+    },
   };
 }
 
@@ -70,6 +73,10 @@ export function resolveSiteConfig(
     seo: { ...defaults.seo, ...persisted?.seo },
     faq: persisted?.faq ?? defaults.faq,
     testimonials: persisted?.testimonials ?? defaults.testimonials,
+    menuExperience: {
+      ...defaults.menuExperience,
+      ...persisted?.menuExperience,
+    },
   };
 
   if (!merged.hero.title && tenant.name) {
@@ -134,6 +141,7 @@ export function mergeSiteConfigPatch(
     seo: mergePartial(existing.seo, patch.seo),
     faq: patch.faq ?? existing.faq,
     testimonials: patch.testimonials ?? existing.testimonials,
+    menuExperience: mergePartial(existing.menuExperience ?? {}, patch.menuExperience),
   };
 }
 

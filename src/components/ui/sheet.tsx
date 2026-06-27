@@ -28,7 +28,7 @@ SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content> & {
-    side?: "left" | "right";
+    side?: "left" | "right" | "bottom" | "top";
   }
 >(({ side = "left", className, children, ...props }, ref) => (
   <SheetPortal>
@@ -36,11 +36,15 @@ const SheetContent = React.forwardRef<
     <SheetPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed z-50 flex flex-col gap-4 bg-background shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
+        "fixed z-50 flex flex-col bg-background shadow-lg transition ease-in-out data-[state=closed]:duration-300 data-[state=open]:duration-500 data-[state=open]:animate-in data-[state=closed]:animate-out",
         side === "left" &&
-          "inset-y-0 left-0 h-full w-60 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
+          "inset-y-0 left-0 h-full w-60 gap-4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
         side === "right" &&
-          "inset-y-0 right-0 h-full w-60 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+          "inset-y-0 right-0 h-full w-60 gap-4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+        side === "bottom" &&
+          "inset-x-0 bottom-0 max-h-[92vh] gap-0 rounded-t-2xl border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+        side === "top" &&
+          "inset-x-0 top-0 max-h-[92vh] gap-0 rounded-b-2xl border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
         className,
       )}
       {...props}

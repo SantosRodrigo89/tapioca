@@ -91,6 +91,16 @@ export const SiteFaqItemSchema = z.object({
   answer: z.string().min(1).max(1000),
 });
 
+export const ProductDrawerActionIdSchema = z.enum([
+  "share",
+  "copy-link",
+  "whatsapp",
+]);
+
+export const SiteMenuExperienceSchema = z.object({
+  productDrawerActions: z.array(ProductDrawerActionIdSchema).max(3).optional(),
+});
+
 export const SiteTestimonialSchema = z.object({
   id: z.string(),
   author: z.string().min(1).max(80),
@@ -110,6 +120,7 @@ export const SiteConfigSchema = z.object({
   seo: SiteSeoSchema,
   faq: z.array(SiteFaqItemSchema).max(20),
   testimonials: z.array(SiteTestimonialSchema).max(20),
+  menuExperience: SiteMenuExperienceSchema.optional(),
 });
 
 export const GalleryImageSchema = z.object({

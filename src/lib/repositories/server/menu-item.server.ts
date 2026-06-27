@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { parseConfigurationGroups } from "@/lib/catalog/parse-configuration";
+import { isMenuItemBadge } from "@/types/menu-item-badge";
 import type { MenuItem, AvailabilitySchedule } from "@/types";
 
 function parseAvailability(
@@ -23,6 +24,7 @@ function docToMenuItem(
     available: data.available as boolean,
     availability: parseAvailability(data),
     configurationGroups: parseConfigurationGroups(data.configurationGroups),
+    badge: isMenuItemBadge(data.badge) ? data.badge : undefined,
     order: data.order as number,
     createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),
     updatedAt: (data.updatedAt as FirebaseFirestore.Timestamp).toDate(),

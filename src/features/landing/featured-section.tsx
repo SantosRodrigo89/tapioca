@@ -9,9 +9,6 @@ export function FeaturedSection({ data }: FeaturedSectionProps) {
   if (data.highlights.length === 0) return null;
 
   return (
-    <HighlightsSection
-      entries={data.highlights}
-      whatsapp={data.whatsapp}
-    />
+    <HighlightsSection entries={data.highlights} />
   );
 }

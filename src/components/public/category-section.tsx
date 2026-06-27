@@ -5,14 +5,9 @@ import type { Category, MenuItem } from "@/types";
 interface CategorySectionProps {
   category: Category;
   items: MenuItem[];
-  whatsapp?: string;
 }
 
-export function CategorySection({
-  category,
-  items,
-  whatsapp,
-}: CategorySectionProps) {
+export function CategorySection({ category, items }: CategorySectionProps) {
   if (items.length === 0) return null;
 
   return (
@@ -30,12 +25,7 @@ export function CategorySection({
       </h2>
       <div className="flex flex-col gap-4 sm:gap-5">
         {items.map((item) => (
-          <MenuItemCard
-            key={item.id}
-            item={item}
-            category={category}
-            whatsapp={whatsapp}
-          />
+          <MenuItemCard key={item.id} item={item} category={category} />
         ))}
       </div>
     </ScrollReveal>

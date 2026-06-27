@@ -7,7 +7,7 @@ interface MenuSectionProps {
 }
 
 export function MenuSection({ data }: MenuSectionProps) {
-  const { visibleCategories, whatsapp } = data;
+  const { visibleCategories } = data;
 
   return (
     <section
@@ -30,10 +30,7 @@ export function MenuSection({ data }: MenuSectionProps) {
           Nenhum item disponível no momento.
         </p>
       ) : (
-        <CategoryAccordion
-          categories={visibleCategories}
-          whatsapp={whatsapp}
-        />
+        <CategoryAccordion categories={visibleCategories} />
       )}
     </section>
   );

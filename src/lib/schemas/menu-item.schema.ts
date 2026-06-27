@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { AvailabilityScheduleSchema } from "./availability.schema";
 import { ConfigurationGroupsSchema } from "./configuration.schema";
+import { MENU_ITEM_BADGES } from "@/types/menu-item-badge";
+
+const MenuItemBadgeSchema = z.enum(MENU_ITEM_BADGES);
 
 export const MenuItemSchema = z.object({
   id: z.string(),
@@ -10,6 +13,7 @@ export const MenuItemSchema = z.object({
   imageUrl: z.string().url().optional(),
   available: z.boolean(),
   configurationGroups: ConfigurationGroupsSchema.optional(),
+  badge: MenuItemBadgeSchema.optional(),
   order: z.number().int().nonnegative(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -31,6 +35,7 @@ export const CreateMenuItemSchema = z.object({
   available: z.boolean(),
   availability: AvailabilityScheduleSchema.optional(),
   configurationGroups: ConfigurationGroupsSchema.optional(),
+  badge: MenuItemBadgeSchema.optional(),
 });
 
 export const UpdateMenuItemSchema = z.object({
@@ -53,6 +58,7 @@ export const UpdateMenuItemSchema = z.object({
   order: z.number().int().nonnegative().optional(),
   imageUrl: z.string().url().optional().nullable(),
   configurationGroups: ConfigurationGroupsSchema.optional().nullable(),
+  badge: MenuItemBadgeSchema.optional().nullable(),
 });
 
 export type MenuItem = z.infer<typeof MenuItemSchema>;
