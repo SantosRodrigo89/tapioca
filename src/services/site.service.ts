@@ -1,5 +1,6 @@
 import type { Tenant } from "@/types";
 import type { SiteConfig, SiteSectionConfig, SiteSectionId } from "@/types/site";
+import { sanitizeHref } from "@/lib/utils/safe-url";
 
 /** Default section order for the public landing page */
 export const DEFAULT_SECTION_ORDER: SiteSectionId[] = [
@@ -110,8 +111,43 @@ export function resolveSiteConfig(
   return merged;
 }
 
+function sanitizeSiteConfigLinks(config: SiteConfig): SiteConfig {
+  const heroButtons = config.hero.buttons
+    ?.map((btn) => {
+      const href = sanitizeHref(btn.href);
+      return href ? { ...btn, href } : null;
+    })
+    .filter((btn): btn is NonNullable<typeof btn> => btn !== null);
+
+  return {
+    ...config,
+    hero: {
+      ...config.hero,
+      buttons: heroButtons?.length ? heroButtons : undefined,
+    },
+    contact: {
+      ...config.contact,
+      instagram: config.contact.instagram
+        ? sanitizeHref(config.contact.instagram)
+        : undefined,
+      facebook: config.contact.facebook
+        ? sanitizeHref(config.contact.facebook)
+        : undefined,
+      tiktok: config.contact.tiktok
+        ? sanitizeHref(config.contact.tiktok)
+        : undefined,
+    },
+    location: {
+      ...config.location,
+      directionsUrl: config.location.directionsUrl
+        ? sanitizeHref(config.location.directionsUrl)
+        : undefined,
+    },
+  };
+}
+
 export function getResolvedSiteConfig(tenant: Tenant): SiteConfig {
-  return resolveSiteConfig(tenant, tenant.siteConfig);
+  return sanitizeSiteConfigLinks(resolveSiteConfig(tenant, tenant.siteConfig));
 }
 
 function mergePartial<T extends object>(existing: T, patch?: Partial<T>): T {

@@ -12,6 +12,7 @@ import { getGalleryByTenantServer } from "@/lib/repositories/server/gallery.serv
 import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
 import { getTenantBySlugServer } from "@/lib/repositories/server/tenant.server";
 import { getResolvedSiteConfig } from "@/services/site.service";
+import { getTenantEntitlementsServer } from "@/lib/platform/get-tenant-entitlements.server";
 import type { Category, MenuItem } from "@/types";
 
 export const dynamic = "force-dynamic";
@@ -86,6 +87,11 @@ export default async function PublicLandingPage({ params }: PageProps) {
   }
 
   const siteConfig = getResolvedSiteConfig(tenant);
+  const entitlements = await getTenantEntitlementsServer(tenant);
+
+  if (!entitlements.landing_page) {
+    notFound();
+  }
 
   const [categories, gallery] = await Promise.all([
     getCategoriesByTenantServer(tenant.id, { activeOnly: true }),
@@ -132,7 +138,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
       categories={categoriesWithItems}
     >
       <PublicTheme tenant={tenant} siteConfig={siteConfig} />
-      {renderLandingSections(pageData)}
+      {renderLandingSections(pageData, entitlements)}
     </ProductDetailProvider>
   );
 }

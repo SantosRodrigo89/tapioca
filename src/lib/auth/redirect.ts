@@ -1,4 +1,5 @@
 import type { UserRole } from "@/types";
+import { isSafeInternalRedirect } from "@/lib/auth/safe-redirect";
 
 export function getPostLoginPath(
   role: UserRole | undefined,
@@ -8,12 +9,7 @@ export function getPostLoginPath(
     return "/super";
   }
 
-  if (
-    redirect &&
-    redirect.startsWith("/") &&
-    (redirect.startsWith("/auth/invite/") ||
-      (!redirect.startsWith("/auth") && !redirect.startsWith("/super")))
-  ) {
+  if (redirect && isSafeInternalRedirect(redirect)) {
     return redirect;
   }
 

@@ -6,6 +6,9 @@ import {
   touchLastAccessAtIfStaleServer,
 } from "@/lib/repositories/server/tenant.server";
 import { AdminShell } from "@/layouts/admin-shell";
+import { EntitlementsProvider } from "@/components/admin/entitlements-provider";
+import { getTenantEntitlementsServer } from "@/lib/platform/get-tenant-entitlements.server";
+import { redirectIfTenantBlocked } from "@/lib/platform/require-entitlements.server";
 
 export default async function AdminLayout({
   children,
@@ -31,17 +34,24 @@ export default async function AdminLayout({
     redirect("/auth/login");
   }
 
+  redirectIfTenantBlocked(tenant);
+
+  const entitlements = await getTenantEntitlementsServer(tenant);
+
   void touchLastAccessAtIfStaleServer(tenantId, tenant.lastAccessAt).catch(
     (err) => console.error("[lastAccessAt]", err),
   );
 
   return (
-    <AdminShell
-      tenantSlug={tenant.slug}
-      tenantName={tenant.name}
-      tenantStatus={tenant.status}
-    >
-      {children}
-    </AdminShell>
+    <EntitlementsProvider entitlements={entitlements}>
+      <AdminShell
+        tenantSlug={tenant.slug}
+        tenantName={tenant.name}
+        tenantStatus={tenant.status}
+        entitlements={entitlements}
+      >
+        {children}
+      </AdminShell>
+    </EntitlementsProvider>
   );
 }

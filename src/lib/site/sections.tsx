@@ -5,6 +5,11 @@ import { HeroSection } from "@/features/landing/hero-section";
 import { SectionSkeleton } from "@/features/landing/section-skeleton";
 import { resolveLandingNavItems } from "@/lib/site/landing-nav";
 import { resolveEnabledSections } from "@/services/site.service";
+import {
+  isEntitled,
+  SECTION_FEATURE_MAP,
+  type TenantEntitlements,
+} from "@/lib/platform/entitlements";
 import type { SiteSectionId } from "@/types/site";
 import type { LandingPageData } from "./landing-types";
 
@@ -209,8 +214,15 @@ function sectionHasContent(
   }
 }
 
-export function renderLandingSections(data: LandingPageData) {
-  const sections = resolveEnabledSections(data.siteConfig);
+export function renderLandingSections(
+  data: LandingPageData,
+  entitlements?: TenantEntitlements,
+) {
+  const sections = resolveEnabledSections(data.siteConfig).filter((section) => {
+    const requiredFeature = SECTION_FEATURE_MAP[section.id];
+    if (!requiredFeature || !entitlements) return true;
+    return isEntitled(entitlements, requiredFeature);
+  });
   const navItems = resolveLandingNavItems(data);
   let bandIndex = 0;
 

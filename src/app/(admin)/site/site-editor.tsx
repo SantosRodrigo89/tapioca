@@ -13,6 +13,8 @@ import { ContactTab } from "@/features/presenca-digital/contact-tab";
 import { HoursTab } from "@/features/presenca-digital/hours-tab";
 import { SeoTab } from "@/features/presenca-digital/seo-tab";
 import { QrTab } from "@/features/presenca-digital/qr-tab";
+import { useEntitlements } from "@/components/admin/entitlements-provider";
+import { SITE_TAB_FEATURE_MAP } from "@/lib/platform/entitlements";
 import type { CategoryWithItems } from "@/components/admin/highlights-settings";
 import type { GalleryImage, SiteConfig, Tenant } from "@/types";
 
@@ -63,10 +65,21 @@ export function SiteEditor({
   publicUrl,
 }: SiteEditorProps) {
   useMenuAuth();
+  const entitlements = useEntitlements();
+
+  const visibleTabs = TABS.filter(
+    (tab) => entitlements[SITE_TAB_FEATURE_MAP[tab.id]] ?? false,
+  );
 
   const [tenant, setTenant] = useState(initialTenant);
   const [siteConfig, setSiteConfig] = useState(initialSiteConfig);
-  const [activeTab, setActiveTab] = useState<TabId>("appearance");
+  const [activeTab, setActiveTab] = useState<TabId>(() => visibleTabs[0]?.id ?? "appearance");
+
+  useEffect(() => {
+    if (!visibleTabs.some((t) => t.id === activeTab)) {
+      setActiveTab(visibleTabs[0]?.id ?? "appearance");
+    }
+  }, [activeTab, visibleTabs]);
 
   useEffect(() => {
     const hash = window.location.hash;
@@ -99,7 +112,7 @@ export function SiteEditor({
 
       <div className="flex flex-col gap-8 md:flex-row">
         <nav className="flex w-full gap-1 overflow-x-auto pb-1 md:w-48 md:shrink-0 md:flex-col md:overflow-visible md:pb-0">
-          {TABS.map(({ id, label }) => (
+          {visibleTabs.map(({ id, label }) => (
             <button
               key={id}
               type="button"

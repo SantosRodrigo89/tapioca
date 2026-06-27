@@ -7,7 +7,9 @@ import {
   Phone,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { SafeExternalLink } from "@/components/public/safe-external-link";
 import { formatPhoneNumber, formatWhatsAppLink } from "@/lib/utils";
+import { sanitizeHref } from "@/lib/utils/safe-url";
 import { formatDaySchedule } from "@/lib/utils/opening-hours";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
@@ -24,16 +26,17 @@ function SocialLink({
   label: string;
   children: React.ReactNode;
 }) {
+  const safe = sanitizeHref(href);
+  if (!safe) return null;
+
   return (
-    <Link
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
+    <SafeExternalLink
+      href={safe}
+      ariaLabel={label}
       className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[var(--menu-border)] text-[var(--menu-secondary)] transition-all hover:border-[var(--menu-primary)] hover:bg-[var(--menu-primary)]/10 hover:text-[var(--menu-primary-dark)]"
     >
       {children}
-    </Link>
+    </SafeExternalLink>
   );
 }
 

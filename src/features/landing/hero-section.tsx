@@ -1,6 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
 import { Clock, MapPin, MessageCircle } from "lucide-react";
+import { SafeExternalLink } from "@/components/public/safe-external-link";
 import { formatWhatsAppLink } from "@/lib/utils";
 import { getHeroLocationLabel } from "@/lib/utils/address";
 import {
@@ -27,34 +27,34 @@ function HeroButton({
 
   if (resolved === "outline") {
     return (
-      <Link
+      <SafeExternalLink
         href={button.href}
         className={`${base} border-2 border-white/80 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20`}
       >
         {button.label}
-      </Link>
+      </SafeExternalLink>
     );
   }
 
   if (resolved === "secondary") {
     return (
-      <Link
+      <SafeExternalLink
         href={button.href}
         className={`${base} bg-white text-[var(--menu-secondary)] shadow-md hover:shadow-lg`}
       >
         {button.label}
-      </Link>
+      </SafeExternalLink>
     );
   }
 
   return (
-    <Link
+    <SafeExternalLink
       href={button.href}
       className={`${base} text-[var(--menu-secondary)] shadow-md hover:shadow-lg`}
       style={{ backgroundColor: "var(--menu-primary)" }}
     >
       {button.label}
-    </Link>
+    </SafeExternalLink>
   );
 }
 
@@ -204,17 +204,15 @@ export function HeroSection({ data }: HeroSectionProps) {
               <div className="flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
                 {buttons.map((button, index) =>
                   button.label.toLowerCase().includes("whatsapp") ? (
-                    <Link
+                    <SafeExternalLink
                       key={index}
                       href={button.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
                       className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-[var(--menu-secondary)] shadow-md transition-all duration-200 hover:shadow-lg active:scale-[0.98] sm:w-auto"
                       style={{ backgroundColor: "var(--menu-primary)" }}
                     >
                       <MessageCircle className="h-5 w-5" />
                       {button.label}
-                    </Link>
+                    </SafeExternalLink>
                   ) : (
                     <HeroButton key={index} button={button} />
                   ),

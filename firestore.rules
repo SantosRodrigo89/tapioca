@@ -20,20 +20,31 @@ service cloud.firestore {
       return isTenantAdmin(tenantId) || isSuperAdmin();
     }
 
+    function tenantDoc(tenantId) {
+      return get(/databases/$(database)/documents/tenants/$(tenantId));
+    }
+
+    function isTenantActive(tenantId) {
+      return tenantDoc(tenantId).data.status in ['trial', 'active'];
+    }
+
+    function canWriteTenantData(tenantId) {
+      return isOwnerOrSuperAdmin(tenantId)
+        && (isSuperAdmin() || isTenantActive(tenantId));
+    }
+
     // ─── slugIndex ────────────────────────────────────────────────────────────
-    // Public read for slug lookups; only super_admin or server-side writes
+    // Lookups only via Admin SDK (SSR); client reads denied
     match /slugIndex/{slug} {
-      allow read: if true;
+      allow read: if false;
       allow write: if isSuperAdmin();
     }
 
     // ─── tenants ─────────────────────────────────────────────────────────────
     match /tenants/{tenantId} {
-      allow read: if true;
-      // Criação apenas via Admin SDK (Super Admin / convite)
+      allow read: if isOwnerOrSuperAdmin(tenantId);
       allow create: if false;
-      // slug, ownerUid and SaaS fields are immutable for tenant admins
-      allow update: if isOwnerOrSuperAdmin(tenantId)
+      allow update: if canWriteTenantData(tenantId)
         && request.resource.data.slug == resource.data.slug
         && request.resource.data.ownerUid == resource.data.ownerUid
         && (isSuperAdmin() || (
@@ -44,22 +55,19 @@ service cloud.firestore {
         ));
       allow delete: if isSuperAdmin();
 
-      // ─── categories ────────────────────────────────────────────────────────
       match /categories/{categoryId} {
-        allow read: if true;
-        allow write: if isOwnerOrSuperAdmin(tenantId);
+        allow read: if isOwnerOrSuperAdmin(tenantId);
+        allow write: if canWriteTenantData(tenantId);
 
-        // ─── items ───────────────────────────────────────────────────────────
         match /items/{itemId} {
-          allow read: if true;
-          allow write: if isOwnerOrSuperAdmin(tenantId);
+          allow read: if isOwnerOrSuperAdmin(tenantId);
+          allow write: if canWriteTenantData(tenantId);
         }
       }
 
-      // ─── gallery ───────────────────────────────────────────────────────────
       match /gallery/{imageId} {
-        allow read: if true;
-        allow write: if isOwnerOrSuperAdmin(tenantId);
+        allow read: if isOwnerOrSuperAdmin(tenantId);
+        allow write: if canWriteTenantData(tenantId);
       }
     }
 

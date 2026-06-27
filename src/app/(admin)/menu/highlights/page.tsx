@@ -10,6 +10,11 @@ import {
 } from "@/components/admin/highlights-settings";
 import type { Category, MenuItem } from "@/types";
 
+import {
+  requireFeature,
+  requireTenantEntitlements,
+} from "@/lib/platform/require-entitlements.server";
+
 export const metadata: Metadata = { title: "Destaques" };
 
 export default async function MenuHighlightsPage() {
@@ -18,6 +23,9 @@ export default async function MenuHighlightsPage() {
 
   const tenant = await getTenantByIdServer(sessionUser.tenantId);
   if (!tenant) redirect("/auth/login");
+
+  const entitlements = await requireTenantEntitlements(tenant);
+  requireFeature(entitlements, "products");
 
   const categories = await getCategoriesByTenantServer(tenant.id);
   const categoriesWithItems: CategoryWithItems[] = await Promise.all(

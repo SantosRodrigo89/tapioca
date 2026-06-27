@@ -7,6 +7,8 @@
     "build": "npm run export:brand && next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "sync:logo": "node scripts/sync-logo.mjs",
     "export:brand": "node scripts/export-brand-assets.mjs"
   },
@@ -20,6 +22,8 @@
     "@radix-ui/react-label": "^2.1.10",
     "@radix-ui/react-separator": "^1.1.10",
     "@radix-ui/react-slot": "^1.3.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^12.15.0",
@@ -45,6 +49,7 @@
     "eslint-config-next": "16.2.9",
     "playwright": "^1.61.1",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.9"
   }
 }

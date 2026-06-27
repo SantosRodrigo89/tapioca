@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateSiteConfig } from "@/lib/repositories/tenant.repository";
+import { UpdateSiteSeoSchema } from "@/lib/schemas/site.schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -41,24 +42,26 @@ export function SeoTab({
     keywordsText !== (seo.keywords ?? []).join(", ");
 
   const handleSave = async () => {
-    if (ogImageUrl && !/^https?:\/\/.+/.test(ogImageUrl)) {
-      toast.error("URL da imagem OG inválida");
+    const keywords = keywordsText
+      .split(",")
+      .map((k) => k.trim())
+      .filter(Boolean);
+
+    const parsed = UpdateSiteSeoSchema.safeParse({
+      title: title.trim() || undefined,
+      description: description.trim() || undefined,
+      ogImageUrl: ogImageUrl.trim() || undefined,
+      keywords: keywords.length > 0 ? keywords : undefined,
+    });
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Dados de SEO inválidos");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const keywords = keywordsText
-        .split(",")
-        .map((k) => k.trim())
-        .filter(Boolean);
-
-      const seoPatch = {
-        title: title.trim() || undefined,
-        description: description.trim() || undefined,
-        ogImageUrl: ogImageUrl.trim() || undefined,
-        keywords: keywords.length > 0 ? keywords : undefined,
-      };
+      const seoPatch = parsed.data;
 
       await updateSiteConfig(tenant.id, { seo: seoPatch }, siteConfig);
 

@@ -1,5 +1,13 @@
 import { z } from "zod";
 import { TenantThemeSchema } from "./tenant-menu.schema";
+import {
+  ExternalUrlFieldSchema,
+  FacebookFieldSchema,
+  InstagramFieldSchema,
+  SafeHrefSchema,
+  SafeOptionalHttpUrlSchema,
+  TiktokFieldSchema,
+} from "./safe-url.schema";
 
 export const SiteSectionIdSchema = z.enum([
   "hero",
@@ -25,7 +33,7 @@ export const FontPresetSchema = z.enum(["plus-jakarta", "inter", "dm-sans"]);
 
 export const SiteButtonSchema = z.object({
   label: z.string().min(1).max(50),
-  href: z.string().min(1).max(500),
+  href: SafeHrefSchema,
   variant: z.enum(["primary", "secondary", "outline"]).optional(),
 });
 
@@ -36,14 +44,14 @@ export const SiteIdentitySchema = z.object({
 export const SiteHeroSchema = z.object({
   title: z.string().max(100).optional(),
   subtitle: z.string().max(200).optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: SafeOptionalHttpUrlSchema,
   buttons: z.array(SiteButtonSchema).max(3).optional(),
 });
 
 export const SiteAboutSchema = z.object({
   title: z.string().max(100).optional(),
   description: z.string().max(2000).optional(),
-  imageUrl: z.string().url().optional(),
+  imageUrl: SafeOptionalHttpUrlSchema,
 });
 
 export const SiteDifferentialSchema = z.object({
@@ -65,9 +73,9 @@ export const SiteContactSchema = z.object({
     .optional()
     .or(z.literal("")),
   phone: z.string().max(20).optional(),
-  instagram: z.string().max(100).optional(),
-  facebook: z.string().max(200).optional(),
-  tiktok: z.string().max(100).optional(),
+  instagram: InstagramFieldSchema,
+  facebook: FacebookFieldSchema,
+  tiktok: TiktokFieldSchema,
   email: z.string().email().optional().or(z.literal("")),
 });
 
@@ -75,13 +83,13 @@ export const SiteLocationSchema = z.object({
   address: z.string().max(300).optional(),
   lat: z.number().min(-90).max(90).optional(),
   lng: z.number().min(-180).max(180).optional(),
-  directionsUrl: z.string().url().optional(),
+  directionsUrl: ExternalUrlFieldSchema,
 });
 
 export const SiteSeoSchema = z.object({
   title: z.string().max(70).optional(),
   description: z.string().max(160).optional(),
-  ogImageUrl: z.string().url().optional(),
+  ogImageUrl: SafeOptionalHttpUrlSchema,
   keywords: z.array(z.string().max(50)).max(20).optional(),
 });
 
@@ -105,7 +113,7 @@ export const SiteTestimonialSchema = z.object({
   id: z.string(),
   author: z.string().min(1).max(80),
   text: z.string().min(1).max(500),
-  imageUrl: z.string().url().optional(),
+  imageUrl: SafeOptionalHttpUrlSchema,
 });
 
 export const SiteConfigSchema = z.object({

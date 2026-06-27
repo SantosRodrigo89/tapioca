@@ -7,6 +7,7 @@ import {
   normalizePhoneInput,
 } from "@/lib/utils";
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
+import { UpdateSiteContactSchema } from "@/lib/schemas/site.schema";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,18 +53,23 @@ export function ContactTab({
     address !== (location.address ?? tenant.address ?? "");
 
   const handleSave = async () => {
-    if (whatsapp && !/^\d+$/.test(whatsapp)) {
-      toast.error("WhatsApp deve conter apenas números");
-      return;
-    }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      toast.error("E-mail inválido");
+    const parsed = UpdateSiteContactSchema.safeParse({
+      whatsapp: whatsapp.trim() || "",
+      phone: phone.trim() || undefined,
+      instagram: instagram.trim() || undefined,
+      facebook: facebook.trim() || undefined,
+      tiktok: tiktok.trim() || undefined,
+      email: email.trim() || "",
+    });
+
+    if (!parsed.success) {
+      toast.error(parsed.error.issues[0]?.message ?? "Dados de contato inválidos");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      const whatsappValue = whatsapp.trim() || undefined;
+      const whatsappValue = parsed.data.whatsapp || undefined;
       const addressValue = address.trim() || undefined;
 
       await updateTenant(tenant.id, {
@@ -73,11 +79,11 @@ export function ContactTab({
 
       const contactPatch = {
         whatsapp: whatsappValue,
-        phone: phone.trim() || undefined,
-        instagram: instagram.trim() || undefined,
-        facebook: facebook.trim() || undefined,
-        tiktok: tiktok.trim() || undefined,
-        email: email.trim() || undefined,
+        phone: parsed.data.phone,
+        instagram: parsed.data.instagram,
+        facebook: parsed.data.facebook,
+        tiktok: parsed.data.tiktok,
+        email: parsed.data.email || undefined,
       };
 
       const locationPatch = {

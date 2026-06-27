@@ -6,6 +6,10 @@ import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.
 import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
 import { getGalleryByTenantServer } from "@/lib/repositories/server/gallery.server";
 import { getResolvedSiteConfig } from "@/services/site.service";
+import {
+  requireFeature,
+  requireTenantEntitlements,
+} from "@/lib/platform/require-entitlements.server";
 import { SiteEditor } from "./site-editor";
 import type { Category, MenuItem } from "@/types";
 
@@ -18,6 +22,9 @@ export default async function SitePage() {
   const tenantId = sessionUser.tenantId as string;
   const tenant = await getTenantByIdServer(tenantId);
   if (!tenant) redirect("/auth/login");
+
+  const entitlements = await requireTenantEntitlements(tenant);
+  requireFeature(entitlements, "landing_page");
 
   const [categories, gallery] = await Promise.all([
     getCategoriesByTenantServer(tenantId),
