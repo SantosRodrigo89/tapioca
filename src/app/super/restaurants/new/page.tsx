@@ -1,18 +1,36 @@
 import type { Metadata } from "next";
-import { SuperPageHeader } from "@/components/super/super-page-header";
+import { listPlansServer } from "@/lib/repositories/server/platform/plan.server";
+import { listTemplatesServer } from "@/lib/repositories/server/platform/template.server";
+import { getPlatformSettingsServer } from "@/lib/repositories/server/platform/platform-settings.server";
+import { getDefaultPlanId } from "@/lib/platform/plans/default-plans";
+import { CreateRestaurantWizard } from "@/features/super/restaurants/create-restaurant-wizard/create-restaurant-wizard";
 
 export const metadata: Metadata = { title: "Novo Restaurante — Super Admin" };
 
-export default function NewRestaurantPage() {
+export default async function NewRestaurantPage() {
+  const [plans, templates, settings] = await Promise.all([
+    listPlansServer(),
+    listTemplatesServer(),
+    getPlatformSettingsServer(),
+  ]);
+
+  const activePlans = plans.filter((p) => p.status === "active");
+  const activeTemplates = templates.filter((t) => t.status === "active");
+
   return (
-    <div className="space-y-6">
-      <SuperPageHeader
-        title="Novo Restaurante"
-        description="Wizard de cadastro — em implementação na próxima entrega."
-      />
-      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        Etapas: dados do restaurante → administrador → resumo e convite.
-      </div>
-    </div>
+    <CreateRestaurantWizard
+      plans={(activePlans.length > 0 ? activePlans : plans).map((p) => ({
+        id: p.id,
+        name: p.name,
+      }))}
+      templates={(activeTemplates.length > 0 ? activeTemplates : templates).map(
+        (t) => ({
+          id: t.id,
+          name: t.name,
+          category: t.category,
+        }),
+      )}
+      defaultPlanId={settings.defaultPlanId || getDefaultPlanId()}
+    />
   );
 }
