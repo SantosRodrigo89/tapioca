@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
 import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
+import { notifyPublicLandingChanged } from "@/lib/cache/notify-public-landing";
 import { parseConfigurationGroups } from "@/lib/catalog/parse-configuration";
 import { serializeConfigurationGroups } from "@/lib/catalog/serialize-configuration";
 import type { MenuItem, ConfigurationGroup } from "@/types";
@@ -113,6 +114,8 @@ export async function createMenuItem(
     updatedAt: serverTimestamp(),
   });
 
+  notifyPublicLandingChanged(tenantId);
+
   return {
     id: ref.id,
     name: data.name,
@@ -162,6 +165,7 @@ export async function updateMenuItem(
   }
 
   await updateDoc(doc(itemsRef(tenantId, categoryId), itemId), payload);
+  notifyPublicLandingChanged(tenantId);
 }
 
 export async function deleteMenuItem(
@@ -171,4 +175,5 @@ export async function deleteMenuItem(
 ): Promise<void> {
   await ensureClientAuthForWrite(tenantId);
   await deleteDoc(doc(itemsRef(tenantId, categoryId), itemId));
+  notifyPublicLandingChanged(tenantId);
 }

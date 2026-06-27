@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
 import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
+import { notifyPublicLandingChanged } from "@/lib/cache/notify-public-landing";
 import type { Category } from "@/types";
 
 function timestampToDate(value: unknown): Date {
@@ -96,6 +97,8 @@ export async function createCategory(
     updatedAt: serverTimestamp(),
   });
 
+  notifyPublicLandingChanged(tenantId);
+
   return {
     id: ref.id,
     name: data.name,
@@ -130,6 +133,7 @@ export async function updateCategory(
   }
 
   await updateDoc(doc(categoriesRef(tenantId), categoryId), payload);
+  notifyPublicLandingChanged(tenantId);
 }
 
 export async function deleteCategory(
@@ -138,4 +142,5 @@ export async function deleteCategory(
 ): Promise<void> {
   await ensureClientAuthForWrite(tenantId);
   await deleteDoc(doc(categoriesRef(tenantId), categoryId));
+  notifyPublicLandingChanged(tenantId);
 }

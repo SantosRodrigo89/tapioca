@@ -8,3 +8,5 @@ export const CACHE_TTL = {
 export function publicLandingCacheTag(slug: string): string {
   return `public-landing-${slug}`;
 }
+
+export const SUPER_METRICS_CACHE_TAG = "super-metrics";

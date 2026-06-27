@@ -1,6 +1,7 @@
 import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
 import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
+import { notifyPublicLandingChanged } from "@/lib/cache/notify-public-landing";
 import { stripUndefined } from "@/lib/firestore/sanitize";
 import {
   createDefaultSiteConfig,
@@ -29,6 +30,7 @@ export async function updateTenant(
     ...data,
     updatedAt: serverTimestamp(),
   });
+  notifyPublicLandingChanged(tenantId);
 }
 
 export async function updateSiteConfig(
@@ -44,4 +46,5 @@ export async function updateSiteConfig(
     siteConfig,
     updatedAt: serverTimestamp(),
   });
+  notifyPublicLandingChanged(tenantId);
 }

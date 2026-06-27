@@ -3,7 +3,7 @@ import type { SuperPlatformMetrics } from "@/types/platform";
 import type { SuperDashboardMetrics } from "@/types/platform";
 import type { TenantStatus } from "@/types";
 import { adminDb } from "@/lib/firebase/admin";
-import { CACHE_TTL } from "@/lib/cache/revalidate";
+import { CACHE_TTL, SUPER_METRICS_CACHE_TAG } from "@/lib/cache/revalidate";
 import { countPendingInvitesServer } from "@/lib/repositories/server/platform/invite.server";
 import { listFeaturesServer } from "@/lib/repositories/server/platform/feature.server";
 import { listPlansServer } from "@/lib/repositories/server/platform/plan.server";
@@ -140,7 +140,7 @@ export function getSuperDashboardMetricsServer(): Promise<SuperDashboardMetrics>
   return unstable_cache(
     getSuperDashboardMetricsUncached,
     ["super-dashboard-metrics"],
-    { revalidate: CACHE_TTL.SUPER_METRICS_SECONDS, tags: ["super-metrics"] },
+    { revalidate: CACHE_TTL.SUPER_METRICS_SECONDS, tags: [SUPER_METRICS_CACHE_TAG] },
   )();
 }
 
@@ -148,6 +148,6 @@ export function getSuperPlatformMetricsServer(): Promise<SuperPlatformMetrics> {
   return unstable_cache(
     getSuperPlatformMetricsUncached,
     ["super-platform-metrics"],
-    { revalidate: CACHE_TTL.SUPER_METRICS_SECONDS, tags: ["super-metrics"] },
+    { revalidate: CACHE_TTL.SUPER_METRICS_SECONDS, tags: [SUPER_METRICS_CACHE_TAG] },
   )();
 }

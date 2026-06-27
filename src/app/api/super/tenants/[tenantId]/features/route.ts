@@ -6,6 +6,11 @@ import {
   FeatureEntitlementError,
   updateTenantFeatureServer,
 } from "@/services/platform/feature-entitlements.service";
+import {
+  revalidatePublicLanding,
+  revalidateSuperMetrics,
+} from "@/lib/cache/revalidate.server";
+import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
 
 export async function PATCH(
   request: Request,
@@ -34,6 +39,12 @@ export async function PATCH(
       parsed.data.featureId,
       parsed.data.enabled,
     );
+
+    const tenant = await getTenantByIdServer(tenantId);
+    if (tenant) {
+      revalidatePublicLanding(tenant.slug);
+    }
+    revalidateSuperMetrics();
 
     return NextResponse.json({ ok: true, ...result });
   } catch (err) {

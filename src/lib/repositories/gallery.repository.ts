@@ -13,6 +13,7 @@ import {
 } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
 import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
+import { notifyPublicLandingChanged } from "@/lib/cache/notify-public-landing";
 import type { GalleryImage } from "@/types";
 
 function timestampToDate(value: unknown): Date {
@@ -69,6 +70,8 @@ export async function createGalleryImage(
     createdAt: serverTimestamp(),
   });
 
+  notifyPublicLandingChanged(tenantId);
+
   return {
     id: imageId,
     url: data.url,
@@ -95,6 +98,7 @@ export async function updateGalleryImage(
   }
 
   await updateDoc(doc(galleryRef(tenantId), imageId), payload);
+  notifyPublicLandingChanged(tenantId);
 }
 
 export async function deleteGalleryImage(
@@ -103,6 +107,7 @@ export async function deleteGalleryImage(
 ): Promise<void> {
   await ensureClientAuthForWrite(tenantId);
   await deleteDoc(doc(galleryRef(tenantId), imageId));
+  notifyPublicLandingChanged(tenantId);
 }
 
 export async function reorderGalleryImages(

@@ -7,6 +7,10 @@ import {
   updateTenantStatusServer,
 } from "@/lib/repositories/server/tenant.server";
 import { logAuditEvent } from "@/services/platform/audit.service";
+import {
+  revalidatePublicLanding,
+  revalidateSuperMetrics,
+} from "@/lib/cache/revalidate.server";
 
 interface RouteContext {
   params: Promise<{ tenantId: string }>;
@@ -68,6 +72,9 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
         metadata: { previousStatus, newStatus },
       });
     }
+
+    revalidatePublicLanding(tenant.slug);
+    revalidateSuperMetrics();
 
     return NextResponse.json({ ok: true, status: newStatus });
   } catch (error) {
