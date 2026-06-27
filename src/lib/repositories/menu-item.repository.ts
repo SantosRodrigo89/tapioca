@@ -13,7 +13,9 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
-import type { MenuItem } from "@/types";
+import { parseConfigurationGroups } from "@/lib/catalog/parse-configuration";
+import { serializeConfigurationGroups } from "@/lib/catalog/serialize-configuration";
+import type { MenuItem, ConfigurationGroup } from "@/types";
 
 function timestampToDate(value: unknown): Date {
   if (value instanceof Timestamp) return value.toDate();
@@ -39,6 +41,7 @@ function docToMenuItem(id: string, data: Record<string, unknown>): MenuItem {
     imageUrl: data.imageUrl as string | undefined,
     available: data.available as boolean,
     availability: parseAvailability(data),
+    configurationGroups: parseConfigurationGroups(data.configurationGroups),
     order: data.order as number,
     createdAt: timestampToDate(data.createdAt),
     updatedAt: timestampToDate(data.updatedAt),
@@ -85,6 +88,7 @@ export async function createMenuItem(
     imageUrl?: string;
     available?: boolean;
     availability?: AvailabilitySchedule;
+    configurationGroups?: ConfigurationGroup[];
     order?: number;
   },
 ): Promise<MenuItem> {
@@ -101,6 +105,7 @@ export async function createMenuItem(
     imageUrl: data.imageUrl ?? null,
     available: data.available ?? true,
     ...(data.availability?.enabled ? { availability: data.availability } : {}),
+    configurationGroups: serializeConfigurationGroups(data.configurationGroups),
     order: nextOrder,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -114,6 +119,7 @@ export async function createMenuItem(
     imageUrl: data.imageUrl,
     available: data.available ?? true,
     availability: data.availability?.enabled ? data.availability : undefined,
+    configurationGroups: data.configurationGroups,
     order: nextOrder,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -131,6 +137,7 @@ export async function updateMenuItem(
     imageUrl?: string | null;
     available?: boolean;
     availability?: AvailabilitySchedule | null;
+    configurationGroups?: ConfigurationGroup[] | null;
     order?: number;
   },
 ): Promise<void> {
@@ -138,6 +145,12 @@ export async function updateMenuItem(
     ...data,
     updatedAt: serverTimestamp(),
   };
+
+  if (data.configurationGroups !== undefined) {
+    payload.configurationGroups = serializeConfigurationGroups(
+      data.configurationGroups,
+    );
+  }
 
   if (data.availability === null) {
     payload.availability = null;

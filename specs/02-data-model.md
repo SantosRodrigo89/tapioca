@@ -86,12 +86,58 @@ Items individuais do cardápio.
 | `imageUrl` | `string` | ❌ | URL da imagem no Storage |
 | `available` | `boolean` | ✅ | Se `false`, não aparece no cardápio público |
 | `order` | `number` | ✅ | Posição dentro da categoria (crescente) |
+| `configurationGroups` | `ConfigurationGroup[]` | ❌ | Grupos de configuração do produto (ver abaixo) |
 | `createdAt` | `Timestamp` | ✅ | Data de criação |
 | `updatedAt` | `Timestamp` | ✅ | Data da última atualização |
 
 **Regras:** leitura pública, escrita apenas pelo tenant admin ou super admin.
 
 **Índice:** `available ASC, order ASC`
+
+### Campo embutido: `configurationGroups`
+
+Produtos podem ter zero ou mais grupos de configuração, embutidos no documento do item (sem subcollection). Produtos legados sem este campo funcionam normalmente.
+
+**ConfigurationGroup**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | `string` | ✅ | Identificador estável do grupo |
+| `name` | `string` | ✅ | Nome exibido (ex: "Tamanho") |
+| `type` | `string` | ✅ | Rótulo livre (ex: "Variação", "Adicionais") |
+| `required` | `boolean` | ✅ | Cliente deve selecionar opções |
+| `multiple` | `boolean` | ✅ | Permite múltiplas opções |
+| `minSelections` | `number` | ✅ | Mínimo de opções selecionadas |
+| `maxSelections` | `number` | ✅ | Máximo de opções selecionadas |
+| `pricingStrategy` | `PricingStrategy` | ✅ | `fixed` \| `additional` \| `highest` \| `average` \| `sum` \| `custom` |
+| `definesBasePrice` | `boolean` | ✅ | Grupo de variação — catálogo exibe "A partir de R$ XX" |
+| `enabled` | `boolean` | ✅ | Grupo ativo |
+| `displayOrder` | `number` | ✅ | Ordem de exibição |
+| `options` | `ConfigurationOption[]` | ✅ | Opções do grupo |
+
+**ConfigurationOption**
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | `string` | ✅ | Identificador estável da opção |
+| `name` | `string` | ✅ | Nome da opção |
+| `description` | `string` | ❌ | Descrição opcional |
+| `price` | `number` | ✅ | Preço em centavos |
+| `imageUrl` | `string` | ❌ | URL da imagem (opcional) |
+| `enabled` | `boolean` | ✅ | Opção ativa |
+| `displayOrder` | `number` | ✅ | Ordem dentro do grupo |
+
+**Estratégias de preço (implementadas):**
+
+- `fixed` — preço da opção selecionada substitui a base do grupo
+- `additional` — soma o preço de cada opção selecionada
+- `highest` — usa o maior preço entre as opções selecionadas
+
+**Invariantes:**
+
+- Apenas um grupo por produto pode ter `definesBasePrice: true`
+- Grupos com `definesBasePrice` exigem `pricingStrategy: fixed` e seleção única
+- Pedidos futuros farão snapshot das opções selecionadas (sem referência viva ao catálogo)
 
 ## Subcollection: `tenants/{tenantId}/gallery`
 
@@ -117,6 +163,7 @@ Estrutura de paths:
 tenants/{tenantId}/logo.{ext}
 tenants/{tenantId}/banner.{ext}
 tenants/{tenantId}/items/{itemId}.{ext}
+tenants/{tenantId}/items/{itemId}/options/{optionId}.{ext}
 tenants/{tenantId}/gallery/{imageId}.{ext}
 ```
 
@@ -136,7 +183,7 @@ Os tipos em `src/types/index.ts` mapeiam diretamente este modelo:
 
 - `Tenant` → `tenants/{id}` (inclui `siteConfig` opcional)
 - `Category` → `categories/{id}`
-- `MenuItem` → `items/{id}`
+- `MenuItem` → `items/{id}` (inclui `configurationGroups` opcional)
 - `GalleryImage` → `gallery/{id}`
 - `SlugIndexEntry` → `slugIndex/{slug}`
 - `AuthUser` → usuário Firebase Auth com claims

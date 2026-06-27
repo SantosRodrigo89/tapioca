@@ -3,8 +3,13 @@
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreateMenuItemSchema, type CreateMenuItemInput } from "@/lib/schemas";
+import {
+  CreateMenuItemSchema,
+  type CreateMenuItemInput,
+  type ConfigurationGroupInput,
+} from "@/lib/schemas";
 import { AvailabilityScheduleFields } from "@/components/admin/availability-schedule-fields";
+import { ProductConfigurationSection } from "@/components/admin/product-configuration-section";
 import type { AvailabilitySchedule } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +39,14 @@ export function MenuItemForm({
   const [availability, setAvailability] = useState<
     AvailabilitySchedule | undefined
   >(defaultValues?.availability);
+  const [configurationGroups, setConfigurationGroups] = useState<
+    ConfigurationGroupInput[]
+  >(defaultValues?.configurationGroups ?? []);
+  const [configError, setConfigError] = useState<string | null>(null);
+
+  const hasBasePriceGroup = configurationGroups.some(
+    (group) => group.definesBasePrice,
+  );
 
   const {
     register,
@@ -47,10 +60,29 @@ export function MenuItemForm({
 
   return (
     <form
-      onSubmit={handleSubmit((data) =>
-        onSubmit({ ...data, availability }, imageFile),
-      )}
-      className="space-y-4"
+      onSubmit={handleSubmit((data) => {
+        const payload = {
+          ...data,
+          availability,
+          configurationGroups:
+            configurationGroups.length > 0 ? configurationGroups : undefined,
+        };
+
+        const parsed = CreateMenuItemSchema.safeParse(payload);
+        if (!parsed.success) {
+          const groupIssue = parsed.error.issues.find((issue) =>
+            issue.path.includes("configurationGroups"),
+          );
+          setConfigError(
+            groupIssue?.message ?? "Verifique as configurações do produto",
+          );
+          return;
+        }
+
+        setConfigError(null);
+        return onSubmit(parsed.data, imageFile);
+      })}
+      className="space-y-4 max-h-[70vh] overflow-y-auto pr-1"
     >
       <div className="space-y-1">
         <Label htmlFor="item-name">Nome</Label>
@@ -74,7 +106,9 @@ export function MenuItemForm({
       </div>
 
       <div className="space-y-1">
-        <Label htmlFor="item-price">Preço</Label>
+        <Label htmlFor="item-price">
+          {hasBasePriceGroup ? "Preço base (opcional)" : "Preço"}
+        </Label>
         <Controller
           name="price"
           control={control}
@@ -87,6 +121,12 @@ export function MenuItemForm({
             />
           )}
         />
+        {hasBasePriceGroup && (
+          <p className="text-xs text-muted-foreground">
+            Com variação de preço, o valor exibido será &quot;A partir de&quot; da
+            opção mais barata.
+          </p>
+        )}
         {errors.price && (
           <p className="text-xs text-destructive">{errors.price.message}</p>
         )}
@@ -110,6 +150,15 @@ export function MenuItemForm({
           Item disponível (visível no cardápio)
         </Label>
       </div>
+
+      <ProductConfigurationSection
+        value={configurationGroups}
+        onChange={setConfigurationGroups}
+        disabled={isSubmitting}
+      />
+      {configError && (
+        <p className="text-xs text-destructive">{configError}</p>
+      )}
 
       <AvailabilityScheduleFields
         value={availability}

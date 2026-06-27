@@ -5,7 +5,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { UpdateTenantHighlightsSchema } from "@/lib/schemas/tenant-menu.schema";
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
-import { formatPrice } from "@/lib/utils";
+import { formatMenuItemPrice } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import type { CategoryWithItems } from "@/components/admin/highlights-settings";
@@ -148,7 +148,7 @@ export function FeaturedTab({
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{item.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {item.categoryName} · {formatPrice(item.price)}
+                        {item.categoryName} · {formatMenuItemPrice(item)}
                         {!item.available && " · Indisponível"}
                       </p>
                     </div>

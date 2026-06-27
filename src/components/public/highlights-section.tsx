@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight, Clock } from "lucide-react";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
-import { formatPrice, formatWhatsAppOrderLink } from "@/lib/utils";
+import { formatWhatsAppOrderLink } from "@/lib/utils";
+import { formatMenuItemPrice } from "@/lib/pricing";
 import { getItemAvailabilityStatus } from "@/lib/utils/availability";
 import type { Category, MenuItem } from "@/types";
 
@@ -69,7 +70,7 @@ export function HighlightsSection({
                     className="text-xl font-bold"
                     style={{ color: "var(--menu-primary-dark)" }}
                   >
-                    {formatPrice(item.price)}
+                    {formatMenuItemPrice(item)}
                   </p>
                   {!status.orderable && status.label && (
                     <p className="inline-flex items-center gap-1 text-xs font-medium text-[#999]">

@@ -44,7 +44,7 @@ import {
 import { MenuItemForm } from "@/components/admin/menu-item-form";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import { ItemThumbnail } from "@/components/admin/item-thumbnail";
-import { formatPrice } from "@/lib/utils";
+import { formatMenuItemPrice } from "@/lib/pricing";
 import {
   formatAvailabilitySummary,
   getItemAvailabilityStatus,
@@ -139,6 +139,9 @@ export function ProductsPanel({
       await updateMenuItem(tenantId, categoryId, itemId, {
         ...data,
         availability: data.availability?.enabled ? data.availability : null,
+        configurationGroups: data.configurationGroups?.length
+          ? data.configurationGroups
+          : null,
         ...(imageUrl ? { imageUrl } : {}),
       });
 
@@ -155,6 +158,7 @@ export function ProductsPanel({
                         availability: data.availability?.enabled
                           ? data.availability
                           : undefined,
+                        configurationGroups: data.configurationGroups,
                         ...(imageUrl ? { imageUrl } : {}),
                       }
                     : i,
@@ -403,7 +407,7 @@ export function ProductsPanel({
                               </p>
                             )}
                             <p className="text-sm font-semibold mt-0.5">
-                              {formatPrice(item.price)}
+                              {formatMenuItemPrice(item)}
                             </p>
                             {(() => {
                               const scheduleLabel =
@@ -586,6 +590,7 @@ export function ProductsPanel({
                 price: dialog.item.price,
                 available: dialog.item.available,
                 availability: dialog.item.availability,
+                configurationGroups: dialog.item.configurationGroups,
               }}
               onSubmit={(data, imageFile) =>
                 handleUpdateItem(

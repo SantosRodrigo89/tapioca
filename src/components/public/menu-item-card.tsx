@@ -1,7 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Clock, Plus } from "lucide-react";
-import { formatPrice, formatWhatsAppOrderLink } from "@/lib/utils";
+import { formatWhatsAppOrderLink } from "@/lib/utils";
+import { formatMenuItemPrice } from "@/lib/pricing";
 import { getItemAvailabilityStatus } from "@/lib/utils/availability";
 import type { Category, MenuItem } from "@/types";
 
@@ -66,7 +67,7 @@ export function MenuItemCard({
             className="text-xl font-bold sm:text-2xl"
             style={{ color: "var(--menu-primary-dark)" }}
           >
-            {formatPrice(item.price)}
+            {formatMenuItemPrice(item)}
           </p>
 
           {whatsapp && status.orderable ? (

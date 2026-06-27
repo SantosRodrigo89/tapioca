@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { AvailabilityScheduleSchema } from "./availability.schema";
+import { ConfigurationGroupsSchema } from "./configuration.schema";
 
 export const MenuItemSchema = z.object({
   id: z.string(),
@@ -8,6 +9,7 @@ export const MenuItemSchema = z.object({
   price: z.number().int().nonnegative(),
   imageUrl: z.string().url().optional(),
   available: z.boolean(),
+  configurationGroups: ConfigurationGroupsSchema.optional(),
   order: z.number().int().nonnegative(),
   createdAt: z.date(),
   updatedAt: z.date(),
@@ -28,6 +30,7 @@ export const CreateMenuItemSchema = z.object({
     .nonnegative("Preço não pode ser negativo"),
   available: z.boolean(),
   availability: AvailabilityScheduleSchema.optional(),
+  configurationGroups: ConfigurationGroupsSchema.optional(),
 });
 
 export const UpdateMenuItemSchema = z.object({
@@ -49,6 +52,7 @@ export const UpdateMenuItemSchema = z.object({
   availability: AvailabilityScheduleSchema.optional(),
   order: z.number().int().nonnegative().optional(),
   imageUrl: z.string().url().optional().nullable(),
+  configurationGroups: ConfigurationGroupsSchema.optional().nullable(),
 });
 
 export type MenuItem = z.infer<typeof MenuItemSchema>;

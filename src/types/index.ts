@@ -1,4 +1,11 @@
 import type { SiteConfig } from "./site";
+import type { ConfigurationGroup } from "./catalog-config";
+
+export type {
+  ConfigurationGroup,
+  ConfigurationOption,
+  PricingStrategy,
+} from "./catalog-config";
 
 // ─── Tenant ────────────────────────────────────────────────────────────────
 
@@ -78,6 +85,7 @@ export interface MenuItem {
   imageUrl?: string;
   available: boolean;
   availability?: AvailabilitySchedule;
+  configurationGroups?: ConfigurationGroup[];
   order: number;
   createdAt: Date;
   updatedAt: Date;
