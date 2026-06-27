@@ -4,9 +4,12 @@ import { parseSiteConfigFromFirestore } from "@/lib/firestore/site-config";
 import type {
   DaySchedule,
   Tenant,
+  TenantCreatedBy,
+  TenantMetrics,
   TenantStatus,
   TenantTheme,
 } from "@/types";
+import type { FeatureId } from "@/types/platform/feature";
 import { DEFAULT_TENANT_THEME } from "@/lib/utils/theme";
 
 function parseTheme(data: FirebaseFirestore.DocumentData): TenantTheme | undefined {
@@ -35,6 +38,18 @@ function docToTenant(id: string, data: FirebaseFirestore.DocumentData): Tenant {
     siteConfig: parseSiteConfigFromFirestore(data.siteConfig),
     status: data.status as TenantStatus,
     ownerUid: data.ownerUid as string,
+    planId: data.planId ?? undefined,
+    templateId: data.templateId ?? undefined,
+    category: data.category ?? undefined,
+    customDomain: data.customDomain ?? undefined,
+    featureOverrides: (data.featureOverrides as Partial<
+      Record<FeatureId, boolean>
+    >) ?? undefined,
+    lastAccessAt: data.lastAccessAt
+      ? (data.lastAccessAt as FirebaseFirestore.Timestamp).toDate()
+      : undefined,
+    createdBy: (data.createdBy as TenantCreatedBy | undefined) ?? undefined,
+    metrics: (data.metrics as TenantMetrics | undefined) ?? undefined,
     createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),
     updatedAt: (data.updatedAt as FirebaseFirestore.Timestamp).toDate(),
   };

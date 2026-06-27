@@ -1,6 +1,11 @@
 import type { SiteConfig } from "./site";
 import type { ConfigurationGroup } from "./catalog-config";
 import type { MenuItemBadge } from "./menu-item-badge";
+import type { FeatureId } from "./platform/feature";
+import type {
+  TenantCreatedBy,
+  TenantMetrics,
+} from "./platform";
 
 export type { MenuItemBadge } from "./menu-item-badge";
 export type {
@@ -52,9 +57,19 @@ export interface Tenant {
   siteConfig?: SiteConfig;
   status: TenantStatus;
   ownerUid: string;
+  planId?: string;
+  templateId?: string;
+  category?: string;
+  customDomain?: string;
+  featureOverrides?: Partial<Record<FeatureId, boolean>>;
+  lastAccessAt?: Date;
+  createdBy?: TenantCreatedBy;
+  metrics?: TenantMetrics;
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type { TenantCreatedBy, TenantMetrics } from "./platform";
 
 // ─── Catalog ───────────────────────────────────────────────────────────────
 
@@ -112,3 +127,4 @@ export interface SlugIndexEntry {
 }
 
 export type { SiteConfig, SiteSectionConfig, SiteSectionId, GalleryImage } from "./site";
+export type * from "./platform";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { LogOut, Shield } from "lucide-react";
+import { LogOut, Menu, Shield } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 
-export function SuperHeader() {
+interface SuperHeaderProps {
+  onMenuClick?: () => void;
+}
+
+export function SuperHeader({ onMenuClick }: SuperHeaderProps) {
   const router = useRouter();
   const { user, signOut } = useAuth();
 
@@ -29,12 +33,27 @@ export function SuperHeader() {
 
   return (
     <header className="flex h-14 items-center gap-4 border-b bg-card px-4 md:px-6">
-      <div className="flex items-center gap-3">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="md:hidden"
+        aria-label="Menu"
+        onClick={onMenuClick}
+      >
+        <Menu className="h-5 w-5" />
+      </Button>
+
+      <div className="hidden md:flex items-center gap-3">
         <Logo size="sm" href="/super" />
         <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
           <Shield className="h-4 w-4" />
           Super Admin
         </div>
+      </div>
+
+      <div className="flex md:hidden items-center gap-2 text-sm font-semibold text-muted-foreground">
+        <Shield className="h-4 w-4" />
+        Super Admin
       </div>
 
       <div className="flex-1" />

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { TenantStatusBadge } from "@/components/admin/tenant-status-badge";
+import { SuperPageHeader } from "@/components/super/super-page-header";
 import { Button } from "@/components/ui/button";
 import type { Tenant, TenantStatus } from "@/types";
 
@@ -15,11 +16,11 @@ const STATUS_OPTIONS: { value: TenantStatus; label: string }[] = [
   { value: "cancelled", label: "Cancelado" },
 ];
 
-interface SuperClientProps {
+interface RestaurantsPageProps {
   initialTenants: Tenant[];
 }
 
-export function SuperClient({ initialTenants }: SuperClientProps) {
+export function RestaurantsPage({ initialTenants }: RestaurantsPageProps) {
   const [tenants, setTenants] = useState(initialTenants);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
@@ -54,35 +55,21 @@ export function SuperClient({ initialTenants }: SuperClientProps) {
     }
   };
 
-  const counts = STATUS_OPTIONS.reduce(
-    (acc, { value }) => {
-      acc[value] = tenants.filter((t) => t.status === value).length;
-      return acc;
-    },
-    {} as Record<TenantStatus, number>,
-  );
-
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Tenants</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Gerencie restaurantes cadastrados na plataforma.
-        </p>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-4">
-        {STATUS_OPTIONS.map(({ value, label }) => (
-          <div key={value} className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">{label}</p>
-            <p className="text-2xl font-semibold">{counts[value]}</p>
-          </div>
-        ))}
-      </div>
+      <SuperPageHeader
+        title="Restaurantes"
+        description="Gerencie restaurantes cadastrados na plataforma."
+        action={
+          <Button asChild>
+            <Link href="/super/restaurants/new">Novo restaurante</Link>
+          </Button>
+        }
+      />
 
       {tenants.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Nenhum tenant cadastrado.
+          Nenhum restaurante cadastrado.
         </div>
       ) : (
         <div className="rounded-lg border overflow-x-auto">
@@ -91,6 +78,7 @@ export function SuperClient({ initialTenants }: SuperClientProps) {
               <tr className="border-b bg-muted/50 text-left">
                 <th className="px-4 py-3 font-medium">Restaurante</th>
                 <th className="px-4 py-3 font-medium">Slug</th>
+                <th className="px-4 py-3 font-medium">Plano</th>
                 <th className="px-4 py-3 font-medium">Status</th>
                 <th className="px-4 py-3 font-medium">Criado em</th>
                 <th className="px-4 py-3 font-medium">Ações</th>
@@ -102,6 +90,9 @@ export function SuperClient({ initialTenants }: SuperClientProps) {
                   <td className="px-4 py-3 font-medium">{tenant.name}</td>
                   <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
                     {tenant.slug}
+                  </td>
+                  <td className="px-4 py-3 capitalize text-muted-foreground">
+                    {tenant.planId ?? "starter"}
                   </td>
                   <td className="px-4 py-3">
                     <TenantStatusBadge status={tenant.status} />
@@ -134,7 +125,7 @@ export function SuperClient({ initialTenants }: SuperClientProps) {
                           href={`/${tenant.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          aria-label={`Ver cardápio de ${tenant.name}`}
+                          aria-label={`Ver site de ${tenant.name}`}
                         >
                           <ExternalLink className="h-4 w-4" />
                         </Link>
