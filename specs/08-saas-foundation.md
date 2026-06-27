@@ -54,4 +54,9 @@ Resolução: `resolveFeature()` em `src/lib/platform/features/resolve-feature.ts
 
 ## Entregas
 
-Ver roadmap no documento de arquitetura da Fase 2. Entregas 0–2 concluídas: tipos, seed, shell, dashboard, listagem base de restaurantes.
+Ver roadmap no documento de arquitetura da Fase 2.
+
+- Entregas 0–2: tipos, seed, shell, dashboard
+- Entrega 3: listagem de restaurantes com busca, filtros por status, ordenação, paginação (20/página) e colunas completas
+
+Listagem: `listTenantsPaginatedServer()` + query params em `/super/restaurants`.

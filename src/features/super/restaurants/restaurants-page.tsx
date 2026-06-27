@@ -2,32 +2,27 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
 import { toast } from "sonner";
-import { TenantStatusBadge } from "@/components/admin/tenant-status-badge";
 import { SuperPageHeader } from "@/components/super/super-page-header";
 import { Button } from "@/components/ui/button";
-import type { Tenant, TenantStatus } from "@/types";
-
-const STATUS_OPTIONS: { value: TenantStatus; label: string }[] = [
-  { value: "trial", label: "Trial" },
-  { value: "active", label: "Ativo" },
-  { value: "suspended", label: "Suspenso" },
-  { value: "cancelled", label: "Cancelado" },
-];
+import { RestaurantsFilters } from "@/features/super/restaurants/restaurants-filters";
+import { RestaurantsPagination } from "@/features/super/restaurants/restaurants-pagination";
+import { RestaurantsTable } from "@/features/super/restaurants/restaurants-table";
+import type { ListTenantsResult } from "@/services/platform/list-tenants.service";
+import type { TenantStatus } from "@/types";
 
 interface RestaurantsPageProps {
-  initialTenants: Tenant[];
+  data: ListTenantsResult;
 }
 
-export function RestaurantsPage({ initialTenants }: RestaurantsPageProps) {
-  const [tenants, setTenants] = useState(initialTenants);
+export function RestaurantsPage({ data }: RestaurantsPageProps) {
+  const [items, setItems] = useState(data.items);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const handleStatusChange = async (tenantId: string, status: TenantStatus) => {
-    const previous = tenants;
+    const previous = items;
     setUpdatingId(tenantId);
-    setTenants((current) =>
+    setItems((current) =>
       current.map((t) => (t.id === tenantId ? { ...t, status } : t)),
     );
 
@@ -39,14 +34,13 @@ export function RestaurantsPage({ initialTenants }: RestaurantsPageProps) {
       });
 
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { error?: string } | null;
-        throw new Error(data?.error ?? "Falha ao atualizar status");
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        throw new Error(body?.error ?? "Falha ao atualizar status");
       }
 
       toast.success("Status atualizado");
     } catch (err) {
-      setTenants(previous);
-      console.error("[super/status]", err);
+      setItems(previous);
       toast.error(
         err instanceof Error ? err.message : "Erro ao atualizar status",
       );
@@ -67,77 +61,20 @@ export function RestaurantsPage({ initialTenants }: RestaurantsPageProps) {
         }
       />
 
-      {tenants.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Nenhum restaurante cadastrado.
-        </div>
-      ) : (
-        <div className="rounded-lg border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50 text-left">
-                <th className="px-4 py-3 font-medium">Restaurante</th>
-                <th className="px-4 py-3 font-medium">Slug</th>
-                <th className="px-4 py-3 font-medium">Plano</th>
-                <th className="px-4 py-3 font-medium">Status</th>
-                <th className="px-4 py-3 font-medium">Criado em</th>
-                <th className="px-4 py-3 font-medium">Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              {tenants.map((tenant) => (
-                <tr key={tenant.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-medium">{tenant.name}</td>
-                  <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                    {tenant.slug}
-                  </td>
-                  <td className="px-4 py-3 capitalize text-muted-foreground">
-                    {tenant.planId ?? "starter"}
-                  </td>
-                  <td className="px-4 py-3">
-                    <TenantStatusBadge status={tenant.status} />
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {tenant.createdAt.toLocaleDateString("pt-BR")}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <select
-                        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                        value={tenant.status}
-                        disabled={updatingId === tenant.id}
-                        onChange={(e) =>
-                          handleStatusChange(
-                            tenant.id,
-                            e.target.value as TenantStatus,
-                          )
-                        }
-                        aria-label={`Status de ${tenant.name}`}
-                      >
-                        {STATUS_OPTIONS.map(({ value, label }) => (
-                          <option key={value} value={value}>
-                            {label}
-                          </option>
-                        ))}
-                      </select>
-                      <Button asChild variant="ghost" size="icon" className="h-8 w-8">
-                        <Link
-                          href={`/${tenant.slug}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={`Ver site de ${tenant.name}`}
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <RestaurantsFilters total={data.total} />
+
+      <RestaurantsTable
+        items={items}
+        onStatusChange={handleStatusChange}
+        updatingId={updatingId}
+      />
+
+      <RestaurantsPagination
+        page={data.page}
+        totalPages={data.totalPages}
+        total={data.total}
+        pageSize={data.pageSize}
+      />
     </div>
   );
 }
