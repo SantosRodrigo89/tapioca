@@ -35,3 +35,21 @@ export interface SuperDashboardMetrics {
   /** Placeholder */
   totalViews: number | null;
 }
+
+export interface SuperPlatformMetrics {
+  totalTenants: number;
+  totalProducts: number;
+  totalCategories: number;
+  publishedLandings: number;
+  totalUsers: number;
+  totalQrCodes: number;
+  totalViews: number | null;
+  pendingInvites: number;
+  activeTenants: number;
+  trialTenants: number;
+  suspendedTenants: number;
+  cancelledTenants: number;
+  totalPlans: number;
+  totalTemplates: number;
+  totalFeatures: number;
+}

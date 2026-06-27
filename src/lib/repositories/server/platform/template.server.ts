@@ -51,3 +51,25 @@ export async function upsertTemplateServer(
     { merge: true },
   );
 }
+
+export async function updateTemplateServer(
+  templateId: string,
+  updates: Partial<Omit<SiteTemplate, "id" | "createdAt" | "updatedAt">>,
+): Promise<SiteTemplate> {
+  const existing = await getTemplateByIdServer(templateId);
+  if (!existing) {
+    throw new Error("TEMPLATE_NOT_FOUND");
+  }
+
+  const merged: Omit<SiteTemplate, "createdAt" | "updatedAt"> = {
+    ...existing,
+    ...updates,
+    id: existing.id,
+    siteConfigPreset: updates.siteConfigPreset ?? existing.siteConfigPreset,
+  };
+
+  await upsertTemplateServer(merged);
+  const updated = await getTemplateByIdServer(templateId);
+  if (!updated) throw new Error("TEMPLATE_NOT_FOUND");
+  return updated;
+}
