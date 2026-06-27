@@ -59,3 +59,13 @@ export async function updateFeatureGlobalServer(
     updatedAt: FieldValue.serverTimestamp(),
   });
 }
+
+export async function updateFeatureServer(
+  featureId: string,
+  updates: { globalEnabled?: boolean; defaultEnabled?: boolean },
+): Promise<void> {
+  await adminDb.doc(`features/${featureId}`).update({
+    ...updates,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}

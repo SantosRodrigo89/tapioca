@@ -86,3 +86,42 @@ export async function updateTenantStatusServer(
     updatedAt: FieldValue.serverTimestamp(),
   });
 }
+
+export async function setTenantFeatureOverrideServer(
+  tenantId: string,
+  featureId: FeatureId,
+  enabled: boolean | null,
+): Promise<void> {
+  if (enabled === null) {
+    await adminDb.doc(`tenants/${tenantId}`).update({
+      [`featureOverrides.${featureId}`]: FieldValue.delete(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    return;
+  }
+
+  await adminDb.doc(`tenants/${tenantId}`).update({
+    [`featureOverrides.${featureId}`]: enabled,
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
+export async function listTenantsMinimalServer(): Promise<
+  Pick<Tenant, "id" | "name" | "slug" | "planId" | "featureOverrides">[]
+> {
+  const snap = await adminDb
+    .collection("tenants")
+    .orderBy("name", "asc")
+    .get();
+
+  return snap.docs.map((doc) => {
+    const data = doc.data();
+    return {
+      id: doc.id,
+      name: data.name as string,
+      slug: data.slug as string,
+      planId: (data.planId as string | undefined) ?? "starter",
+      featureOverrides: (data.featureOverrides as Tenant["featureOverrides"]) ?? undefined,
+    };
+  });
+}

@@ -29,3 +29,29 @@ export function isFeatureEnabled(
 ): boolean {
   return resolveFeature(featureId, { tenant, plan, feature });
 }
+
+export function getResolvedFeatureState(
+  featureId: FeatureId,
+  context: {
+    feature: PlatformFeature;
+    plan: Pick<Plan, "features"> | null;
+    tenantOverrides?: Partial<Record<FeatureId, boolean>>;
+  },
+): {
+  resolved: boolean;
+  hasOverride: boolean;
+  overrideValue?: boolean;
+  planValue?: boolean;
+} {
+  const hasOverride = context.tenantOverrides?.[featureId] !== undefined;
+  const overrideValue = context.tenantOverrides?.[featureId];
+  const planValue = context.plan?.features?.[featureId];
+
+  const resolved = resolveFeature(featureId, {
+    tenant: { featureOverrides: context.tenantOverrides },
+    plan: context.plan,
+    feature: context.feature,
+  });
+
+  return { resolved, hasOverride, overrideValue, planValue };
+}
