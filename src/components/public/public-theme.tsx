@@ -1,4 +1,7 @@
-import { resolveTenantTheme, themeToCssVars } from "@/lib/utils/theme";
+import {
+  designTokensToCssVars,
+  resolveDesignTokens,
+} from "@/lib/utils/theme";
 import type { Tenant } from "@/types";
 import type { SiteConfig } from "@/types/site";
 
@@ -14,8 +17,8 @@ interface PublicThemeProps {
 }
 
 export function PublicTheme({ tenant, siteConfig }: PublicThemeProps) {
-  const theme = resolveTenantTheme(tenant.theme);
-  const vars = themeToCssVars(theme);
+  const tokens = resolveDesignTokens(tenant.theme);
+  const vars = designTokensToCssVars(tokens);
 
   const typography = siteConfig?.identity.typography;
   const fontFamily = typography ? FONT_STACKS[typography] : undefined;

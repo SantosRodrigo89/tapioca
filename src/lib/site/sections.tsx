@@ -239,8 +239,13 @@ export function renderLandingSections(
         if (section.id === "hero") {
           return (
             <Fragment key={section.id}>
+              <LandingNav
+                items={navItems}
+                tenantName={data.tenant.name}
+                tenantLogo={data.tenant.logoUrl}
+                whatsapp={data.whatsapp}
+              />
               {content}
-              {navItems.length > 0 && <LandingNav items={navItems} />}
             </Fragment>
           );
         }

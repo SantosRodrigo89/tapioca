@@ -1,15 +1,46 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
+import { MessageCircle } from "lucide-react";
+import { LandingButton } from "@/components/public/landing";
 import { cn } from "@/lib/utils";
+import { formatWhatsAppLink } from "@/lib/utils";
 import type { LandingNavItem } from "@/lib/site/landing-nav";
 
 interface LandingNavProps {
   items: LandingNavItem[];
+  tenantName: string;
+  tenantLogo?: string;
+  whatsapp?: string;
+  heroSelector?: string;
 }
 
-export function LandingNav({ items }: LandingNavProps) {
+export function LandingNav({
+  items,
+  tenantName,
+  tenantLogo,
+  whatsapp,
+  heroSelector = "#landing-hero",
+}: LandingNavProps) {
   const [activeId, setActiveId] = useState(items[0]?.targetId ?? "");
+  const [isOverHero, setIsOverHero] = useState(true);
+
+  useEffect(() => {
+    const hero = document.querySelector(heroSelector);
+    if (!hero) {
+      setIsOverHero(false);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsOverHero(entry.isIntersecting),
+      { threshold: 0, rootMargin: "-64px 0px 0px 0px" },
+    );
+
+    observer.observe(hero);
+    return () => observer.disconnect();
+  }, [heroSelector]);
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -49,32 +80,102 @@ export function LandingNav({ items }: LandingNavProps) {
     }
   }
 
-  if (items.length === 0) return null;
+  const showBrand = !isOverHero;
+  const hasNavLinks = items.length > 0;
+
+  if (!hasNavLinks && !whatsapp) return null;
 
   return (
-    <nav
-      aria-label="Navegação da página"
-      className="landing-nav sticky top-0 z-40 border-b border-[var(--menu-border)] bg-white/90 shadow-sm backdrop-blur-xl"
+    <header
+      className={cn(
+        "landing-nav fixed top-0 z-50 w-full transition-all duration-300",
+        isOverHero ? "landing-nav--overlay" : "landing-nav--solid",
+        showBrand && "landing-nav--has-brand",
+      )}
     >
-      <div className="landing-container">
-        <div className="scrollbar-hide overflow-x-auto py-3">
-          <div className="flex w-max min-w-full items-center justify-center gap-1 sm:gap-2">
-            {items.map((item) => (
-              <a
-                key={item.targetId}
-                href={item.href}
-                onClick={(e) => handleClick(e, item.targetId)}
-                className={cn(
-                  "landing-nav-link shrink-0 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300",
-                  activeId === item.targetId && "landing-nav-link--active",
-                )}
-              >
-                {item.label}
-              </a>
-            ))}
+      <div
+        className={cn(
+          "landing-container landing-nav-inner",
+          showBrand
+            ? "landing-nav-inner--stacked"
+            : "landing-nav-inner--row",
+        )}
+      >
+        {/* Brand — aparece após sair do hero */}
+        {showBrand && (
+          <div className="landing-nav-brand flex min-w-0 items-center gap-2.5">
+            <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-[var(--menu-border)] bg-white shadow-sm">
+              {tenantLogo ? (
+                <Image
+                  src={tenantLogo}
+                  alt=""
+                  fill
+                  sizes="36px"
+                  className="object-cover"
+                />
+              ) : (
+                <div
+                  className="flex h-full w-full items-center justify-center text-sm font-bold text-[var(--menu-primary-foreground)]"
+                  style={{ backgroundColor: "var(--menu-primary)" }}
+                  aria-hidden
+                >
+                  {tenantName.charAt(0).toUpperCase()}
+                </div>
+              )}
+            </div>
+            <span className="truncate text-sm font-semibold text-[var(--menu-secondary)] sm:text-base">
+              {tenantName}
+            </span>
           </div>
-        </div>
+        )}
+
+        {/* Links de seção */}
+        {hasNavLinks && (
+          <nav
+            aria-label="Navegação da página"
+            className="landing-nav-links scrollbar-hide min-w-0 overflow-x-auto"
+          >
+            <div
+              className={cn(
+                "flex w-max items-center gap-1 sm:gap-1.5",
+                isOverHero ? "mx-auto sm:justify-center" : "sm:mx-auto",
+              )}
+            >
+              {items.map((item) => (
+                <a
+                  key={item.targetId}
+                  href={item.href}
+                  onClick={(e) => handleClick(e, item.targetId)}
+                  className={cn(
+                    "landing-nav-link shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition-all duration-300 sm:px-4 sm:py-2",
+                    isOverHero && "landing-nav-link--overlay",
+                    activeId === item.targetId &&
+                      (isOverHero
+                        ? "landing-nav-link--overlay-active"
+                        : "landing-nav-link--active"),
+                  )}
+                >
+                  {item.label}
+                </a>
+              ))}
+            </div>
+          </nav>
+        )}
+
+        {/* CTA WhatsApp — desktop, após sair do hero */}
+        {whatsapp && showBrand && (
+          <LandingButton
+            href={formatWhatsAppLink(whatsapp)}
+            variant="primary"
+            size="sm"
+            icon={<MessageCircle className="h-4 w-4 shrink-0" aria-hidden />}
+            className="landing-nav-whatsapp hidden shrink-0 sm:inline-flex"
+            ariaLabel="Pedir pelo WhatsApp"
+          >
+            WhatsApp
+          </LandingButton>
+        )}
       </div>
-    </nav>
+    </header>
   );
 }

@@ -1,6 +1,9 @@
 import Image from "next/image";
-import { Clock, MapPin, MessageCircle } from "lucide-react";
-import { SafeExternalLink } from "@/components/public/safe-external-link";
+import { ChevronDown, Clock, MapPin, MessageCircle } from "lucide-react";
+import {
+  LandingBadge,
+  LandingButton,
+} from "@/components/public/landing";
 import { formatWhatsAppLink } from "@/lib/utils";
 import { getHeroLocationLabel } from "@/lib/utils/address";
 import {
@@ -14,77 +17,25 @@ interface HeroSectionProps {
   data: LandingPageData;
 }
 
-function HeroButton({
-  button,
-  variant = "primary",
-}: {
-  button: SiteButton;
-  variant?: "primary" | "outline" | "secondary";
-}) {
-  const resolved = button.variant ?? variant;
-  const base =
-    "inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-auto";
-
-  if (resolved === "outline") {
-    return (
-      <SafeExternalLink
-        href={button.href}
-        className={`${base} border-2 border-white/80 bg-white/10 text-white backdrop-blur-sm hover:bg-white/20`}
-      >
-        {button.label}
-      </SafeExternalLink>
-    );
-  }
-
-  if (resolved === "secondary") {
-    return (
-      <SafeExternalLink
-        href={button.href}
-        className={`${base} bg-white text-[var(--menu-secondary)] shadow-md hover:shadow-lg`}
-      >
-        {button.label}
-      </SafeExternalLink>
-    );
-  }
-
-  return (
-    <SafeExternalLink
-      href={button.href}
-      className={`${base} text-[var(--menu-secondary)] shadow-md hover:shadow-lg`}
-      style={{ backgroundColor: "var(--menu-primary)" }}
-    >
-      {button.label}
-    </SafeExternalLink>
-  );
-}
-
-export function HeroSection({ data }: HeroSectionProps) {
-  const { tenant, siteConfig, whatsapp } = data;
-  const hero = siteConfig.hero;
-
-  const coverImage = hero.imageUrl ?? tenant.bannerUrl ?? tenant.logoUrl;
-  const title = hero.title ?? tenant.name;
-  const subtitle = hero.subtitle ?? tenant.description;
-
-  const address = siteConfig.location.address ?? tenant.address;
-  const locationLabel = getHeroLocationLabel(address);
-
-  const hoursOpen = isOpenNow(tenant.openingHours);
-  const isOpen =
-    hoursOpen !== null
-      ? hoursOpen
-      : tenant.status === "trial" || tenant.status === "active";
-  const closingLabel = formatTodayClosingLabel(tenant.openingHours);
-
-  const configuredButtons = hero.buttons ?? [];
-  const hasMenuButton = configuredButtons.some(
-    (b) => b.href === "#cardapio" || b.label.toLowerCase().includes("cardápio"),
+function resolveHeroButtons(
+  configured: SiteButton[],
+  whatsapp?: string,
+): SiteButton[] {
+  const hasMenuButton = configured.some(
+    (b) =>
+      b.href === "#cardapio" || b.label.toLowerCase().includes("cardápio"),
   );
 
-  const defaultButtons: SiteButton[] = [
+  const defaults: SiteButton[] = [
     ...(hasMenuButton
       ? []
-      : [{ label: "Ver Cardápio", href: "#cardapio", variant: "outline" as const }]),
+      : [
+          {
+            label: "Ver Cardápio",
+            href: "#cardapio",
+            variant: "outline" as const,
+          },
+        ]),
     ...(whatsapp
       ? [
           {
@@ -96,12 +47,45 @@ export function HeroSection({ data }: HeroSectionProps) {
       : []),
   ];
 
-  const buttons =
-    configuredButtons.length > 0 ? configuredButtons : defaultButtons;
+  return configured.length > 0 ? configured : defaults;
+}
+
+function mapButtonVariant(
+  variant?: SiteButton["variant"],
+): "primary" | "secondary" | "hero-outline" {
+  if (variant === "secondary") return "secondary";
+  if (variant === "outline") return "hero-outline";
+  return "primary";
+}
+
+export function HeroSection({ data }: HeroSectionProps) {
+  const { tenant, siteConfig, whatsapp } = data;
+  const hero = siteConfig.hero;
+
+  const coverImage = hero.imageUrl ?? tenant.bannerUrl ?? tenant.logoUrl;
+  const title = hero.title ?? tenant.name;
+  const subtitle = hero.subtitle ?? tenant.description;
+  const specialties = hero.specialties?.filter(Boolean) ?? [];
+
+  const address = siteConfig.location.address ?? tenant.address;
+  const locationLabel = getHeroLocationLabel(address);
+
+  const hoursOpen = isOpenNow(tenant.openingHours);
+  const isOpen =
+    hoursOpen !== null
+      ? hoursOpen
+      : tenant.status === "trial" || tenant.status === "active";
+  const closingLabel = formatTodayClosingLabel(tenant.openingHours);
+
+  const buttons = resolveHeroButtons(hero.buttons ?? [], whatsapp);
 
   return (
-    <section aria-label="Apresentação" className="relative">
-      <div className="relative flex min-h-[65vh] flex-col justify-end sm:min-h-[75vh] lg:min-h-[85vh]">
+    <section
+      id="landing-hero"
+      aria-label="Apresentação"
+      className="landing-hero relative"
+    >
+      <div className="relative flex min-h-[92svh] flex-col justify-end sm:min-h-[88vh] lg:min-h-[90vh]">
         {/* Background */}
         <div className="absolute inset-0 overflow-hidden">
           {coverImage ? (
@@ -111,115 +95,110 @@ export function HeroSection({ data }: HeroSectionProps) {
               fill
               priority
               sizes="100vw"
-              className="object-cover scale-105"
+              className="object-cover scale-[1.03] motion-safe:transition-transform motion-safe:duration-[20s] motion-safe:ease-out"
               aria-hidden
             />
           ) : (
             <div
-              className="absolute inset-0"
-              style={{
-                background: `linear-gradient(135deg, var(--menu-primary) 0%, #e8a234 50%, var(--menu-secondary) 100%)`,
-              }}
+              className="absolute inset-0 landing-hero-fallback"
               aria-hidden
             />
           )}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/80" />
+          <div className="landing-hero-overlay absolute inset-0" aria-hidden />
         </div>
 
-        {/* Content overlay */}
-        <div className="relative mx-auto w-full max-w-5xl px-4 pb-10 pt-32 sm:px-6 sm:pb-14 sm:pt-40">
-          <div className="flex flex-col items-center gap-6 text-center sm:gap-8">
-            {/* Logo */}
-            <div className="relative h-24 w-24 overflow-hidden rounded-2xl border-4 border-white bg-white shadow-2xl sm:h-28 sm:w-28">
-              {tenant.logoUrl ? (
-                <Image
-                  src={tenant.logoUrl}
-                  alt={`Logo ${tenant.name}`}
-                  fill
-                  sizes="112px"
-                  className="object-cover"
-                  priority
-                />
-              ) : (
-                <div
-                  className="flex h-full w-full items-center justify-center text-3xl font-bold text-[var(--menu-secondary)]"
-                  style={{ background: "var(--menu-primary)" }}
-                >
-                  {tenant.name.charAt(0).toUpperCase()}
-                </div>
+        {/* Content */}
+        <div className="relative mx-auto w-full max-w-7xl px-4 pb-14 pt-28 sm:px-6 sm:pb-16 sm:pt-32 lg:pb-20 lg:pt-36">
+          <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center sm:items-start sm:gap-7 sm:text-left lg:max-w-2xl lg:gap-8">
+            {/* Status badge */}
+            <LandingBadge
+              variant={isOpen ? "success" : "danger"}
+              className="landing-hero-status"
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full"
+                style={{
+                  backgroundColor: isOpen
+                    ? "var(--menu-success)"
+                    : "var(--menu-danger)",
+                }}
+                aria-hidden
+              />
+              {isOpen ? "Aberto agora" : "Fechado"}
+              {closingLabel && isOpen && (
+                <span className="font-normal opacity-80"> · {closingLabel}</span>
               )}
-            </div>
+            </LandingBadge>
 
             {/* Title & subtitle */}
-            <div className="space-y-3">
-              <h1 className="text-4xl font-bold leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
-                {title}
-              </h1>
+            <div className="space-y-4">
+              <h1 className="landing-display text-white">{title}</h1>
               {subtitle && (
-                <p className="mx-auto max-w-2xl line-clamp-2 text-base leading-relaxed text-white/80 sm:text-lg">
+                <p className="landing-lead mx-auto max-w-xl text-white/85 sm:mx-0">
                   {subtitle}
                 </p>
               )}
             </div>
 
-            {/* Meta row — rating slot reserved for future data */}
-            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/90">
-              {locationLabel && (
-                <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-4 w-4 shrink-0 text-white/70" />
-                  {locationLabel}
-                </span>
-              )}
+            {/* Specialties */}
+            {specialties.length > 0 && (
+              <div className="flex flex-wrap justify-center gap-2 sm:justify-start">
+                {specialties.map((tag) => (
+                  <LandingBadge key={tag} variant="outline">
+                    {tag}
+                  </LandingBadge>
+                ))}
+              </div>
+            )}
 
-              {closingLabel && (
-                <span className="inline-flex items-center gap-1.5">
-                  <Clock className="h-4 w-4 shrink-0 text-white/70" />
-                  {closingLabel}
-                </span>
-              )}
-
-              <span
-                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-                style={{
-                  backgroundColor: isOpen
-                    ? "color-mix(in srgb, var(--menu-success) 25%, transparent)"
-                    : "color-mix(in srgb, var(--menu-danger) 25%, transparent)",
-                  color: isOpen ? "#86efac" : "#fca5a5",
-                }}
-              >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{
-                    backgroundColor: isOpen
-                      ? "var(--menu-success)"
-                      : "var(--menu-danger)",
-                  }}
-                />
-                {isOpen ? "Aberto agora" : "Fechado"}
-              </span>
-            </div>
-
-            {/* CTAs */}
-            {buttons.length > 0 && (
-              <div className="flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row sm:justify-center">
-                {buttons.map((button, index) =>
-                  button.label.toLowerCase().includes("whatsapp") ? (
-                    <SafeExternalLink
-                      key={index}
-                      href={button.href}
-                      className="inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3.5 text-sm font-semibold text-[var(--menu-secondary)] shadow-md transition-all duration-200 hover:shadow-lg active:scale-[0.98] sm:w-auto"
-                      style={{ backgroundColor: "var(--menu-primary)" }}
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                      {button.label}
-                    </SafeExternalLink>
-                  ) : (
-                    <HeroButton key={index} button={button} />
-                  ),
+            {/* Meta row */}
+            {(locationLabel || (closingLabel && !isOpen)) && (
+              <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/75 sm:justify-start">
+                {locationLabel && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <MapPin className="h-4 w-4 shrink-0 text-white/50" />
+                    {locationLabel}
+                  </span>
+                )}
+                {closingLabel && !isOpen && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Clock className="h-4 w-4 shrink-0 text-white/50" />
+                    {closingLabel}
+                  </span>
                 )}
               </div>
             )}
+
+            {/* CTAs */}
+            {buttons.length > 0 && (
+              <div className="flex w-full max-w-md flex-col gap-3 sm:max-w-none sm:flex-row">
+                {buttons.map((button, index) => (
+                  <LandingButton
+                    key={index}
+                    href={button.href}
+                    variant={mapButtonVariant(button.variant)}
+                    size="lg"
+                    className="w-full sm:w-auto"
+                    icon={
+                      button.label.toLowerCase().includes("whatsapp") ? (
+                        <MessageCircle className="h-5 w-5 shrink-0" />
+                      ) : undefined
+                    }
+                  >
+                    {button.label}
+                  </LandingButton>
+                ))}
+              </div>
+            )}
           </div>
+        </div>
+
+        {/* Scroll hint */}
+        <div
+          className="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 sm:block"
+          aria-hidden
+        >
+          <ChevronDown className="landing-scroll-hint h-6 w-6 text-white/50" />
         </div>
       </div>
     </section>

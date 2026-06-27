@@ -40,6 +40,8 @@ export interface SiteHero {
   subtitle?: string;
   imageUrl?: string;
   buttons?: SiteButton[];
+  /** Tags de especialidade exibidas no hero (ex.: "Pizza artesanal", "Delivery") */
+  specialties?: string[];
 }
 
 export interface SiteAbout {
