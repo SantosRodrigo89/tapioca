@@ -45,8 +45,8 @@ for (const item of exports) {
   }
 }
 
-// App icon — mark on brand secondary background
-const iconSvg = fs.readFileSync(path.join(svgDir, "icon-default.svg"));
+// App icon — mark on brand secondary background (icon-light for dark surfaces)
+const iconLightSvgForApp = fs.readFileSync(path.join(svgDir, "icon-light.svg"));
 const appIconSizes = [
   { size: 32, dest: path.join(root, "src/app/icon.png") },
   { size: 180, dest: path.join(root, "src/app/apple-icon.png") },
@@ -57,7 +57,7 @@ for (const { size, dest } of appIconSizes) {
   const padding = Math.round(size * 0.18);
   const markSize = size - padding * 2;
 
-  const mark = await sharp(iconSvg)
+  const mark = await sharp(iconLightSvgForApp)
     .resize(markSize, markSize, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()
     .toBuffer();
@@ -75,6 +75,64 @@ for (const { size, dest } of appIconSizes) {
     .toFile(dest);
 
   console.log("exported →", path.relative(root, dest));
+}
+
+// Instagram — profile picture (square, circular crop on platform)
+const iconLightSvg = fs.readFileSync(path.join(svgDir, "icon-light.svg"));
+const instagramProfileSizes = [320, 1080];
+for (const size of instagramProfileSizes) {
+  const padding = Math.round(size * 0.18);
+  const markSize = size - padding * 2;
+
+  const mark = await sharp(iconLightSvg)
+    .resize(markSize, markSize, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+
+  const outPath = path.join(pngDir, `instagram-profile-${size}.png`);
+  await sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 24, g: 24, b: 27, alpha: 1 },
+    },
+  })
+    .composite([{ input: mark, gravity: "center" }])
+    .png()
+    .toFile(outPath);
+
+  console.log("exported →", path.relative(root, outPath));
+}
+
+// Instagram — horizontal logo on white square (posts, stories, highlights)
+const instagramLogoSvg = fs.readFileSync(path.join(svgDir, "logo-horizontal-default.svg"));
+for (const size of [1080]) {
+  const logoWidth = Math.round(size * 0.65);
+  const logoHeight = Math.round(logoWidth * 0.25);
+
+  const logoBuffer = await sharp(instagramLogoSvg)
+    .resize(logoWidth, logoHeight, {
+      fit: "contain",
+      background: { r: 255, g: 255, b: 255, alpha: 1 },
+    })
+    .png()
+    .toBuffer();
+
+  const outPath = path.join(pngDir, `instagram-logo-${size}.png`);
+  await sharp({
+    create: {
+      width: size,
+      height: size,
+      channels: 4,
+      background: { r: 255, g: 255, b: 255, alpha: 1 },
+    },
+  })
+    .composite([{ input: logoBuffer, gravity: "center" }])
+    .png()
+    .toFile(outPath);
+
+  console.log("exported →", path.relative(root, outPath));
 }
 
 // Primary horizontal logo for sync pipeline
