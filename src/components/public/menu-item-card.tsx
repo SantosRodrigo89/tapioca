@@ -30,9 +30,16 @@ export function MenuItemCard({
 
   if (variant === "featured") {
     return (
-      <button
-        type="button"
+      <div
+        role="button"
+        tabIndex={0}
         onClick={handleOpen}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleOpen();
+          }
+        }}
         aria-label={`Ver detalhes de ${item.name}`}
         className={`product-card product-card--featured menu-card w-[260px] shrink-0 overflow-hidden text-left sm:w-[280px] ${
           !status.orderable ? "opacity-75" : ""
@@ -88,7 +95,7 @@ export function MenuItemCard({
             </p>
           )}
         </div>
-      </button>
+      </div>
     );
   }
 

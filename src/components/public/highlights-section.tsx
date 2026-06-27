@@ -1,5 +1,5 @@
-import { MenuItemCard } from "@/components/public/menu-item-card";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { HighlightsCarousel } from "@/components/public/highlights-carousel";
 import type { Category, MenuItem } from "@/types";
 
 export interface HighlightEntry {
@@ -25,17 +25,7 @@ export function HighlightsSection({ entries }: HighlightsSectionProps) {
         </div>
       </ScrollReveal>
 
-      <div className="scrollbar-hide -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:gap-5 sm:px-6">
-        {entries.map(({ item, category }, index) => (
-          <ScrollReveal key={item.id} delay={index * 80} className="shrink-0">
-            <MenuItemCard
-              item={item}
-              category={category}
-              variant="featured"
-            />
-          </ScrollReveal>
-        ))}
-      </div>
+      <HighlightsCarousel entries={entries} />
     </div>
   );
 }
