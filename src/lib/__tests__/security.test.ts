@@ -6,6 +6,24 @@ import {
   normalizeInstagram,
   sanitizeHref,
 } from "@/lib/utils/safe-url";
+import {
+  buildProductionContentSecurityPolicy,
+  CSP_HEADER_ENFORCE,
+} from "@/lib/security/content-security-policy";
+
+describe("content-security-policy", () => {
+  it("uses enforce header directives without unsafe-eval in production", () => {
+    const policy = buildProductionContentSecurityPolicy();
+    expect(policy).not.toContain("unsafe-eval");
+    expect(policy).toContain("upgrade-insecure-requests");
+    expect(policy).toContain("object-src 'none'");
+    expect(policy).toContain("https://firestore.googleapis.com");
+  });
+
+  it("exports enforce header name", () => {
+    expect(CSP_HEADER_ENFORCE).toBe("Content-Security-Policy");
+  });
+});
 
 describe("isSafeInternalRedirect", () => {
   it("allows valid admin paths", () => {
