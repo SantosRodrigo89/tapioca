@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Clock, MapPin, MessageCircle } from "lucide-react";
 import { formatWhatsAppLink } from "@/lib/utils";
-import { extractCityFromAddress } from "@/lib/utils/address";
+import { getHeroLocationLabel } from "@/lib/utils/address";
 import {
   formatTodayClosingLabel,
   isOpenNow,
@@ -67,7 +67,7 @@ export function HeroSection({ data }: HeroSectionProps) {
   const subtitle = hero.subtitle ?? tenant.description;
 
   const address = siteConfig.location.address ?? tenant.address;
-  const city = extractCityFromAddress(address);
+  const locationLabel = getHeroLocationLabel(address);
 
   const hoursOpen = isOpenNow(tenant.openingHours);
   const isOpen =
@@ -164,10 +164,10 @@ export function HeroSection({ data }: HeroSectionProps) {
 
             {/* Meta row — rating slot reserved for future data */}
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-white/90">
-              {city && (
+              {locationLabel && (
                 <span className="inline-flex items-center gap-1.5">
                   <MapPin className="h-4 w-4 shrink-0 text-white/70" />
-                  {city}
+                  {locationLabel}
                 </span>
               )}
 
