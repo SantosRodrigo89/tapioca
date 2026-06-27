@@ -1,27 +1,68 @@
-import Link from "next/link";
-import { Logo } from "@/components/brand/logo";
-import { BRAND_TAGLINE } from "@/lib/brand";
+import type { Metadata } from "next";
+import { MarketingPage } from "@/features/marketing/marketing-page";
+import {
+  getHomeJsonLd,
+  getMarketingBaseUrl,
+  HOME_KEYWORDS,
+  HOME_META_DESCRIPTION,
+  HOME_META_TITLE,
+  HOME_OG,
+} from "@/lib/marketing/seo";
+
+const baseUrl = getMarketingBaseUrl();
+const ogImageUrl = `${baseUrl}/logo.png`;
+
+export const metadata: Metadata = {
+  title: HOME_META_TITLE,
+  description: HOME_META_DESCRIPTION,
+  keywords: HOME_KEYWORDS,
+  alternates: {
+    canonical: baseUrl,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  openGraph: {
+    title: HOME_OG.title,
+    description: HOME_OG.description,
+    url: baseUrl,
+    siteName: "Mesio",
+    locale: "pt_BR",
+    type: "website",
+    images: [
+      {
+        url: ogImageUrl,
+        width: 640,
+        height: 320,
+        alt: "Mesio — Plataforma de presença digital para restaurantes",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: HOME_OG.title,
+    description: HOME_OG.description,
+    images: [ogImageUrl],
+  },
+};
 
 export default function HomePage() {
+  const jsonLd = getHomeJsonLd(baseUrl);
+
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-background px-4 text-center">
-      <div className="max-w-lg space-y-8">
-        <Logo size="lg" href="/" priority className="mx-auto" />
-        <div className="space-y-2">
-          <p className="text-muted-foreground text-lg">{BRAND_TAGLINE}</p>
-          <p className="text-muted-foreground/80 text-sm">
-            Site, cardápio digital e presença online em minutos.
-          </p>
-        </div>
-        <div className="flex items-center justify-center pt-2">
-          <Link
-            href="/auth/login"
-            className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-6 text-sm font-medium text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-          >
-            Entrar
-          </Link>
-        </div>
-      </div>
-    </main>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <MarketingPage />
+    </>
   );
 }

@@ -2,14 +2,16 @@ export const BRAND_NAME = "Mesio";
 export const BRAND_TAGLINE =
   "A plataforma de presença digital para restaurantes.";
 export const BRAND_DESCRIPTION =
-  "Plataforma moderna para restaurantes. Sua presença digital começa aqui.";
+  "Plataforma SaaS de presença digital para restaurantes. Site, cardápio digital, QR Code e gestão simples em um só lugar.";
 export const BRAND_KEYWORDS = [
+  "Mesio",
   "restaurantes",
   "presença digital",
+  "plataforma para restaurantes",
   "site para restaurantes",
   "landing page restaurante",
   "cardápio digital",
-  "Mesio",
+  "QR Code restaurante",
 ];
 
 export const BRAND_COLORS = {
