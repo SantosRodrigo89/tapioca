@@ -3,6 +3,7 @@ export type AuditEventType =
   | "invite_accepted"
   | "login"
   | "plan_changed"
+  | "settings_changed"
   | "suspended"
   | "reactivated";
 

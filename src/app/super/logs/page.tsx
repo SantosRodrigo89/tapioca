@@ -1,49 +1,44 @@
 import type { Metadata } from "next";
-import { listAuditLogsServer } from "@/lib/repositories/server/platform/audit-log.server";
-import { SuperPageHeader } from "@/components/super/super-page-header";
+import { Suspense } from "react";
+import { ListAuditLogsQuerySchema } from "@/lib/schemas/platform/list-audit-logs.schema";
+import {
+  listAuditLogsPaginatedServer,
+  serializeAuditLogForClient,
+} from "@/services/platform/list-audit-logs.service";
+import { LogsPage } from "@/features/super/logs/logs-page";
 
 export const metadata: Metadata = { title: "Logs — Super Admin" };
 
-export default async function SuperLogsPage() {
-  const logs = await listAuditLogsServer();
+interface SuperLogsRouteProps {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}
+
+export default async function SuperLogsRoute({ searchParams }: SuperLogsRouteProps) {
+  const params = await searchParams;
+
+  const parsed = ListAuditLogsQuerySchema.parse({
+    type: typeof params.type === "string" ? params.type : undefined,
+    q: typeof params.q === "string" ? params.q : undefined,
+    page: typeof params.page === "string" ? params.page : undefined,
+    pageSize: typeof params.pageSize === "string" ? params.pageSize : undefined,
+  });
+
+  const result = await listAuditLogsPaginatedServer(parsed);
+
+  const listKey = [parsed.type, parsed.q ?? "", parsed.page].join("-");
 
   return (
-    <div className="space-y-6">
-      <SuperPageHeader
-        title="Logs"
-        description="Auditoria de eventos da plataforma."
+    <Suspense>
+      <LogsPage
+        key={listKey}
+        data={{
+          items: result.items.map(serializeAuditLogForClient),
+          total: result.total,
+          page: result.page,
+          pageSize: result.pageSize,
+          totalPages: result.totalPages,
+        }}
       />
-
-      {logs.length === 0 ? (
-        <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          Nenhum evento registrado ainda.
-        </div>
-      ) : (
-        <div className="rounded-lg border overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-muted/50 text-left">
-                <th className="px-4 py-3 font-medium">Evento</th>
-                <th className="px-4 py-3 font-medium">Restaurante</th>
-                <th className="px-4 py-3 font-medium">Data</th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr key={log.id} className="border-b last:border-0">
-                  <td className="px-4 py-3 font-medium">{log.type}</td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {log.tenantName ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {log.createdAt.toLocaleString("pt-BR")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
+    </Suspense>
   );
 }

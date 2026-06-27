@@ -6,6 +6,7 @@ import {
   getTenantByIdServer,
   updateTenantStatusServer,
 } from "@/lib/repositories/server/tenant.server";
+import { logAuditEvent } from "@/services/platform/audit.service";
 
 interface RouteContext {
   params: Promise<{ tenantId: string }>;
@@ -40,8 +41,35 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   }
 
   try {
-    await updateTenantStatusServer(tenantId, parsed.data.status);
-    return NextResponse.json({ ok: true, status: parsed.data.status });
+    const previousStatus = tenant.status;
+    const newStatus = parsed.data.status;
+
+    await updateTenantStatusServer(tenantId, newStatus);
+
+    if (newStatus === "suspended" && previousStatus !== "suspended") {
+      await logAuditEvent({
+        type: "suspended",
+        actorUid: sessionUser!.uid,
+        actorEmail: sessionUser!.email ?? undefined,
+        tenantId,
+        tenantName: tenant.name,
+        metadata: { previousStatus, newStatus },
+      });
+    } else if (
+      newStatus === "active" &&
+      (previousStatus === "suspended" || previousStatus === "cancelled")
+    ) {
+      await logAuditEvent({
+        type: "reactivated",
+        actorUid: sessionUser!.uid,
+        actorEmail: sessionUser!.email ?? undefined,
+        tenantId,
+        tenantName: tenant.name,
+        metadata: { previousStatus, newStatus },
+      });
+    }
+
+    return NextResponse.json({ ok: true, status: newStatus });
   } catch (error) {
     console.error("[PATCH /api/super/tenants/status]", error);
     return NextResponse.json(

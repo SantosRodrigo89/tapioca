@@ -65,6 +65,8 @@ Ver roadmap no documento de arquitetura da Fase 2.
 - Entrega 8: módulo `/super/features` — toggles global, por plano e por restaurante + `resolveFeature()`
 - Entrega 9: CRUD de templates em `/super/templates` (edição + tema visual)
 - Entrega 10: métricas em `/super/metrics` com seções e `GET /api/super/metrics`
+- Entrega 11: logs em `/super/logs` com filtros, detalhes e hooks de auditoria (login, suspensão, reativação)
+- Entrega 12: configurações globais editáveis em `/super/settings`, `PATCH /api/super/settings` e audit `settings_changed`
 
 Listagem: `listTenantsPaginatedServer()` + query params em `/super/restaurants`.
 Cadastro: `createTenantWithInviteServer()` — tenant com `ownerUid` vazio até aceite do convite.

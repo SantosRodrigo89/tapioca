@@ -6,6 +6,8 @@ import {
   clearSessionCookie,
   getSessionUser,
 } from "@/lib/auth/session";
+import { logAuditEvent } from "@/services/platform/audit.service";
+import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
 
 export async function POST(request: NextRequest) {
   try {
@@ -31,6 +33,24 @@ export async function POST(request: NextRequest) {
 
     const sessionCookie = await createSessionCookie(idToken);
     await setSessionCookie(sessionCookie);
+
+    const role = decoded.role as string | undefined;
+    const tenantId = decoded.tenantId as string | undefined;
+    let tenantName: string | undefined;
+
+    if (tenantId) {
+      const tenant = await getTenantByIdServer(tenantId).catch(() => null);
+      tenantName = tenant?.name;
+    }
+
+    void logAuditEvent({
+      type: "login",
+      actorUid: decoded.uid,
+      actorEmail: decoded.email ?? undefined,
+      tenantId,
+      tenantName,
+      metadata: { role },
+    });
 
     return NextResponse.json({ status: "ok" });
   } catch (error) {

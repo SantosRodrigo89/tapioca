@@ -18,7 +18,7 @@ function docToAuditLog(
   };
 }
 
-export async function listAuditLogsServer(limit = 50): Promise<AuditLog[]> {
+export async function listAuditLogsServer(limit = 500): Promise<AuditLog[]> {
   const snap = await adminDb
     .collection("auditLogs")
     .orderBy("createdAt", "desc")
