@@ -2,6 +2,10 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
+import {
+  formatPhoneInputValue,
+  normalizePhoneInput,
+} from "@/lib/utils";
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -117,13 +121,16 @@ export function ContactTab({
           <Input
             id="whatsapp"
             type="tel"
-            value={whatsapp}
+            inputMode="numeric"
+            value={formatPhoneInputValue(whatsapp)}
             disabled={isSubmitting}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            placeholder="5511999999999"
+            onChange={(e) =>
+              setWhatsapp(normalizePhoneInput(e.target.value, 13))
+            }
+            placeholder="+55 (31) 99999-9999"
           />
           <p className="text-xs text-muted-foreground">
-            Apenas números com DDI
+            Com DDI do Brasil, ex: +55 (31) 99999-9999
           </p>
         </div>
 
@@ -132,10 +139,13 @@ export function ContactTab({
           <Input
             id="phone"
             type="tel"
-            value={phone}
+            inputMode="numeric"
+            value={formatPhoneInputValue(phone)}
             disabled={isSubmitting}
-            onChange={(e) => setPhone(e.target.value)}
-            placeholder="(11) 99999-9999"
+            onChange={(e) =>
+              setPhone(normalizePhoneInput(e.target.value, 11))
+            }
+            placeholder="(31) 99999-9999"
           />
         </div>
 

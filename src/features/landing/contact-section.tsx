@@ -7,7 +7,7 @@ import {
   Phone,
 } from "lucide-react";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
-import { formatWhatsAppLink } from "@/lib/utils";
+import { formatPhoneNumber, formatWhatsAppLink } from "@/lib/utils";
 import { formatDaySchedule } from "@/lib/utils/opening-hours";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
@@ -102,7 +102,7 @@ export function ContactSection({ data }: ContactSectionProps) {
             <ContactChannel
               href={formatWhatsAppLink(whatsapp)}
               icon={<MessageCircle className="h-5 w-5" />}
-              label={whatsapp}
+              label={formatPhoneNumber(whatsapp)}
               external
             />
           )}
@@ -110,7 +110,7 @@ export function ContactSection({ data }: ContactSectionProps) {
             <ContactChannel
               href={`tel:${contact.phone.replace(/\D/g, "")}`}
               icon={<Phone className="h-5 w-5" />}
-              label={contact.phone}
+              label={formatPhoneNumber(contact.phone)}
             />
           )}
           {contact.email && (

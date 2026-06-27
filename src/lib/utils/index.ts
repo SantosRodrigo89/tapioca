@@ -4,6 +4,12 @@ export {
   digitsToCents,
   formatDigitsAsPrice,
 } from "./price";
+export {
+  formatPhoneInputValue,
+  formatPhoneNumber,
+  normalizePhoneInput,
+  stripPhoneDigits,
+} from "./phone";
 
 export function formatPrice(cents: number): string {
   return new Intl.NumberFormat("pt-BR", {
