@@ -1,6 +1,9 @@
+import { unstable_cache } from "next/cache";
 import type { SuperPlatformMetrics } from "@/types/platform";
+import type { SuperDashboardMetrics } from "@/types/platform";
 import type { TenantStatus } from "@/types";
 import { adminDb } from "@/lib/firebase/admin";
+import { CACHE_TTL } from "@/lib/cache/revalidate";
 import { countPendingInvitesServer } from "@/lib/repositories/server/platform/invite.server";
 import { listFeaturesServer } from "@/lib/repositories/server/platform/feature.server";
 import { listPlansServer } from "@/lib/repositories/server/platform/plan.server";
@@ -23,40 +26,59 @@ function isLandingPublished(
   return hero?.enabled ?? false;
 }
 
-async function aggregateCatalogMetrics(tenantIds: string[]) {
-  let totalCategories = 0;
-  let totalProducts = 0;
+async function countTenantCatalog(tenantId: string) {
+  const categoriesSnap = await adminDb
+    .collection(`tenants/${tenantId}/categories`)
+    .get();
 
-  for (const tenantId of tenantIds) {
-    const categoriesSnap = await adminDb
-      .collection(`tenants/${tenantId}/categories`)
-      .get();
-    totalCategories += categoriesSnap.size;
-    for (const catDoc of categoriesSnap.docs) {
-      const itemsSnap = await adminDb
-        .collection(`tenants/${tenantId}/categories/${catDoc.id}/items`)
-        .get();
-      totalProducts += itemsSnap.size;
-    }
+  if (categoriesSnap.empty) {
+    return { categories: 0, products: 0 };
   }
 
-  return { totalCategories, totalProducts };
+  const itemSnaps = await Promise.all(
+    categoriesSnap.docs.map((catDoc) =>
+      adminDb
+        .collection(`tenants/${tenantId}/categories/${catDoc.id}/items`)
+        .count()
+        .get(),
+    ),
+  );
+
+  return {
+    categories: categoriesSnap.size,
+    products: itemSnaps.reduce((sum, snap) => sum + snap.data().count, 0),
+  };
 }
 
-export async function getSuperDashboardMetricsServer(): Promise<
-  import("@/types/platform").SuperDashboardMetrics
-> {
+async function aggregateCatalogMetrics(tenantIds: string[]) {
+  if (tenantIds.length === 0) {
+    return { totalCategories: 0, totalProducts: 0 };
+  }
+
+  const perTenant = await Promise.all(
+    tenantIds.map((tenantId) => countTenantCatalog(tenantId)),
+  );
+
+  return perTenant.reduce(
+    (acc, row) => ({
+      totalCategories: acc.totalCategories + row.categories,
+      totalProducts: acc.totalProducts + row.products,
+    }),
+    { totalCategories: 0, totalProducts: 0 },
+  );
+}
+
+async function getSuperDashboardMetricsUncached(): Promise<SuperDashboardMetrics> {
   const tenantsSnap = await adminDb.collection("tenants").get();
   const tenants = tenantsSnap.docs.map((doc) => ({
     status: doc.data().status as TenantStatus,
     siteConfig: doc.data().siteConfig,
   }));
 
-  const { totalProducts } = await aggregateCatalogMetrics(
-    tenantsSnap.docs.map((d) => d.id),
-  );
-
-  const pendingInvites = await countPendingInvitesServer().catch(() => 0);
+  const [{ totalProducts }, pendingInvites] = await Promise.all([
+    aggregateCatalogMetrics(tenantsSnap.docs.map((d) => d.id)),
+    countPendingInvitesServer().catch(() => 0),
+  ]);
 
   return {
     activeTenants: countByStatus(tenants, "active"),
@@ -72,7 +94,7 @@ export async function getSuperDashboardMetricsServer(): Promise<
   };
 }
 
-export async function getSuperPlatformMetricsServer(): Promise<SuperPlatformMetrics> {
+async function getSuperPlatformMetricsUncached(): Promise<SuperPlatformMetrics> {
   const [tenantsSnap, pendingInvites, plans, templates, features] =
     await Promise.all([
       adminDb.collection("tenants").get(),
@@ -112,4 +134,20 @@ export async function getSuperPlatformMetricsServer(): Promise<SuperPlatformMetr
     totalTemplates: templates.length,
     totalFeatures: features.length,
   };
+}
+
+export function getSuperDashboardMetricsServer(): Promise<SuperDashboardMetrics> {
+  return unstable_cache(
+    getSuperDashboardMetricsUncached,
+    ["super-dashboard-metrics"],
+    { revalidate: CACHE_TTL.SUPER_METRICS_SECONDS, tags: ["super-metrics"] },
+  )();
+}
+
+export function getSuperPlatformMetricsServer(): Promise<SuperPlatformMetrics> {
+  return unstable_cache(
+    getSuperPlatformMetricsUncached,
+    ["super-platform-metrics"],
+    { revalidate: CACHE_TTL.SUPER_METRICS_SECONDS, tags: ["super-metrics"] },
+  )();
 }

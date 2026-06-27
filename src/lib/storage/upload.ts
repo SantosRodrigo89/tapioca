@@ -1,6 +1,6 @@
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getClientStorage } from "@/lib/firebase/client";
-import { refreshAuthToken } from "@/hooks/use-auth";
+import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
 
 const MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
@@ -22,11 +22,15 @@ function extensionFromMime(type: string): string {
   return "jpg";
 }
 
-async function uploadImage(path: string, file: File): Promise<string> {
+async function uploadImage(
+  tenantId: string,
+  path: string,
+  file: File,
+): Promise<string> {
   const validationError = validateImageFile(file);
   if (validationError) throw new Error(validationError);
 
-  await refreshAuthToken();
+  await ensureClientAuthForWrite(tenantId);
 
   const storageRef = ref(getClientStorage(), path);
   await uploadBytes(storageRef, file, { contentType: file.type });
@@ -38,7 +42,7 @@ export async function uploadTenantLogo(
   file: File,
 ): Promise<string> {
   const ext = extensionFromMime(file.type);
-  return uploadImage(`tenants/${tenantId}/logo.${ext}`, file);
+  return uploadImage(tenantId, `tenants/${tenantId}/logo.${ext}`, file);
 }
 
 export async function uploadTenantBanner(
@@ -46,7 +50,7 @@ export async function uploadTenantBanner(
   file: File,
 ): Promise<string> {
   const ext = extensionFromMime(file.type);
-  return uploadImage(`tenants/${tenantId}/banner.${ext}`, file);
+  return uploadImage(tenantId, `tenants/${tenantId}/banner.${ext}`, file);
 }
 
 export async function uploadMenuItemImage(
@@ -55,7 +59,7 @@ export async function uploadMenuItemImage(
   file: File,
 ): Promise<string> {
   const ext = extensionFromMime(file.type);
-  return uploadImage(`tenants/${tenantId}/items/${itemId}.${ext}`, file);
+  return uploadImage(tenantId, `tenants/${tenantId}/items/${itemId}.${ext}`, file);
 }
 
 export async function uploadGalleryImage(
@@ -64,5 +68,5 @@ export async function uploadGalleryImage(
   file: File,
 ): Promise<string> {
   const ext = extensionFromMime(file.type);
-  return uploadImage(`tenants/${tenantId}/gallery/${imageId}.${ext}`, file);
+  return uploadImage(tenantId, `tenants/${tenantId}/gallery/${imageId}.${ext}`, file);
 }

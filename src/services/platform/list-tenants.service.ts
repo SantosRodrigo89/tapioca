@@ -1,6 +1,9 @@
 import type { Tenant, TenantStatus } from "@/types";
 import type { ListTenantsQuery } from "@/lib/schemas/platform/list-tenants.schema";
-import { listTenantsServer } from "@/lib/repositories/server/tenant.server";
+import {
+  listTenantsServer,
+  queryTenantsPaginatedServer,
+} from "@/lib/repositories/server/tenant.server";
 import { getPlatformSettingsServer } from "@/lib/repositories/server/platform/platform-settings.server";
 
 export interface TenantListRow {
@@ -87,9 +90,25 @@ function toListRow(tenant: Tenant, platformDomain: string): TenantListRow {
   };
 }
 
-export async function listTenantsPaginatedServer(
+function buildResult(
+  tenants: Tenant[],
+  total: number,
   query: ListTenantsQuery,
-): Promise<ListTenantsResult> {
+  platformDomain: string,
+): ListTenantsResult {
+  const totalPages = Math.max(1, Math.ceil(total / query.pageSize));
+  const page = Math.min(query.page, totalPages);
+
+  return {
+    items: tenants.map((t) => toListRow(t, platformDomain)),
+    total,
+    page,
+    pageSize: query.pageSize,
+    totalPages,
+  };
+}
+
+async function listTenantsWithSearch(query: ListTenantsQuery): Promise<ListTenantsResult> {
   const [tenants, settings] = await Promise.all([
     listTenantsServer(),
     getPlatformSettingsServer(),
@@ -108,16 +127,28 @@ export async function listTenantsPaginatedServer(
   filtered.sort((a, b) => compareTenants(a, b, query.sort, query.order));
 
   const total = filtered.length;
-  const totalPages = Math.max(1, Math.ceil(total / query.pageSize));
-  const page = Math.min(query.page, totalPages);
-  const start = (page - 1) * query.pageSize;
+  const start = (query.page - 1) * query.pageSize;
   const slice = filtered.slice(start, start + query.pageSize);
 
-  return {
-    items: slice.map((t) => toListRow(t, settings.domain)),
-    total,
-    page,
-    pageSize: query.pageSize,
-    totalPages,
-  };
+  return buildResult(slice, total, query, settings.domain);
+}
+
+export async function listTenantsPaginatedServer(
+  query: ListTenantsQuery,
+): Promise<ListTenantsResult> {
+  const settings = await getPlatformSettingsServer();
+
+  if (query.q?.trim()) {
+    return listTenantsWithSearch(query);
+  }
+
+  const { items, total } = await queryTenantsPaginatedServer({
+    status: query.status ?? "all",
+    sort: query.sort ?? "createdAt",
+    order: query.order ?? "desc",
+    page: query.page ?? 1,
+    pageSize: query.pageSize ?? 20,
+  });
+
+  return buildResult(items, total, query, settings.domain);
 }

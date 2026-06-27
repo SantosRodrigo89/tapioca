@@ -3,19 +3,14 @@ import { notFound } from "next/navigation";
 import { PublicTheme } from "@/components/public/public-theme";
 import { ProductDetailProvider } from "@/components/public/product-detail-context";
 import { UnavailablePage } from "@/components/public/unavailable-page";
-import { resolveProductDrawerActions } from "@/lib/site/product-experience";
-import type { LandingPageData } from "@/lib/site/landing-types";
-import { resolveHighlights } from "@/lib/site/resolve-highlights";
 import { renderLandingSections } from "@/lib/site/sections";
-import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
-import { getGalleryByTenantServer } from "@/lib/repositories/server/gallery.server";
-import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
-import { getTenantBySlugServer } from "@/lib/repositories/server/tenant.server";
+import {
+  getCachedTenantBySlug,
+  getPublicLandingBySlug,
+} from "@/lib/site/load-public-landing.server";
 import { getResolvedSiteConfig } from "@/services/site.service";
-import { getTenantEntitlementsServer } from "@/lib/platform/get-tenant-entitlements.server";
-import type { Category, MenuItem } from "@/types";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 120;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -23,7 +18,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const tenant = await getTenantBySlugServer(slug);
+  const tenant = await getCachedTenantBySlug(slug);
 
   if (!tenant) {
     return { title: "Cardápio não encontrado" };
@@ -76,68 +71,26 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function PublicLandingPage({ params }: PageProps) {
   const { slug } = await params;
-  const tenant = await getTenantBySlugServer(slug);
+  const result = await getPublicLandingBySlug(slug);
 
-  if (!tenant) {
+  if (result.kind === "not_found") {
     notFound();
   }
 
-  if (tenant.status === "suspended" || tenant.status === "cancelled") {
-    return <UnavailablePage status={tenant.status} name={tenant.name} />;
+  if (result.kind === "blocked") {
+    return <UnavailablePage status={result.status} name={result.name} />;
   }
 
-  const siteConfig = getResolvedSiteConfig(tenant);
-  const entitlements = await getTenantEntitlementsServer(tenant);
-
-  if (!entitlements.landing_page) {
-    notFound();
-  }
-
-  const [categories, gallery] = await Promise.all([
-    getCategoriesByTenantServer(tenant.id, { activeOnly: true }),
-    getGalleryByTenantServer(tenant.id),
-  ]);
-
-  const categoriesWithItems = await Promise.all(
-    categories.map(async (cat: Category) => {
-      const items: MenuItem[] = await getItemsByCategoryServer(
-        tenant.id,
-        cat.id,
-        { availableOnly: true },
-      );
-      return { ...cat, items };
-    }),
-  );
-
-  const visibleCategories = categoriesWithItems.filter(
-    (c) => c.items.length > 0,
-  );
-  const highlights = resolveHighlights(
-    siteConfig,
-    tenant,
-    visibleCategories,
-  );
-  const whatsapp = siteConfig.contact.whatsapp ?? tenant.whatsapp;
-  const drawerActions = resolveProductDrawerActions(siteConfig, whatsapp);
-
-  const pageData: LandingPageData = {
-    tenant,
-    siteConfig,
-    gallery,
-    categoriesWithItems,
-    visibleCategories,
-    highlights,
-    whatsapp,
-  };
+  const { pageData, entitlements, drawerActions } = result;
 
   return (
     <ProductDetailProvider
       tenantSlug={slug}
-      whatsapp={whatsapp}
+      whatsapp={pageData.whatsapp}
       drawerActions={drawerActions}
-      categories={categoriesWithItems}
+      categories={pageData.categoriesWithItems}
     >
-      <PublicTheme tenant={tenant} siteConfig={siteConfig} />
+      <PublicTheme tenant={pageData.tenant} siteConfig={pageData.siteConfig} />
       {renderLandingSections(pageData, entitlements)}
     </ProductDetailProvider>
   );

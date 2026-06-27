@@ -2,8 +2,6 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
-import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
-import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
 import { TenantStatusBadge } from "@/components/admin/tenant-status-badge";
 import { OnboardingCards } from "@/features/dashboard/onboarding-cards";
 import { SummaryCards } from "@/features/dashboard/summary-cards";
@@ -13,6 +11,7 @@ import {
   getOnboardingTasks,
 } from "@/services/onboarding.service";
 import { getPublicUrlDisplay } from "@/lib/brand";
+import { getTenantCatalogServer } from "@/lib/site/tenant-catalog.server";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -23,12 +22,9 @@ export default async function DashboardPage() {
   const tenant = await getTenantByIdServer(sessionUser.tenantId as string);
   if (!tenant) redirect("/auth/login");
 
-  const categories = await getCategoriesByTenantServer(tenant.id);
-  const allItems = (
-    await Promise.all(
-      categories.map((c) => getItemsByCategoryServer(tenant.id, c.id)),
-    )
-  ).flat();
+  const catalog = await getTenantCatalogServer(tenant.id);
+  const categories = catalog.map(({ items: _items, ...category }) => category);
+  const allItems = catalog.flatMap((entry) => entry.items);
 
   const stats = getDashboardStats(categories, allItems);
   const tasks = getOnboardingTasks(tenant, stats);

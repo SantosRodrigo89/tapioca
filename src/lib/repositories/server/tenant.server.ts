@@ -77,6 +77,49 @@ export async function listTenantsServer(): Promise<Tenant[]> {
   return snap.docs.map((doc) => docToTenant(doc.id, doc.data()));
 }
 
+export interface TenantsPageQuery {
+  status: TenantStatus | "all";
+  sort: "name" | "slug" | "createdAt" | "lastAccessAt";
+  order: "asc" | "desc";
+  page: number;
+  pageSize: number;
+}
+
+export interface TenantsPageResult {
+  items: Tenant[];
+  total: number;
+}
+
+/**
+ * Firestore-native pagination (no text search).
+ * Uses count() + limit(page * pageSize) with in-memory slice for the page window.
+ */
+export async function queryTenantsPaginatedServer(
+  query: TenantsPageQuery,
+): Promise<TenantsPageResult> {
+  let baseQuery: FirebaseFirestore.Query = adminDb.collection("tenants");
+
+  if (query.status !== "all") {
+    baseQuery = baseQuery.where("status", "==", query.status);
+  }
+
+  baseQuery = baseQuery.orderBy(query.sort, query.order);
+
+  const [countSnap, pageSnap] = await Promise.all([
+    baseQuery.count().get(),
+    baseQuery.limit(query.page * query.pageSize).get(),
+  ]);
+
+  const total = countSnap.data().count;
+  const start = (query.page - 1) * query.pageSize;
+  const docs = pageSnap.docs.slice(start, start + query.pageSize);
+
+  return {
+    items: docs.map((doc) => docToTenant(doc.id, doc.data())),
+    total,
+  };
+}
+
 export async function updateTenantStatusServer(
   tenantId: string,
   status: TenantStatus,

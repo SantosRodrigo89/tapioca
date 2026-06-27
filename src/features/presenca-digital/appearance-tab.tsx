@@ -105,7 +105,9 @@ export function AppearanceTab({
       toast.success("Aparência salva");
     } catch (err) {
       console.error("[appearance-tab]", err);
-      toast.error("Erro ao salvar aparência");
+      const message =
+        err instanceof Error ? err.message : "Erro ao salvar aparência";
+      toast.error(message);
     } finally {
       setIsSubmitting(false);
     }

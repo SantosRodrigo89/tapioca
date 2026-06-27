@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sidebar } from "@/layouts/admin-sidebar";
 import { MobileSidebar } from "@/layouts/admin-mobile-sidebar";
 import { AdminHeader } from "@/layouts/admin-header";
+import { useMenuAuth } from "@/features/cardapio/use-menu-auth";
 import type { TenantEntitlements } from "@/lib/platform/entitlements";
 
 interface AdminShellProps {
@@ -20,6 +21,7 @@ export function AdminShell({
   entitlements,
   children,
 }: AdminShellProps) {
+  useMenuAuth();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   return (

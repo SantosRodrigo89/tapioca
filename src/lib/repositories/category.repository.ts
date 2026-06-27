@@ -13,6 +13,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
+import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
 import type { Category } from "@/types";
 
 function timestampToDate(value: unknown): Date {
@@ -79,6 +80,7 @@ export async function createCategory(
     availability?: AvailabilitySchedule;
   },
 ): Promise<Category> {
+  await ensureClientAuthForWrite(tenantId);
   const existing = await getCategoriesByTenant(tenantId);
   const nextOrder =
     data.order ?? (existing.length > 0
@@ -115,6 +117,7 @@ export async function updateCategory(
     availability?: AvailabilitySchedule | null;
   },
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   const payload: Record<string, unknown> = {
     ...data,
     updatedAt: serverTimestamp(),
@@ -133,5 +136,6 @@ export async function deleteCategory(
   tenantId: string,
   categoryId: string,
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   await deleteDoc(doc(categoriesRef(tenantId), categoryId));
 }

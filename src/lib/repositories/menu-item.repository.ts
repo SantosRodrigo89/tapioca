@@ -13,6 +13,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
+import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
 import { parseConfigurationGroups } from "@/lib/catalog/parse-configuration";
 import { serializeConfigurationGroups } from "@/lib/catalog/serialize-configuration";
 import type { MenuItem, ConfigurationGroup } from "@/types";
@@ -92,6 +93,7 @@ export async function createMenuItem(
     order?: number;
   },
 ): Promise<MenuItem> {
+  await ensureClientAuthForWrite(tenantId);
   const existing = await getItemsByCategory(tenantId, categoryId);
   const nextOrder =
     data.order ?? (existing.length > 0
@@ -141,6 +143,7 @@ export async function updateMenuItem(
     order?: number;
   },
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   const payload: Record<string, unknown> = {
     ...data,
     updatedAt: serverTimestamp(),
@@ -166,5 +169,6 @@ export async function deleteMenuItem(
   categoryId: string,
   itemId: string,
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   await deleteDoc(doc(itemsRef(tenantId, categoryId), itemId));
 }

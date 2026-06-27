@@ -12,6 +12,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
+import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
 import type { GalleryImage } from "@/types";
 
 function timestampToDate(value: unknown): Date {
@@ -55,6 +56,7 @@ export async function createGalleryImage(
     order?: number;
   },
 ): Promise<GalleryImage> {
+  await ensureClientAuthForWrite(tenantId);
   const existing = await listGalleryImages(tenantId);
   const nextOrder =
     data.order ??
@@ -85,6 +87,7 @@ export async function updateGalleryImage(
     order?: number;
   },
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   const payload: Record<string, unknown> = { ...data };
 
   if (data.caption === null) {
@@ -98,6 +101,7 @@ export async function deleteGalleryImage(
   tenantId: string,
   imageId: string,
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   await deleteDoc(doc(galleryRef(tenantId), imageId));
 }
 

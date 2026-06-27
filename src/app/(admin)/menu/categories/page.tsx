@@ -3,12 +3,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
-import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
-import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
 import {
   requireFeature,
   requireTenantEntitlements,
 } from "@/lib/platform/require-entitlements.server";
+import { getTenantCatalogServer } from "@/lib/site/tenant-catalog.server";
 import { CategoriesPanel } from "@/features/cardapio/categories-panel";
 
 export const metadata: Metadata = { title: "Categorias" };
@@ -24,15 +23,11 @@ export default async function MenuCategoriesPage() {
   const entitlements = await requireTenantEntitlements(tenant);
   requireFeature(entitlements, "categories");
 
-  const categories = await getCategoriesByTenantServer(tenantId);
-
-  const itemCountsEntries = await Promise.all(
-    categories.map(async (cat) => {
-      const items = await getItemsByCategoryServer(tenantId, cat.id);
-      return [cat.id, items.length] as const;
-    }),
+  const catalog = await getTenantCatalogServer(tenantId);
+  const categories = catalog.map(({ items: _items, ...category }) => category);
+  const itemCounts = Object.fromEntries(
+    catalog.map((entry) => [entry.id, entry.items.length]),
   );
-  const itemCounts = Object.fromEntries(itemCountsEntries);
 
   return (
     <Suspense>

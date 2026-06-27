@@ -47,3 +47,23 @@ export async function getItemsByCategoryServer(
   const snap = await query.get();
   return snap.docs.map((d) => docToMenuItem(d.id, d.data()));
 }
+
+/** Fetches items for multiple categories in parallel (one query per category). */
+export async function getItemsByCategoriesServer(
+  tenantId: string,
+  categoryIds: string[],
+  { availableOnly = false }: { availableOnly?: boolean } = {},
+): Promise<Map<string, MenuItem[]>> {
+  if (categoryIds.length === 0) return new Map();
+
+  const entries = await Promise.all(
+    categoryIds.map(async (categoryId) => {
+      const items = await getItemsByCategoryServer(tenantId, categoryId, {
+        availableOnly,
+      });
+      return [categoryId, items] as const;
+    }),
+  );
+
+  return new Map(entries);
+}

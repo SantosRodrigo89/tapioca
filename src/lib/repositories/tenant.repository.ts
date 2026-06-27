@@ -1,5 +1,6 @@
 import { updateDoc, doc, serverTimestamp } from "firebase/firestore";
 import { getClientDb } from "@/lib/firebase/client";
+import { ensureClientAuthForWrite } from "@/lib/firebase/ensure-client-auth";
 import { stripUndefined } from "@/lib/firestore/sanitize";
 import {
   createDefaultSiteConfig,
@@ -23,6 +24,7 @@ export async function updateTenant(
   tenantId: string,
   data: UpdateTenantData,
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   await updateDoc(doc(getClientDb(), "tenants", tenantId), {
     ...data,
     updatedAt: serverTimestamp(),
@@ -34,6 +36,7 @@ export async function updateSiteConfig(
   patch: Partial<SiteConfig>,
   existing?: SiteConfig,
 ): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
   const base = existing ?? createDefaultSiteConfig();
   const siteConfig = stripUndefined(mergeSiteConfigPatch(base, patch));
 

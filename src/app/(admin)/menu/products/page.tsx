@@ -3,14 +3,12 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
-import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
-import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
 import {
   requireFeature,
   requireTenantEntitlements,
 } from "@/lib/platform/require-entitlements.server";
+import { getTenantCatalogServer } from "@/lib/site/tenant-catalog.server";
 import { ProductsPanel } from "@/features/cardapio/products-panel";
-import type { CategoryWithItems } from "@/features/cardapio/types";
 
 export const metadata: Metadata = { title: "Produtos" };
 
@@ -24,14 +22,8 @@ export default async function MenuProductsPage() {
 
   const entitlements = await requireTenantEntitlements(tenant);
   requireFeature(entitlements, "products");
-  const categories = await getCategoriesByTenantServer(tenantId);
 
-  const categoriesWithItems: CategoryWithItems[] = await Promise.all(
-    categories.map(async (cat) => {
-      const items = await getItemsByCategoryServer(tenantId, cat.id);
-      return { ...cat, items };
-    }),
-  );
+  const categoriesWithItems = await getTenantCatalogServer(tenantId);
 
   return (
     <Suspense>

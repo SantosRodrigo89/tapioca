@@ -2,16 +2,14 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
-import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
-import { getItemsByCategoryServer } from "@/lib/repositories/server/menu-item.server";
 import { getGalleryByTenantServer } from "@/lib/repositories/server/gallery.server";
 import { getResolvedSiteConfig } from "@/services/site.service";
+import { getTenantCatalogServer } from "@/lib/site/tenant-catalog.server";
 import {
   requireFeature,
   requireTenantEntitlements,
 } from "@/lib/platform/require-entitlements.server";
 import { SiteEditor } from "./site-editor";
-import type { Category, MenuItem } from "@/types";
 
 export const metadata: Metadata = { title: "Presença Digital" };
 
@@ -26,20 +24,10 @@ export default async function SitePage() {
   const entitlements = await requireTenantEntitlements(tenant);
   requireFeature(entitlements, "landing_page");
 
-  const [categories, gallery] = await Promise.all([
-    getCategoriesByTenantServer(tenantId),
+  const [categoriesWithItems, gallery] = await Promise.all([
+    getTenantCatalogServer(tenantId),
     getGalleryByTenantServer(tenantId),
   ]);
-
-  const categoriesWithItems = await Promise.all(
-    categories.map(async (cat: Category) => {
-      const items: MenuItem[] = await getItemsByCategoryServer(
-        tenantId,
-        cat.id,
-      );
-      return { ...cat, items };
-    }),
-  );
 
   const siteConfig = getResolvedSiteConfig(tenant);
   const base =

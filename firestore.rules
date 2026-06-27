@@ -25,12 +25,23 @@ service cloud.firestore {
     }
 
     function isTenantActive(tenantId) {
-      return tenantDoc(tenantId).data.status in ['trial', 'active'];
+      let status = tenantDoc(tenantId).data.status;
+      return status == 'trial' || status == 'active' || status == null;
+    }
+
+    function isTenantResourceActive() {
+      let status = resource.data.status;
+      return status == 'trial' || status == 'active' || status == null;
     }
 
     function canWriteTenantData(tenantId) {
       return isOwnerOrSuperAdmin(tenantId)
         && (isSuperAdmin() || isTenantActive(tenantId));
+    }
+
+    function canUpdateTenantDoc(tenantId) {
+      return isOwnerOrSuperAdmin(tenantId)
+        && (isSuperAdmin() || isTenantResourceActive());
     }
 
     // ─── slugIndex ────────────────────────────────────────────────────────────
@@ -44,15 +55,21 @@ service cloud.firestore {
     match /tenants/{tenantId} {
       allow read: if isOwnerOrSuperAdmin(tenantId);
       allow create: if false;
-      allow update: if canWriteTenantData(tenantId)
-        && request.resource.data.slug == resource.data.slug
-        && request.resource.data.ownerUid == resource.data.ownerUid
-        && (isSuperAdmin() || (
-          request.resource.data.planId == resource.data.planId
-          && request.resource.data.templateId == resource.data.templateId
-          && request.resource.data.createdBy == resource.data.createdBy
-          && request.resource.data.status == resource.data.status
-        ));
+      allow update: if canUpdateTenantDoc(tenantId)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+          'name',
+          'description',
+          'address',
+          'whatsapp',
+          'logoUrl',
+          'bannerUrl',
+          'theme',
+          'openingHours',
+          'highlightItemIds',
+          'siteConfig',
+          'updatedAt',
+          'lastAccessAt',
+        ]);
       allow delete: if isSuperAdmin();
 
       match /categories/{categoryId} {
