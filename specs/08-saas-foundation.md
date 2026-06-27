@@ -67,6 +67,7 @@ Ver roadmap no documento de arquitetura da Fase 2.
 - Entrega 10: métricas em `/super/metrics` com seções e `GET /api/super/metrics`
 - Entrega 11: logs em `/super/logs` com filtros, detalhes e hooks de auditoria (login, suspensão, reativação)
 - Entrega 12: configurações globais editáveis em `/super/settings`, `PATCH /api/super/settings` e audit `settings_changed`
+- Entrega 13: polish — signup com plano/template padrão, hook `lastAccessAt` no layout admin (15 min), proxy `/super` e regras Firestore para campos SaaS imutáveis no tenant admin
 
 Listagem: `listTenantsPaginatedServer()` + query params em `/super/restaurants`.
 Cadastro: `createTenantWithInviteServer()` — tenant com `ownerUid` vazio até aceite do convite.

@@ -6,13 +6,20 @@ const ADMIN_ROUTES = [
   "/menu",
   "/catalog",
   "/settings",
-  "/super",
 ];
+
+const SUPER_ROUTES_PREFIX = "/super";
 
 export function proxy(request: NextRequest): NextResponse {
   const { pathname } = request.nextUrl;
 
-  const isAdminRoute = ADMIN_ROUTES.some((route) => pathname.startsWith(route));
+  const isSuperRoute =
+    pathname === SUPER_ROUTES_PREFIX ||
+    pathname.startsWith(`${SUPER_ROUTES_PREFIX}/`);
+  const isAdminRoute =
+    isSuperRoute ||
+    ADMIN_ROUTES.some((route) => pathname.startsWith(route));
+
   if (!isAdminRoute) {
     return NextResponse.next();
   }
@@ -35,6 +42,7 @@ export const config = {
     "/menu/:path*",
     "/catalog/:path*",
     "/settings/:path*",
+    "/super",
     "/super/:path*",
   ],
 };

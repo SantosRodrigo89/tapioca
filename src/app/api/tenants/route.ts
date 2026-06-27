@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { adminAuth, adminDb } from "@/lib/firebase/admin";
-import { FieldValue } from "firebase-admin/firestore";
 import { generateSlug } from "@/lib/utils";
 import { SlugSchema } from "@/lib/schemas/tenant.schema";
+import {
+  createSelfServiceTenantServer,
+  SelfServiceTenantError,
+} from "@/services/platform/create-self-service-tenant.service";
 
 export async function POST(request: NextRequest) {
   try {
@@ -19,12 +21,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate uid by checking the user exists
-    const userRecord = await adminAuth.getUser(uid).catch(() => null);
-    if (!userRecord) {
-      return NextResponse.json({ error: "Usuário não encontrado" }, { status: 404 });
-    }
-
     const slug = generateSlug(restaurantName);
     const slugValidation = SlugSchema.safeParse(slug);
     if (!slugValidation.success) {
@@ -34,50 +30,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check slug uniqueness
-    const slugSnap = await adminDb.doc(`slugIndex/${slug}`).get();
-    if (slugSnap.exists) {
-      return NextResponse.json(
-        { error: "Nome do restaurante já está em uso. Tente um nome diferente." },
-        { status: 409 },
-      );
+    const result = await createSelfServiceTenantServer({
+      uid,
+      restaurantName,
+      slug,
+    });
+
+    return NextResponse.json(result, { status: 201 });
+  } catch (error) {
+    if (error instanceof SelfServiceTenantError) {
+      const status =
+        error.code === "USER_NOT_FOUND"
+          ? 404
+          : error.code === "SLUG_TAKEN"
+            ? 409
+            : 400;
+      return NextResponse.json({ error: error.message, code: error.code }, { status });
     }
 
-    // Use the Firebase Auth UID as the tenant document ID for simplicity
-    const tenantId = uid;
-    const now = FieldValue.serverTimestamp();
-
-    const batch = adminDb.batch();
-
-    batch.set(adminDb.doc(`tenants/${tenantId}`), {
-      id: tenantId,
-      slug,
-      name: restaurantName,
-      description: null,
-      logoUrl: null,
-      address: null,
-      whatsapp: null,
-      status: "trial",
-      ownerUid: uid,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    batch.set(adminDb.doc(`slugIndex/${slug}`), {
-      tenantId,
-      createdAt: now,
-    });
-
-    await batch.commit();
-
-    // Set custom claims
-    await adminAuth.setCustomUserClaims(uid, {
-      role: "tenant_admin",
-      tenantId,
-    });
-
-    return NextResponse.json({ tenantId, slug }, { status: 201 });
-  } catch (error) {
     console.error("[POST /api/tenants]", error);
     return NextResponse.json(
       { error: "Falha ao criar restaurante" },

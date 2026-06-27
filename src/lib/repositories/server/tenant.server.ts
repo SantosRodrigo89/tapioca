@@ -106,6 +106,26 @@ export async function setTenantFeatureOverrideServer(
   });
 }
 
+const LAST_ACCESS_TOUCH_INTERVAL_MS = 15 * 60 * 1000;
+
+export async function touchLastAccessAtIfStaleServer(
+  tenantId: string,
+  lastAccessAt?: Date,
+): Promise<void> {
+  const now = Date.now();
+  if (
+    lastAccessAt &&
+    now - lastAccessAt.getTime() < LAST_ACCESS_TOUCH_INTERVAL_MS
+  ) {
+    return;
+  }
+
+  await adminDb.doc(`tenants/${tenantId}`).update({
+    lastAccessAt: FieldValue.serverTimestamp(),
+    updatedAt: FieldValue.serverTimestamp(),
+  });
+}
+
 export async function listTenantsMinimalServer(): Promise<
   Pick<Tenant, "id" | "name" | "slug" | "planId" | "featureOverrides">[]
 > {

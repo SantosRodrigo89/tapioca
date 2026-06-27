@@ -31,10 +31,16 @@ service cloud.firestore {
     match /tenants/{tenantId} {
       allow read: if true;
       allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerUid;
-      // slug and ownerUid are immutable after creation
+      // slug, ownerUid and SaaS fields are immutable for tenant admins
       allow update: if isOwnerOrSuperAdmin(tenantId)
         && request.resource.data.slug == resource.data.slug
-        && request.resource.data.ownerUid == resource.data.ownerUid;
+        && request.resource.data.ownerUid == resource.data.ownerUid
+        && (isSuperAdmin() || (
+          request.resource.data.planId == resource.data.planId
+          && request.resource.data.templateId == resource.data.templateId
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.status == resource.data.status
+        ));
       allow delete: if isSuperAdmin();
 
       // ─── categories ────────────────────────────────────────────────────────

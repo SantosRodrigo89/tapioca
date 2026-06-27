@@ -1,7 +1,10 @@
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { isSuperAdmin } from "@/lib/auth/roles";
-import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
+import {
+  getTenantByIdServer,
+  touchLastAccessAtIfStaleServer,
+} from "@/lib/repositories/server/tenant.server";
 import { AdminShell } from "@/layouts/admin-shell";
 
 export default async function AdminLayout({
@@ -27,6 +30,10 @@ export default async function AdminLayout({
   if (!tenant) {
     redirect("/auth/login");
   }
+
+  void touchLastAccessAtIfStaleServer(tenantId, tenant.lastAccessAt).catch(
+    (err) => console.error("[lastAccessAt]", err),
+  );
 
   return (
     <AdminShell
