@@ -1,5 +1,4 @@
-import { CategoryNav } from "@/components/public/category-nav";
-import { CategorySection } from "@/components/public/category-section";
+import { CategoryAccordion } from "@/components/public/category-accordion";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
@@ -11,45 +10,31 @@ export function MenuSection({ data }: MenuSectionProps) {
   const { visibleCategories, whatsapp } = data;
 
   return (
-    <div className="relative">
-      {visibleCategories.length > 0 && (
-        <CategoryNav
-          categories={visibleCategories.map((c) => ({
-            id: c.id,
-            name: c.name,
-          }))}
+    <section
+      id="cardapio"
+      aria-label="Cardápio"
+      className="landing-section space-y-10 lg:space-y-14"
+    >
+      <ScrollReveal>
+        <div className="mx-auto max-w-2xl space-y-4 text-center">
+          <h2 className="landing-heading">Nosso Cardápio</h2>
+          <p className="landing-subheading">
+            Conheça nossas especialidades preparadas com ingredientes
+            selecionados.
+          </p>
+        </div>
+      </ScrollReveal>
+
+      {visibleCategories.length === 0 ? (
+        <p className="py-16 text-center text-base text-[#777]">
+          Nenhum item disponível no momento.
+        </p>
+      ) : (
+        <CategoryAccordion
+          categories={visibleCategories}
+          whatsapp={whatsapp}
         />
       )}
-
-      <section
-        id="cardapio"
-        aria-label="Cardápio"
-        className="landing-section space-y-12"
-      >
-        <ScrollReveal>
-          <div className="space-y-2 text-center sm:text-left">
-            <h2 className="landing-heading">Cardápio</h2>
-            <p className="landing-subheading">
-              Escolha seus pratos favoritos e peça pelo WhatsApp
-            </p>
-          </div>
-        </ScrollReveal>
-
-        {visibleCategories.length === 0 ? (
-          <p className="py-16 text-center text-base text-[#777]">
-            Nenhum item disponível no momento.
-          </p>
-        ) : (
-          visibleCategories.map((cat) => (
-            <CategorySection
-              key={cat.id}
-              category={cat}
-              items={cat.items}
-              whatsapp={whatsapp}
-            />
-          ))
-        )}
-      </section>
-    </div>
+    </section>
   );
 }

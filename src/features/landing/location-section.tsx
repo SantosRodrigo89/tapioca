@@ -50,6 +50,7 @@ export function LocationSection({ data }: LocationSectionProps) {
   return (
     <section
       aria-labelledby="location-heading"
+      id="localizacao"
       className="landing-section"
     >
       <ScrollReveal>

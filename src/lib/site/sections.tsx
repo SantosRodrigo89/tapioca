@@ -1,7 +1,9 @@
 import { Fragment, Suspense } from "react";
 import dynamic from "next/dynamic";
+import { LandingNav } from "@/components/public/landing-nav";
 import { HeroSection } from "@/features/landing/hero-section";
 import { SectionSkeleton } from "@/features/landing/section-skeleton";
+import { resolveLandingNavItems } from "@/lib/site/landing-nav";
 import { resolveEnabledSections } from "@/services/site.service";
 import type { SiteSectionId } from "@/types/site";
 import type { LandingPageData } from "./landing-types";
@@ -160,17 +162,77 @@ function wrapInBand(
   );
 }
 
+function sectionHasContent(
+  sectionId: SiteSectionId,
+  data: LandingPageData,
+): boolean {
+  switch (sectionId) {
+    case "hero":
+    case "menu":
+    case "footer":
+      return true;
+    case "about":
+      return !!(
+        data.siteConfig.about.description || data.siteConfig.about.imageUrl
+      );
+    case "differentials":
+      return (data.siteConfig.differentials?.length ?? 0) > 0;
+    case "featured":
+      return data.highlights.length > 0;
+    case "gallery":
+      return data.gallery.length > 0;
+    case "contact": {
+      const contact = data.siteConfig.contact;
+      return !!(
+        contact.whatsapp ||
+        contact.phone ||
+        contact.email ||
+        contact.instagram ||
+        contact.facebook ||
+        contact.tiktok ||
+        data.siteConfig.location.address ||
+        data.tenant.address ||
+        data.tenant.openingHours
+      );
+    }
+    case "location": {
+      const location = data.siteConfig.location;
+      return !!(
+        location.address ||
+        data.tenant.address ||
+        location.directionsUrl ||
+        (location.lat != null && location.lng != null)
+      );
+    }
+    default:
+      return false;
+  }
+}
+
 export function renderLandingSections(data: LandingPageData) {
   const sections = resolveEnabledSections(data.siteConfig);
+  const navItems = resolveLandingNavItems(data);
   let bandIndex = 0;
 
   return (
     <>
       {sections.map((section) => {
+        if (!sectionHasContent(section.id, data)) return null;
+
         const render = SECTION_COMPONENTS[section.id];
         if (!render) return null;
 
         const content = render(data);
+
+        if (section.id === "hero") {
+          return (
+            <Fragment key={section.id}>
+              {content}
+              {navItems.length > 0 && <LandingNav items={navItems} />}
+            </Fragment>
+          );
+        }
+
         const wrapped = BANDED_SECTIONS.has(section.id)
           ? wrapInBand(section.id, content, bandIndex++)
           : content;

@@ -14,6 +14,7 @@ export function GallerySection({ data }: GallerySectionProps) {
   return (
     <section
       aria-labelledby="gallery-heading"
+      id="galeria"
       className="landing-section"
     >
       <ScrollReveal>

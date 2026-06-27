@@ -24,16 +24,16 @@ export function DifferentialsSection({ data }: DifferentialsSectionProps) {
         </h2>
       </ScrollReveal>
 
-      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
         {differentials.map((diff, index) => (
           <ScrollReveal
             key={diff.id}
             delay={index * 80}
             as="article"
-            className="menu-card flex h-full flex-col items-center gap-4 p-6 text-center sm:items-start sm:p-8 sm:text-left"
+            className="menu-card flex h-full min-h-[220px] flex-col items-center gap-4 p-6 text-center sm:items-start sm:p-8 sm:text-left"
           >
             {diff.icon && (
-              <span className="text-4xl" role="img" aria-hidden>
+              <span className="text-4xl leading-none" role="img" aria-hidden>
                 {diff.icon}
               </span>
             )}
@@ -41,7 +41,7 @@ export function DifferentialsSection({ data }: DifferentialsSectionProps) {
               {diff.title}
             </h3>
             {diff.description && (
-              <p className="line-clamp-2 text-sm leading-relaxed text-[#666] sm:text-base">
+              <p className="flex-1 text-sm leading-relaxed text-[#666] sm:text-base">
                 {diff.description}
               </p>
             )}

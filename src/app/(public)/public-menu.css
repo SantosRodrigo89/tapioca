@@ -6,6 +6,7 @@
   --menu-border: #eaeaea;
   --menu-success: #22c55e;
   --menu-danger: #ef4444;
+  --landing-nav-height: 3.25rem;
 
   scroll-behavior: smooth;
   background-color: #ffffff;
@@ -27,18 +28,18 @@
 }
 
 .public-menu .landing-section-band {
-  padding-block: 5rem;
+  padding-block: 4rem;
 }
 
 @media (min-width: 640px) {
   .public-menu .landing-section-band {
-    padding-block: 7rem;
+    padding-block: 5rem;
   }
 }
 
 @media (min-width: 1024px) {
   .public-menu .landing-section-band {
-    padding-block: 8rem;
+    padding-block: 6rem;
   }
 }
 
@@ -174,5 +175,28 @@
 }
 
 .public-menu .landing-section {
-  scroll-margin-top: 4rem;
+  scroll-margin-top: calc(var(--landing-nav-height) + 0.75rem);
+}
+
+/* ─── Landing navigation ───────────────────────────────────────────────── */
+
+.public-menu .landing-nav-link {
+  color: #666666;
+}
+
+.public-menu .landing-nav-link:hover {
+  color: var(--menu-secondary);
+  background-color: var(--menu-surface);
+}
+
+.public-menu .landing-nav-link--active {
+  color: var(--menu-secondary);
+  background-color: color-mix(in srgb, var(--menu-primary) 15%, white);
+  font-weight: 600;
+}
+
+/* ─── Menu items grid ────────────────────────────────────────────────────── */
+
+.public-menu .menu-items-grid .menu-card {
+  height: 100%;
 }

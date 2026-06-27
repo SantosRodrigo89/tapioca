@@ -22,7 +22,7 @@ export function MenuItemCard({
 
   return (
     <article
-      className={`menu-card flex gap-4 p-4 sm:gap-5 sm:p-5 ${
+      className={`menu-card flex h-full gap-4 p-4 sm:gap-5 sm:p-5 ${
         !status.orderable ? "opacity-75" : ""
       }`}
     >
