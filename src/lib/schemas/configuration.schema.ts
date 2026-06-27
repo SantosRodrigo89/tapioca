@@ -9,6 +9,11 @@ export const PricingStrategySchema = z.enum([
   "custom",
 ]);
 
+const VariantPricesSchema = z.record(
+  z.string().min(1),
+  z.number().int().nonnegative("Preço não pode ser negativo"),
+);
+
 export const ConfigurationOptionSchema = z.object({
   id: z.string().min(1),
   name: z
@@ -20,6 +25,7 @@ export const ConfigurationOptionSchema = z.object({
     .max(200, "Descrição deve ter no máximo 200 caracteres")
     .optional(),
   price: z.number().int().nonnegative("Preço não pode ser negativo"),
+  variantPrices: VariantPricesSchema.optional(),
   imageUrl: z.string().url().optional(),
   enabled: z.boolean(),
   displayOrder: z.number().int().nonnegative(),
@@ -42,6 +48,7 @@ export const ConfigurationGroupSchema = z
     maxSelections: z.number().int().positive(),
     pricingStrategy: PricingStrategySchema,
     definesBasePrice: z.boolean(),
+    linkedGroupId: z.string().min(1).optional(),
     enabled: z.boolean(),
     displayOrder: z.number().int().nonnegative(),
     options: z.array(ConfigurationOptionSchema),
@@ -105,6 +112,37 @@ export const ConfigurationGroupsSchema = z
         code: "custom",
         message: "Apenas um grupo pode definir o preço base",
       });
+    }
+
+    const groupIds = new Set(groups.map((g) => g.id));
+    for (const group of groups) {
+      if (!group.linkedGroupId) continue;
+
+      if (!groupIds.has(group.linkedGroupId)) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Grupo vinculado não encontrado",
+          path: [groups.indexOf(group), "linkedGroupId"],
+        });
+        continue;
+      }
+
+      const linked = groups.find((g) => g.id === group.linkedGroupId);
+      if (!linked?.definesBasePrice) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Grupo vinculado deve ser a variação de tamanho",
+          path: [groups.indexOf(group), "linkedGroupId"],
+        });
+      }
+
+      if (group.definesBasePrice) {
+        ctx.addIssue({
+          code: "custom",
+          message: "Grupo de variação não pode ser vinculado a outro",
+          path: [groups.indexOf(group), "linkedGroupId"],
+        });
+      }
     }
   });
 

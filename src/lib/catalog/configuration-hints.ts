@@ -23,9 +23,13 @@ function getGroupHint(group: ConfigurationGroup): string | null {
 
   const label = group.name.toLowerCase();
 
-  if (group.definesBasePrice) {
-    return `Disponível em ${count} ${label}`;
-  }
+    if (group.definesBasePrice) {
+      return `Disponível em ${count} ${label}`;
+    }
+
+    if (group.linkedGroupId) {
+      return `${count} ${label} com preços por tamanho`;
+    }
 
   if (group.multiple && group.maxSelections > 1) {
     if (group.maxSelections < count) {

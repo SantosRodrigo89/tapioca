@@ -123,8 +123,8 @@ export function MenuItemForm({
         />
         {hasBasePriceGroup && (
           <p className="text-xs text-muted-foreground">
-            Com variação de preço, o valor exibido será &quot;A partir de&quot; da
-            opção mais barata.
+            Com variação de preço, deixe em R$ 0 — o cardápio mostra
+            &quot;A partir de&quot; automaticamente.
           </p>
         )}
         {errors.price && (

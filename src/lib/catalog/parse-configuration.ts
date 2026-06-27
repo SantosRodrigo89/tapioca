@@ -20,11 +20,27 @@ function parseOption(raw: unknown, index: number): ConfigurationOption | null {
     description:
       typeof data.description === "string" ? data.description : undefined,
     price: typeof data.price === "number" ? data.price : 0,
+    variantPrices: parseVariantPrices(data.variantPrices),
     imageUrl: typeof data.imageUrl === "string" ? data.imageUrl : undefined,
     enabled: data.enabled !== false,
     displayOrder:
       typeof data.displayOrder === "number" ? data.displayOrder : index,
   };
+}
+
+function parseVariantPrices(
+  raw: unknown,
+): Record<string, number> | undefined {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return undefined;
+
+  const result: Record<string, number> = {};
+  for (const [key, value] of Object.entries(raw as Record<string, unknown>)) {
+    if (typeof value === "number" && value >= 0) {
+      result[key] = value;
+    }
+  }
+
+  return Object.keys(result).length > 0 ? result : undefined;
 }
 
 function parseGroup(raw: unknown, index: number): ConfigurationGroup | null {
@@ -52,6 +68,8 @@ function parseGroup(raw: unknown, index: number): ConfigurationGroup | null {
       typeof data.maxSelections === "number" ? data.maxSelections : 1,
     pricingStrategy: strategy,
     definesBasePrice: data.definesBasePrice === true,
+    linkedGroupId:
+      typeof data.linkedGroupId === "string" ? data.linkedGroupId : undefined,
     enabled: data.enabled !== false,
     displayOrder:
       typeof data.displayOrder === "number" ? data.displayOrder : index,

@@ -15,6 +15,7 @@ export function serializeConfigurationGroups(
     maxSelections: group.maxSelections,
     pricingStrategy: group.pricingStrategy,
     definesBasePrice: group.definesBasePrice,
+    linkedGroupId: group.linkedGroupId ?? null,
     enabled: group.enabled,
     displayOrder: group.displayOrder,
     options: group.options.map((option) => ({
@@ -22,6 +23,7 @@ export function serializeConfigurationGroups(
       name: option.name,
       description: option.description ?? null,
       price: option.price,
+      variantPrices: option.variantPrices ?? null,
       imageUrl: option.imageUrl ?? null,
       enabled: option.enabled,
       displayOrder: option.displayOrder,

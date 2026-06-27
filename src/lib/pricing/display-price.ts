@@ -1,4 +1,8 @@
 import { formatPrice } from "@/lib/utils";
+import {
+  getMinVariantPriceCents,
+  hasVariantPricing,
+} from "@/lib/catalog/variant-pricing";
 import type { MenuItem } from "@/types";
 
 export type MenuItemPriceDisplay =
@@ -12,6 +16,9 @@ export function getBasePriceGroup(item: MenuItem) {
 }
 
 export function getStartingPriceCents(item: MenuItem): number | null {
+  const variantMin = getMinVariantPriceCents(item);
+  if (variantMin != null) return variantMin;
+
   const baseGroup = getBasePriceGroup(item);
   if (!baseGroup) return null;
 
@@ -24,6 +31,7 @@ export function getStartingPriceCents(item: MenuItem): number | null {
 }
 
 export function hasConfigurablePricing(item: MenuItem): boolean {
+  if (hasVariantPricing(item)) return true;
   return getBasePriceGroup(item) != null;
 }
 
