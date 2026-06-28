@@ -8,9 +8,19 @@ import {
 } from "@/lib/utils";
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
 import { UpdateSiteContactSchema } from "@/lib/schemas/site.schema";
+import {
+  buildSectionCopyPatch,
+  DEFAULT_SECTION_COPY,
+  mergeSectionCopyPatch,
+  resolveSectionCopy,
+} from "@/lib/site/section-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  ContactCtaFields,
+  SectionHeadingFields,
+} from "@/features/presenca-digital/contact-cta-fields";
 import type { SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -29,6 +39,7 @@ export function ContactTab({
 }: ContactTabProps) {
   const contact = siteConfig.contact;
   const location = siteConfig.location;
+  const resolvedCopy = resolveSectionCopy(siteConfig.sectionCopy);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [whatsapp, setWhatsapp] = useState(
@@ -42,6 +53,25 @@ export function ContactTab({
   const [address, setAddress] = useState(
     location.address ?? tenant.address ?? "",
   );
+  const [sectionTitle, setSectionTitle] = useState<string>(
+    resolvedCopy.contact.title ?? "",
+  );
+  const [sectionSubtitle, setSectionSubtitle] = useState<string>(
+    resolvedCopy.contact.subtitle ?? "",
+  );
+  const [ctaEyebrow, setCtaEyebrow] = useState<string>(
+    resolvedCopy.contact.ctaEyebrow ?? "",
+  );
+  const [ctaTitle, setCtaTitle] = useState<string>(resolvedCopy.contact.ctaTitle ?? "");
+  const [ctaSubtitle, setCtaSubtitle] = useState<string>(
+    resolvedCopy.contact.ctaSubtitle ?? "",
+  );
+  const [locationTitle, setLocationTitle] = useState<string>(
+    resolvedCopy.location.title ?? "",
+  );
+  const [locationSubtitle, setLocationSubtitle] = useState<string>(
+    resolvedCopy.location.subtitle ?? "",
+  );
 
   const hasChanges =
     whatsapp !== (contact.whatsapp ?? tenant.whatsapp ?? "") ||
@@ -50,7 +80,14 @@ export function ContactTab({
     facebook !== (contact.facebook ?? "") ||
     tiktok !== (contact.tiktok ?? "") ||
     email !== (contact.email ?? "") ||
-    address !== (location.address ?? tenant.address ?? "");
+    address !== (location.address ?? tenant.address ?? "") ||
+    sectionTitle !== (resolvedCopy.contact.title ?? "") ||
+    sectionSubtitle !== (resolvedCopy.contact.subtitle ?? "") ||
+    ctaEyebrow !== (resolvedCopy.contact.ctaEyebrow ?? "") ||
+    ctaTitle !== (resolvedCopy.contact.ctaTitle ?? "") ||
+    ctaSubtitle !== (resolvedCopy.contact.ctaSubtitle ?? "") ||
+    locationTitle !== (resolvedCopy.location.title ?? "") ||
+    locationSubtitle !== (resolvedCopy.location.subtitle ?? "");
 
   const handleSave = async () => {
     const parsed = UpdateSiteContactSchema.safeParse({
@@ -90,9 +127,25 @@ export function ContactTab({
         address: addressValue,
       };
 
+      const contactCopyPatch = buildSectionCopyPatch("contact", {
+        title: sectionTitle,
+        subtitle: sectionSubtitle,
+        ctaEyebrow,
+        ctaTitle,
+        ctaSubtitle,
+      });
+      const locationCopyPatch = buildSectionCopyPatch("location", {
+        title: locationTitle,
+        subtitle: locationSubtitle,
+      });
+      const sectionCopyPatch = {
+        ...contactCopyPatch,
+        ...locationCopyPatch,
+      };
+
       await updateSiteConfig(
         tenant.id,
-        { contact: contactPatch, location: locationPatch },
+        { contact: contactPatch, location: locationPatch, sectionCopy: sectionCopyPatch },
         siteConfig,
       );
 
@@ -101,6 +154,10 @@ export function ContactTab({
         ...siteConfig,
         contact: { ...siteConfig.contact, ...contactPatch },
         location: { ...siteConfig.location, ...locationPatch },
+        sectionCopy: mergeSectionCopyPatch(
+          siteConfig.sectionCopy ?? {},
+          sectionCopyPatch,
+        ),
       });
 
       toast.success("Contato salvo");
@@ -120,6 +177,41 @@ export function ContactTab({
           Canais de comunicação e endereço do restaurante.
         </p>
       </div>
+
+      <SectionHeadingFields
+        title={sectionTitle}
+        subtitle={sectionSubtitle}
+        disabled={isSubmitting}
+        titlePlaceholder={DEFAULT_SECTION_COPY.contact.title}
+        subtitlePlaceholder={DEFAULT_SECTION_COPY.contact.subtitle}
+        onTitleChange={setSectionTitle}
+        onSubtitleChange={setSectionSubtitle}
+      />
+
+      <ContactCtaFields
+        ctaEyebrow={ctaEyebrow}
+        ctaTitle={ctaTitle}
+        ctaSubtitle={ctaSubtitle}
+        disabled={isSubmitting}
+        eyebrowPlaceholder={DEFAULT_SECTION_COPY.contact.ctaEyebrow}
+        titlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaTitle}
+        subtitlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaSubtitle}
+        onCtaEyebrowChange={setCtaEyebrow}
+        onCtaTitleChange={setCtaTitle}
+        onCtaSubtitleChange={setCtaSubtitle}
+      />
+
+      <SectionHeadingFields
+        title={locationTitle}
+        subtitle={locationSubtitle}
+        disabled={isSubmitting}
+        titleLabel="Título da seção Localização"
+        subtitleLabel="Subtítulo da Localização"
+        titlePlaceholder={DEFAULT_SECTION_COPY.location.title}
+        subtitlePlaceholder={DEFAULT_SECTION_COPY.location.subtitle}
+        onTitleChange={setLocationTitle}
+        onSubtitleChange={setLocationSubtitle}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">

@@ -171,7 +171,12 @@ export function SiteEditor({
             />
           )}
           {activeTab === "gallery" && (
-            <GalleryTab tenantId={tenant.id} initialImages={gallery} />
+            <GalleryTab
+              tenant={tenant}
+              siteConfig={siteConfig}
+              initialImages={gallery}
+              onSiteConfigChange={handleSiteConfigChange}
+            />
           )}
           {activeTab === "contact" && (
             <ContactTab

@@ -9,11 +9,18 @@ import {
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
 import { uploadTenantLogo } from "@/lib/storage/upload";
 import { DEFAULT_TENANT_THEME } from "@/lib/utils/theme";
+import {
+  buildSectionCopyPatch,
+  DEFAULT_SECTION_COPY,
+  mergeSectionCopyPatch,
+  resolveSectionCopy,
+} from "@/lib/site/section-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { ColorField } from "./color-field";
+import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
 import type { FontPreset, SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -36,6 +43,7 @@ export function AppearanceTab({
   onTenantChange,
   onSiteConfigChange,
 }: AppearanceTabProps) {
+  const resolvedCopy = resolveSectionCopy(siteConfig.sectionCopy);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = useState(tenant.name);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -46,6 +54,10 @@ export function AppearanceTab({
   const [typography, setTypography] = useState<FontPreset | "">(
     siteConfig.identity.typography ?? "",
   );
+  const [menuTitle, setMenuTitle] = useState<string>(resolvedCopy.menu.title ?? "");
+  const [menuSubtitle, setMenuSubtitle] = useState<string>(
+    resolvedCopy.menu.subtitle ?? "",
+  );
 
   const hasChanges =
     name !== tenant.name ||
@@ -53,7 +65,9 @@ export function AppearanceTab({
     logoUrl !== tenant.logoUrl ||
     JSON.stringify(theme) !==
       JSON.stringify(tenant.theme ?? DEFAULT_TENANT_THEME) ||
-    (typography || undefined) !== siteConfig.identity.typography;
+    (typography || undefined) !== siteConfig.identity.typography ||
+    menuTitle !== (resolvedCopy.menu.title ?? "") ||
+    menuSubtitle !== (resolvedCopy.menu.subtitle ?? "");
 
   const handleSave = async () => {
     if (name.trim().length < 2) {
@@ -86,9 +100,14 @@ export function AppearanceTab({
         ? { typography: typography as FontPreset }
         : {};
 
+      const sectionCopyPatch = buildSectionCopyPatch("menu", {
+        title: menuTitle,
+        subtitle: menuSubtitle,
+      });
+
       await updateSiteConfig(
         tenant.id,
-        { identity: identityPatch },
+        { identity: identityPatch, sectionCopy: sectionCopyPatch },
         siteConfig,
       );
 
@@ -100,6 +119,10 @@ export function AppearanceTab({
       onSiteConfigChange({
         ...siteConfig,
         identity: { ...siteConfig.identity, ...identityPatch },
+        sectionCopy: mergeSectionCopyPatch(
+          siteConfig.sectionCopy ?? {},
+          sectionCopyPatch,
+        ),
       });
 
       toast.success("Aparência salva");
@@ -187,6 +210,18 @@ export function AppearanceTab({
           ))}
         </select>
       </div>
+
+      <SectionHeadingFields
+        title={menuTitle}
+        subtitle={menuSubtitle}
+        disabled={isSubmitting}
+        titleLabel="Título da seção Cardápio"
+        subtitleLabel="Subtítulo do Cardápio"
+        titlePlaceholder={DEFAULT_SECTION_COPY.menu.title}
+        subtitlePlaceholder={DEFAULT_SECTION_COPY.menu.subtitle}
+        onTitleChange={setMenuTitle}
+        onSubtitleChange={setMenuSubtitle}
+      />
 
       <Button
         type="button"

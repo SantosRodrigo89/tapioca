@@ -13,6 +13,9 @@ import type {
   SiteSectionConfig,
   SiteSectionId,
   SiteSeo,
+  SiteSectionCopy,
+  SiteSectionHeadingCopy,
+  SiteContactSectionCopy,
   SiteTestimonial,
 } from "@/types/site";
 
@@ -251,6 +254,44 @@ function parseTestimonials(value: unknown): SiteTestimonial[] | undefined {
   return items.length > 0 ? items : undefined;
 }
 
+function parseHeadingCopy(value: unknown): SiteSectionHeadingCopy | undefined {
+  if (!isRecord(value)) return undefined;
+
+  return {
+    title: parseString(value.title),
+    subtitle: parseString(value.subtitle),
+    eyebrow: parseString(value.eyebrow),
+  };
+}
+
+function parseContactSectionCopy(
+  value: unknown,
+): SiteContactSectionCopy | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const base = parseHeadingCopy(value);
+  return {
+    ...base,
+    ctaEyebrow: parseString(value.ctaEyebrow),
+    ctaTitle: parseString(value.ctaTitle),
+    ctaSubtitle: parseString(value.ctaSubtitle),
+  };
+}
+
+function parseSectionCopy(value: unknown): SiteSectionCopy | undefined {
+  if (!isRecord(value)) return undefined;
+
+  return {
+    about: parseHeadingCopy(value.about),
+    differentials: parseHeadingCopy(value.differentials),
+    featured: parseHeadingCopy(value.featured),
+    menu: parseHeadingCopy(value.menu),
+    gallery: parseHeadingCopy(value.gallery),
+    contact: parseContactSectionCopy(value.contact),
+    location: parseHeadingCopy(value.location),
+  };
+}
+
 /** Safely parse nested siteConfig from a Firestore tenant document. */
 export function parseSiteConfigFromFirestore(data: unknown): SiteConfig | undefined {
   if (!isRecord(data)) return undefined;
@@ -269,5 +310,9 @@ export function parseSiteConfigFromFirestore(data: unknown): SiteConfig | undefi
     seo: { ...defaults.seo, ...parseSeo(data.seo) },
     faq: parseFaq(data.faq) ?? defaults.faq,
     testimonials: parseTestimonials(data.testimonials) ?? defaults.testimonials,
+    sectionCopy: {
+      ...defaults.sectionCopy,
+      ...parseSectionCopy(data.sectionCopy),
+    },
   };
 }

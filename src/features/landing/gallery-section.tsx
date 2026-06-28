@@ -1,6 +1,7 @@
 import { GalleryGrid } from "@/components/public/gallery-grid";
 import { LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { resolveSectionCopy } from "@/lib/site/section-copy";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface GallerySectionProps {
@@ -9,6 +10,7 @@ interface GallerySectionProps {
 
 export function GallerySection({ data }: GallerySectionProps) {
   const gallery = data.gallery;
+  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).gallery;
 
   if (!gallery || gallery.length === 0) return null;
 
@@ -20,9 +22,9 @@ export function GallerySection({ data }: GallerySectionProps) {
     >
       <ScrollReveal>
         <LandingHeading
-          title="Galeria"
+          title={copy.title}
           titleId="gallery-heading"
-          subtitle="Momentos e sabores do nosso restaurante"
+          subtitle={copy.subtitle}
         />
       </ScrollReveal>
 

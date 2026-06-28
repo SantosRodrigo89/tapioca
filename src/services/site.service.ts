@@ -1,5 +1,6 @@
 import type { Tenant } from "@/types";
 import type { SiteConfig, SiteSectionConfig, SiteSectionId } from "@/types/site";
+import { mergeSectionCopyPatch } from "@/lib/site/section-copy";
 import { sanitizeHref } from "@/lib/utils/safe-url";
 
 /** Default section order for the public landing page */
@@ -49,6 +50,7 @@ export function createDefaultSiteConfig(): SiteConfig {
     menuExperience: {
       productDrawerActions: ["share", "copy-link", "whatsapp"],
     },
+    sectionCopy: {},
   };
 }
 
@@ -78,6 +80,10 @@ export function resolveSiteConfig(
       ...defaults.menuExperience,
       ...persisted?.menuExperience,
     },
+    sectionCopy: mergeSectionCopyPatch(
+      defaults.sectionCopy ?? {},
+      persisted?.sectionCopy,
+    ),
   };
 
   if (!merged.hero.title && tenant.name) {
@@ -178,6 +184,10 @@ export function mergeSiteConfigPatch(
     faq: patch.faq ?? existing.faq,
     testimonials: patch.testimonials ?? existing.testimonials,
     menuExperience: mergePartial(existing.menuExperience ?? {}, patch.menuExperience),
+    sectionCopy: mergeSectionCopyPatch(
+      existing.sectionCopy ?? {},
+      patch.sectionCopy,
+    ),
   };
 }
 

@@ -4,10 +4,17 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { updateSiteConfig } from "@/lib/repositories/tenant.repository";
+import {
+  buildSectionCopyPatch,
+  DEFAULT_SECTION_COPY,
+  mergeSectionCopyPatch,
+  resolveSectionCopy,
+} from "@/lib/site/section-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
 import type { SiteConfig, SiteDifferential } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -24,13 +31,22 @@ export function DifferentialsTab({
   siteConfig,
   onSiteConfigChange,
 }: DifferentialsTabProps) {
+  const resolvedCopy = resolveSectionCopy(siteConfig.sectionCopy);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [items, setItems] = useState<SiteDifferential[]>(
     siteConfig.differentials,
   );
+  const [sectionTitle, setSectionTitle] = useState<string>(
+    resolvedCopy.differentials.title ?? "",
+  );
+  const [sectionSubtitle, setSectionSubtitle] = useState<string>(
+    resolvedCopy.differentials.subtitle ?? "",
+  );
 
   const hasChanges =
-    JSON.stringify(items) !== JSON.stringify(siteConfig.differentials);
+    JSON.stringify(items) !== JSON.stringify(siteConfig.differentials) ||
+    sectionTitle !== (resolvedCopy.differentials.title ?? "") ||
+    sectionSubtitle !== (resolvedCopy.differentials.subtitle ?? "");
 
   const addItem = () => {
     if (items.length >= MAX_ITEMS) {
@@ -69,14 +85,26 @@ export function DifferentialsTab({
         icon: item.icon?.trim() || undefined,
       }));
 
+      const sectionCopyPatch = buildSectionCopyPatch("differentials", {
+        title: sectionTitle,
+        subtitle: sectionSubtitle,
+      });
+
       await updateSiteConfig(
         tenant.id,
-        { differentials: cleaned },
+        { differentials: cleaned, sectionCopy: sectionCopyPatch },
         siteConfig,
       );
 
       setItems(cleaned);
-      onSiteConfigChange({ ...siteConfig, differentials: cleaned });
+      onSiteConfigChange({
+        ...siteConfig,
+        differentials: cleaned,
+        sectionCopy: mergeSectionCopyPatch(
+          siteConfig.sectionCopy ?? {},
+          sectionCopyPatch,
+        ),
+      });
       toast.success("Diferenciais salvos");
     } catch (err) {
       console.error("[differentials-tab]", err);
@@ -94,6 +122,16 @@ export function DifferentialsTab({
           Destaque até {MAX_ITEMS} motivos para escolher seu restaurante.
         </p>
       </div>
+
+      <SectionHeadingFields
+        title={sectionTitle}
+        subtitle={sectionSubtitle}
+        disabled={isSubmitting}
+        titlePlaceholder={DEFAULT_SECTION_COPY.differentials.title}
+        subtitlePlaceholder={DEFAULT_SECTION_COPY.differentials.subtitle}
+        onTitleChange={setSectionTitle}
+        onSubtitleChange={setSectionSubtitle}
+      />
 
       <div className="space-y-4">
         {items.map((item, index) => (

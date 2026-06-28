@@ -18,6 +18,7 @@ import {
   isOpenNow,
 } from "@/lib/utils/opening-hours";
 import { cn } from "@/lib/utils";
+import { resolveSectionCopy } from "@/lib/site/section-copy";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface ContactSectionProps {
@@ -112,6 +113,7 @@ function ContactChannelLink({
 export function ContactSection({ data }: ContactSectionProps) {
   const contact = data.siteConfig.contact;
   const location = data.siteConfig.location;
+  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).contact;
   const whatsapp = contact.whatsapp ?? data.whatsapp;
   const address = location.address ?? data.tenant.address;
   const openingHours = data.tenant.openingHours;
@@ -160,9 +162,9 @@ export function ContactSection({ data }: ContactSectionProps) {
       <ScrollReveal>
         <LandingHeading
           align="center"
-          title="Contato"
+          title={copy.title}
           titleId="contact-heading"
-          subtitle="Estamos prontos para atender você"
+          subtitle={copy.subtitle}
         />
       </ScrollReveal>
 
@@ -170,11 +172,9 @@ export function ContactSection({ data }: ContactSectionProps) {
         <ScrollReveal className="mt-8 sm:mt-10" delay={50}>
           <div className="contact-cta">
             <div className="contact-cta__copy">
-              <p className="contact-cta__eyebrow">Peça agora</p>
-              <h3 className="contact-cta__title">Faça seu pedido pelo WhatsApp</h3>
-              <p className="contact-cta__subtitle">
-                Resposta rápida e atendimento personalizado
-              </p>
+              <p className="contact-cta__eyebrow">{copy.ctaEyebrow}</p>
+              <h3 className="contact-cta__title">{copy.ctaTitle}</h3>
+              <p className="contact-cta__subtitle">{copy.ctaSubtitle}</p>
             </div>
             <LandingButton
               href={formatWhatsAppLink(whatsapp)}

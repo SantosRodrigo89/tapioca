@@ -1,6 +1,7 @@
 import { LandingHeading } from "@/components/public/landing";
 import { HighlightsCarousel } from "@/components/public/highlights-carousel";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import type { SiteSectionHeadingCopy } from "@/types/site";
 import type { Category, MenuItem } from "@/types";
 
 export interface HighlightEntry {
@@ -10,10 +11,14 @@ export interface HighlightEntry {
 
 interface HighlightsSectionProps {
   entries: HighlightEntry[];
+  copy?: SiteSectionHeadingCopy;
 }
 
-export function HighlightsSection({ entries }: HighlightsSectionProps) {
+export function HighlightsSection({ entries, copy }: HighlightsSectionProps) {
   if (entries.length === 0) return null;
+
+  const title = copy?.title ?? "Destaques da Casa";
+  const subtitle = copy?.subtitle ?? "Os favoritos dos nossos clientes";
 
   return (
     <section
@@ -23,9 +28,9 @@ export function HighlightsSection({ entries }: HighlightsSectionProps) {
     >
       <ScrollReveal>
         <LandingHeading
-          title="Destaques da Casa"
+          title={title}
           titleId="highlights-heading"
-          subtitle="Os favoritos dos nossos clientes"
+          subtitle={subtitle}
         />
       </ScrollReveal>
 

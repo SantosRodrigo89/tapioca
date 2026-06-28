@@ -1,6 +1,7 @@
 import { MenuCatalog } from "@/components/public/menu-catalog";
 import { LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { resolveSectionCopy } from "@/lib/site/section-copy";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface MenuSectionProps {
@@ -9,6 +10,7 @@ interface MenuSectionProps {
 
 export function MenuSection({ data }: MenuSectionProps) {
   const { visibleCategories } = data;
+  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).menu;
 
   return (
     <section
@@ -19,8 +21,8 @@ export function MenuSection({ data }: MenuSectionProps) {
       <ScrollReveal>
         <LandingHeading
           align="center"
-          title="Nosso Cardápio"
-          subtitle="Conheça nossas especialidades preparadas com ingredientes selecionados."
+          title={copy.title}
+          subtitle={copy.subtitle}
         />
       </ScrollReveal>
 

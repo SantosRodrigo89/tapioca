@@ -109,6 +109,28 @@ export const SiteMenuExperienceSchema = z.object({
   productDrawerActions: z.array(ProductDrawerActionIdSchema).max(3).optional(),
 });
 
+export const SiteSectionHeadingCopySchema = z.object({
+  title: z.string().max(100).optional(),
+  subtitle: z.string().max(200).optional(),
+  eyebrow: z.string().max(80).optional(),
+});
+
+export const SiteContactSectionCopySchema = SiteSectionHeadingCopySchema.extend({
+  ctaEyebrow: z.string().max(80).optional(),
+  ctaTitle: z.string().max(120).optional(),
+  ctaSubtitle: z.string().max(200).optional(),
+});
+
+export const SiteSectionCopySchema = z.object({
+  about: SiteSectionHeadingCopySchema.optional(),
+  differentials: SiteSectionHeadingCopySchema.optional(),
+  featured: SiteSectionHeadingCopySchema.optional(),
+  menu: SiteSectionHeadingCopySchema.optional(),
+  gallery: SiteSectionHeadingCopySchema.optional(),
+  contact: SiteContactSectionCopySchema.optional(),
+  location: SiteSectionHeadingCopySchema.optional(),
+});
+
 export const SiteTestimonialSchema = z.object({
   id: z.string(),
   author: z.string().min(1).max(80),
@@ -129,6 +151,7 @@ export const SiteConfigSchema = z.object({
   faq: z.array(SiteFaqItemSchema).max(20),
   testimonials: z.array(SiteTestimonialSchema).max(20),
   menuExperience: SiteMenuExperienceSchema.optional(),
+  sectionCopy: SiteSectionCopySchema.optional(),
 });
 
 export const GalleryImageSchema = z.object({

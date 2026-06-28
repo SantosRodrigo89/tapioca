@@ -2,6 +2,7 @@ import Image from "next/image";
 import { LandingHeading } from "@/components/public/landing";
 import { ReadMoreText } from "@/components/public/read-more-text";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { resolveSectionCopy } from "@/lib/site/section-copy";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface AboutSectionProps {
@@ -10,6 +11,7 @@ interface AboutSectionProps {
 
 export function AboutSection({ data }: AboutSectionProps) {
   const about = data.siteConfig.about;
+  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).about;
   const title = about.title ?? "Sobre nós";
   const description = about.description;
   const hasImage = !!about.imageUrl;
@@ -22,7 +24,7 @@ export function AboutSection({ data }: AboutSectionProps) {
         <LandingHeading
           title={title}
           titleId="about-heading"
-          eyebrow="Nossa história"
+          eyebrow={copy.eyebrow}
         />
       </ScrollReveal>
 

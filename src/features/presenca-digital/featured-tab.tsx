@@ -5,9 +5,16 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { UpdateTenantHighlightsSchema } from "@/lib/schemas/tenant-menu.schema";
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
+import {
+  buildSectionCopyPatch,
+  DEFAULT_SECTION_COPY,
+  mergeSectionCopyPatch,
+  resolveSectionCopy,
+} from "@/lib/site/section-copy";
 import { formatMenuItemPrice } from "@/lib/pricing";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
 import type { CategoryWithItems } from "@/components/admin/highlights-settings";
 import type { SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
@@ -34,8 +41,15 @@ export function FeaturedTab({
       ? siteConfig.featured.itemIds
       : (tenant.highlightItemIds ?? []);
 
+  const resolvedCopy = resolveSectionCopy(siteConfig.sectionCopy);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>(initialIds);
+  const [sectionTitle, setSectionTitle] = useState<string>(
+    resolvedCopy.featured.title ?? "",
+  );
+  const [sectionSubtitle, setSectionSubtitle] = useState<string>(
+    resolvedCopy.featured.subtitle ?? "",
+  );
 
   const toggleItem = (itemId: string) => {
     setSelectedIds((prev) => {
@@ -51,7 +65,9 @@ export function FeaturedTab({
   };
 
   const hasChanges =
-    JSON.stringify(selectedIds) !== JSON.stringify(initialIds);
+    JSON.stringify(selectedIds) !== JSON.stringify(initialIds) ||
+    sectionTitle !== (resolvedCopy.featured.title ?? "") ||
+    sectionSubtitle !== (resolvedCopy.featured.subtitle ?? "");
 
   const handleSave = async () => {
     const parsed = UpdateTenantHighlightsSchema.safeParse({
@@ -73,9 +89,14 @@ export function FeaturedTab({
         maxCount: MAX_HIGHLIGHTS,
       };
 
+      const sectionCopyPatch = buildSectionCopyPatch("featured", {
+        title: sectionTitle,
+        subtitle: sectionSubtitle,
+      });
+
       await updateSiteConfig(
         tenant.id,
-        { featured: featuredPatch },
+        { featured: featuredPatch, sectionCopy: sectionCopyPatch },
         siteConfig,
       );
 
@@ -83,6 +104,10 @@ export function FeaturedTab({
       onSiteConfigChange({
         ...siteConfig,
         featured: { ...siteConfig.featured, ...featuredPatch },
+        sectionCopy: mergeSectionCopyPatch(
+          siteConfig.sectionCopy ?? {},
+          sectionCopyPatch,
+        ),
       });
 
       toast.success("Produtos em destaque salvos");
@@ -106,6 +131,16 @@ export function FeaturedTab({
           Escolha até {MAX_HIGHLIGHTS} itens para exibir na landing page.
         </p>
       </div>
+
+      <SectionHeadingFields
+        title={sectionTitle}
+        subtitle={sectionSubtitle}
+        disabled={isSubmitting}
+        titlePlaceholder={DEFAULT_SECTION_COPY.featured.title}
+        subtitlePlaceholder={DEFAULT_SECTION_COPY.featured.subtitle}
+        onTitleChange={setSectionTitle}
+        onSubtitleChange={setSectionSubtitle}
+      />
 
       {allItems.length === 0 ? (
         <p className="text-sm text-muted-foreground">

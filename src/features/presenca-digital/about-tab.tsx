@@ -3,10 +3,17 @@
 import { useState } from "react";
 import { toast } from "sonner";
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
+import {
+  buildSectionCopyPatch,
+  DEFAULT_SECTION_COPY,
+  mergeSectionCopyPatch,
+  resolveSectionCopy,
+} from "@/lib/site/section-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
 import type { SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -24,15 +31,18 @@ export function AboutTab({
   onSiteConfigChange,
 }: AboutTabProps) {
   const about = siteConfig.about;
+  const resolvedCopy = resolveSectionCopy(siteConfig.sectionCopy);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState(about.title ?? "Sobre nós");
   const [description, setDescription] = useState(
     about.description ?? tenant.description ?? "",
   );
+  const [eyebrow, setEyebrow] = useState<string>(resolvedCopy.about.eyebrow ?? "");
 
   const hasChanges =
     title !== (about.title ?? "Sobre nós") ||
-    description !== (about.description ?? tenant.description ?? "");
+    description !== (about.description ?? tenant.description ?? "") ||
+    eyebrow !== (resolvedCopy.about.eyebrow ?? "");
 
   const handleSave = async () => {
     setIsSubmitting(true);
@@ -48,12 +58,22 @@ export function AboutTab({
         description: descriptionValue,
       };
 
-      await updateSiteConfig(tenant.id, { about: aboutPatch }, siteConfig);
+      const sectionCopyPatch = buildSectionCopyPatch("about", { eyebrow });
+
+      await updateSiteConfig(
+        tenant.id,
+        { about: aboutPatch, sectionCopy: sectionCopyPatch },
+        siteConfig,
+      );
 
       onTenantChange({ description: descriptionValue });
       onSiteConfigChange({
         ...siteConfig,
         about: { ...siteConfig.about, ...aboutPatch },
+        sectionCopy: mergeSectionCopyPatch(
+          siteConfig.sectionCopy ?? {},
+          sectionCopyPatch,
+        ),
       });
 
       toast.success("Seção Sobre salva");
@@ -73,6 +93,15 @@ export function AboutTab({
           Conte a história do seu restaurante para os visitantes.
         </p>
       </div>
+
+      <SectionHeadingFields
+        showEyebrow
+        showTitle={false}
+        eyebrow={eyebrow}
+        disabled={isSubmitting}
+        eyebrowPlaceholder={DEFAULT_SECTION_COPY.about.eyebrow}
+        onEyebrowChange={setEyebrow}
+      />
 
       <div className="space-y-1">
         <Label htmlFor="about-title">Título</Label>

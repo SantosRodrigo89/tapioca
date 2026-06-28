@@ -104,6 +104,29 @@ export interface SiteMenuExperience {
 
 export type ProductDrawerActionId = "share" | "copy-link" | "whatsapp";
 
+/** Optional heading copy overrides for landing sections */
+export interface SiteSectionHeadingCopy {
+  title?: string;
+  subtitle?: string;
+  eyebrow?: string;
+}
+
+export interface SiteContactSectionCopy extends SiteSectionHeadingCopy {
+  ctaEyebrow?: string;
+  ctaTitle?: string;
+  ctaSubtitle?: string;
+}
+
+export interface SiteSectionCopy {
+  about?: SiteSectionHeadingCopy;
+  differentials?: SiteSectionHeadingCopy;
+  featured?: SiteSectionHeadingCopy;
+  menu?: SiteSectionHeadingCopy;
+  gallery?: SiteSectionHeadingCopy;
+  contact?: SiteContactSectionCopy;
+  location?: SiteSectionHeadingCopy;
+}
+
 export interface SiteConfig {
   sections: SiteSectionConfig[];
   identity: SiteIdentity;
@@ -117,6 +140,7 @@ export interface SiteConfig {
   faq: SiteFaqItem[];
   testimonials: SiteTestimonial[];
   menuExperience?: SiteMenuExperience;
+  sectionCopy?: SiteSectionCopy;
 }
 
 // ─── Gallery (subcollection) ───────────────────────────────────────────────

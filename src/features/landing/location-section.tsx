@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MapPin, Navigation } from "lucide-react";
 import { LandingButton, LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { resolveSectionCopy } from "@/lib/site/section-copy";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface LocationSectionProps {
@@ -43,6 +44,7 @@ function buildMapEmbedUrl(data: LandingPageData): string | null {
 export function LocationSection({ data }: LocationSectionProps) {
   const address =
     data.siteConfig.location.address ?? data.tenant.address;
+  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).location;
   const directionsUrl = buildDirectionsUrl(data);
   const mapEmbedUrl = buildMapEmbedUrl(data);
 
@@ -57,9 +59,9 @@ export function LocationSection({ data }: LocationSectionProps) {
       <ScrollReveal>
         <LandingHeading
           align="center"
-          title="Localização"
+          title={copy.title}
           titleId="location-heading"
-          subtitle="Venha nos visitar"
+          subtitle={copy.subtitle}
         />
       </ScrollReveal>
 

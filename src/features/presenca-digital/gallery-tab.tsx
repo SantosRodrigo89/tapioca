@@ -10,24 +10,82 @@ import {
   reorderGalleryImages,
   updateGalleryImage,
 } from "@/lib/repositories/gallery.repository";
+import { updateSiteConfig } from "@/lib/repositories/tenant.repository";
 import { uploadGalleryImage } from "@/lib/storage/upload";
+import {
+  buildSectionCopyPatch,
+  DEFAULT_SECTION_COPY,
+  mergeSectionCopyPatch,
+  resolveSectionCopy,
+} from "@/lib/site/section-copy";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { GalleryImage } from "@/types";
+import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
+import type { GalleryImage, SiteConfig, Tenant } from "@/types";
 
 const MAX_IMAGES = 20;
 
 interface GalleryTabProps {
-  tenantId: string;
+  tenant: Tenant;
+  siteConfig: SiteConfig;
   initialImages: GalleryImage[];
+  onSiteConfigChange: (config: SiteConfig) => void;
 }
 
-export function GalleryTab({ tenantId, initialImages }: GalleryTabProps) {
+export function GalleryTab({
+  tenant,
+  siteConfig,
+  initialImages,
+  onSiteConfigChange,
+}: GalleryTabProps) {
+  const resolvedCopy = resolveSectionCopy(siteConfig.sectionCopy);
   const [images, setImages] = useState(initialImages);
   const [isUploading, setIsUploading] = useState(false);
+  const [isSavingCopy, setIsSavingCopy] = useState(false);
   const [uploadingPreview, setUploadingPreview] = useState<string | null>(null);
+  const [sectionTitle, setSectionTitle] = useState<string>(
+    resolvedCopy.gallery.title ?? "",
+  );
+  const [sectionSubtitle, setSectionSubtitle] = useState<string>(
+    resolvedCopy.gallery.subtitle ?? "",
+  );
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const hasCopyChanges =
+    sectionTitle !== (resolvedCopy.gallery.title ?? "") ||
+    sectionSubtitle !== (resolvedCopy.gallery.subtitle ?? "");
+
+  const handleSaveCopy = async () => {
+    setIsSavingCopy(true);
+    try {
+      const sectionCopyPatch = buildSectionCopyPatch("gallery", {
+        title: sectionTitle,
+        subtitle: sectionSubtitle,
+      });
+
+      await updateSiteConfig(
+        tenant.id,
+        { sectionCopy: sectionCopyPatch },
+        siteConfig,
+      );
+
+      onSiteConfigChange({
+        ...siteConfig,
+        sectionCopy: mergeSectionCopyPatch(
+          siteConfig.sectionCopy ?? {},
+          sectionCopyPatch,
+        ),
+      });
+
+      toast.success("Textos da galeria salvos");
+    } catch (err) {
+      console.error("[gallery-tab]", err);
+      toast.error("Erro ao salvar textos da galeria");
+    } finally {
+      setIsSavingCopy(false);
+    }
+  };
 
   const handleUpload = async (file: File) => {
     if (images.length >= MAX_IMAGES) {
@@ -41,8 +99,8 @@ export function GalleryTab({ tenantId, initialImages }: GalleryTabProps) {
 
     try {
       const imageId = crypto.randomUUID();
-      const url = await uploadGalleryImage(tenantId, imageId, file);
-      const created = await createGalleryImage(tenantId, imageId, { url });
+      const url = await uploadGalleryImage(tenant.id, imageId, file);
+      const created = await createGalleryImage(tenant.id, imageId, { url });
       setImages((prev) => [...prev, created].sort((a, b) => a.order - b.order));
       toast.success("Imagem adicionada");
     } catch (err) {
@@ -64,7 +122,7 @@ export function GalleryTab({ tenantId, initialImages }: GalleryTabProps) {
 
   const handleCaptionSave = async (id: string, caption: string) => {
     try {
-      await updateGalleryImage(tenantId, id, {
+      await updateGalleryImage(tenant.id, id, {
         caption: caption.trim() || null,
       });
       toast.success("Legenda salva");
@@ -76,7 +134,7 @@ export function GalleryTab({ tenantId, initialImages }: GalleryTabProps) {
 
   const handleDelete = async (id: string) => {
     try {
-      await deleteGalleryImage(tenantId, id);
+      await deleteGalleryImage(tenant.id, id);
       setImages((prev) => prev.filter((img) => img.id !== id));
       toast.success("Imagem removida");
     } catch (err) {
@@ -99,7 +157,7 @@ export function GalleryTab({ tenantId, initialImages }: GalleryTabProps) {
     setImages(next);
 
     try {
-      await reorderGalleryImages(tenantId, updates);
+      await reorderGalleryImages(tenant.id, updates);
     } catch (err) {
       console.error("[gallery-tab]", err);
       toast.error("Erro ao reordenar");
@@ -115,6 +173,26 @@ export function GalleryTab({ tenantId, initialImages }: GalleryTabProps) {
           Fotos do ambiente e pratos. Máximo de {MAX_IMAGES} imagens.
         </p>
       </div>
+
+      <SectionHeadingFields
+        title={sectionTitle}
+        subtitle={sectionSubtitle}
+        disabled={isSavingCopy}
+        titlePlaceholder={DEFAULT_SECTION_COPY.gallery.title}
+        subtitlePlaceholder={DEFAULT_SECTION_COPY.gallery.subtitle}
+        onTitleChange={setSectionTitle}
+        onSubtitleChange={setSectionSubtitle}
+      />
+
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={handleSaveCopy}
+        disabled={isSavingCopy || !hasCopyChanges}
+      >
+        {isSavingCopy ? "Salvando…" : "Salvar textos da galeria"}
+      </Button>
 
       <div className="space-y-2">
         <Label>Adicionar imagem ({images.length}/{MAX_IMAGES})</Label>

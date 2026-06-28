@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { resolveSectionCopy } from "@/lib/site/section-copy";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface DifferentialsSectionProps {
@@ -56,6 +57,7 @@ function DifferentialIcon({ icon }: { icon?: string }) {
 
 export function DifferentialsSection({ data }: DifferentialsSectionProps) {
   const differentials = data.siteConfig.differentials;
+  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).differentials;
 
   if (!differentials || differentials.length === 0) return null;
 
@@ -67,9 +69,9 @@ export function DifferentialsSection({ data }: DifferentialsSectionProps) {
       <ScrollReveal>
         <LandingHeading
           align="center"
-          title="Por que escolher a gente"
+          title={copy.title}
           titleId="differentials-heading"
-          subtitle="O que torna nossa experiência especial"
+          subtitle={copy.subtitle}
         />
       </ScrollReveal>
 
