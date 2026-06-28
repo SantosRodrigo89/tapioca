@@ -24,6 +24,12 @@ function timestampToDate(value: unknown): Date {
   return new Date();
 }
 
+function optionalStringToFirestore(value: string | undefined): string | null {
+  if (value == null) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+}
+
 function docToComplement(id: string, data: Record<string, unknown>): Complement {
   return {
     id,
@@ -82,9 +88,11 @@ export async function createComplement(
     data.order ??
     (existing.length > 0 ? Math.max(...existing.map((c) => c.order)) + 1 : 0);
 
+  const description = optionalStringToFirestore(data.description);
+
   const ref = await addDoc(complementsRef(tenantId), {
     name: data.name,
-    description: data.description ?? null,
+    description,
     price: data.price,
     enabled: data.enabled ?? true,
     order: nextOrder,
@@ -97,7 +105,7 @@ export async function createComplement(
   return {
     id: ref.id,
     name: data.name,
-    description: data.description,
+    description: description ?? undefined,
     price: data.price,
     enabled: data.enabled ?? true,
     order: nextOrder,
@@ -119,10 +127,17 @@ export async function updateComplement(
   },
 ): Promise<void> {
   await ensureClientAuthForWrite(tenantId);
-  await updateDoc(doc(complementsRef(tenantId), complementId), {
+
+  const payload: Record<string, unknown> = {
     ...data,
     updatedAt: serverTimestamp(),
-  });
+  };
+
+  if (data.description !== undefined) {
+    payload.description = optionalStringToFirestore(data.description);
+  }
+
+  await updateDoc(doc(complementsRef(tenantId), complementId), payload);
   notifyPublicLandingChanged(tenantId);
 }
 
