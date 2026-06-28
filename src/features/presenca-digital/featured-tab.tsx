@@ -144,10 +144,6 @@ export function FeaturedTab({
     const query = searchQuery.trim().toLowerCase();
 
     return allItems.filter((item) => {
-      if (showSelectedOnly && !selectedIds.includes(item.id)) {
-        return false;
-      }
-
       if (categoryFilter !== "all" && item.categoryName !== categoryFilter) {
         return false;
       }
@@ -161,7 +157,28 @@ export function FeaturedTab({
         item.categoryName.toLowerCase().includes(query)
       );
     });
-  }, [allItems, categoryFilter, searchQuery, selectedIds, showSelectedOnly]);
+  }, [allItems, categoryFilter, searchQuery]);
+
+  const listItems = useMemo(() => {
+    const matchesFilters = (item: ItemWithCategory) =>
+      filteredItems.some((candidate) => candidate.id === item.id);
+
+    if (showSelectedOnly) {
+      return selectedItems.filter(matchesFilters);
+    }
+
+    const selected = selectedItems.filter(matchesFilters);
+    const unselected = filteredItems.filter(
+      (item) => !selectedIds.includes(item.id),
+    );
+
+    return [...selected, ...unselected];
+  }, [
+    filteredItems,
+    selectedIds,
+    selectedItems,
+    showSelectedOnly,
+  ]);
 
   const categoryNames = useMemo(
     () => [...new Set(categories.map((cat) => cat.name))].sort(),
@@ -277,181 +294,175 @@ export function FeaturedTab({
             })}
           />
 
-          <div className="space-y-3">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Label>
-            Selecionados: {selectedIds.length}/{MAX_HIGHLIGHTS}
-          </Label>
-          <p className="text-xs text-muted-foreground">
-            A ordem aqui é a ordem do carrossel no site
-          </p>
-        </div>
+          <div className="space-y-3 rounded-xl border border-border/60 bg-muted/20 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <Label>Produtos em destaque</Label>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Selecionados: {selectedIds.length}/{MAX_HIGHLIGHTS}. A ordem
+                  dos selecionados é a ordem do carrossel no site.
+                </p>
+              </div>
+            </div>
 
-        {selectedItems.length === 0 ? (
-          <p className="rounded-xl border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
-            Nenhum produto selecionado. Escolha itens na lista abaixo.
-          </p>
-        ) : (
-          <ul className="divide-y rounded-xl border">
-            {selectedItems.map((item, index) => (
-              <li
-                key={item.id}
-                className="flex items-center gap-3 px-3 py-2.5"
-              >
-                <span className="w-6 shrink-0 text-center text-xs font-semibold text-muted-foreground">
-                  {index + 1}
-                </span>
-                <ItemThumbnail item={item} size="sm" />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{item.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {item.categoryName} · {formatMenuItemPrice(item)}
-                    {!item.available && " · Indisponível"}
+            {allItems.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Adicione produtos no cardápio para poder destacá-los.
+              </p>
+            ) : (
+              <>
+                <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
+                  <div className="relative min-w-0 flex-1 sm:min-w-[200px]">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={searchQuery}
+                      disabled={isSubmitting}
+                      placeholder="Buscar por nome ou categoria…"
+                      className="pl-9"
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+
+                  <div className="space-y-1 sm:w-48">
+                    <Label htmlFor="featured-category-filter" className="sr-only">
+                      Categoria
+                    </Label>
+                    <select
+                      id="featured-category-filter"
+                      value={categoryFilter}
+                      disabled={isSubmitting}
+                      onChange={(e) => setCategoryFilter(e.target.value)}
+                      className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      <option value="all">Todas as categorias</option>
+                      {categoryNames.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <label className="flex cursor-pointer items-center gap-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={showSelectedOnly}
+                      disabled={isSubmitting}
+                      onChange={(e) => setShowSelectedOnly(e.target.checked)}
+                      className="rounded border-input"
+                    />
+                    Mostrar só selecionados
+                  </label>
+                </div>
+
+                {listItems.length === 0 ? (
+                  <p className="rounded-lg border border-dashed px-4 py-6 text-center text-sm text-muted-foreground">
+                    {showSelectedOnly
+                      ? "Nenhum produto selecionado com os filtros atuais."
+                      : "Nenhum produto encontrado com os filtros atuais."}
                   </p>
-                </div>
-                <div className="flex shrink-0 items-center gap-0.5">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={isSubmitting || index === 0}
-                    onClick={() => moveItem(index, -1)}
-                    aria-label="Mover para cima"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    disabled={
-                      isSubmitting || index === selectedItems.length - 1
-                    }
-                    onClick={() => moveItem(index, 1)}
-                    aria-label="Mover para baixo"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                    disabled={isSubmitting}
-                    onClick={() => removeItem(item.id)}
-                    aria-label="Remover destaque"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                ) : (
+                  <ul className="divide-y rounded-xl border bg-background max-h-[520px] overflow-y-auto">
+                    {listItems.map((item) => {
+                      const isSelected = selectedIds.includes(item.id);
+                      const order = selectedIds.indexOf(item.id);
 
-      {allItems.length === 0 ? (
-        <p className="text-sm text-muted-foreground">
-          Adicione produtos no cardápio para poder destacá-los.
-        </p>
-      ) : (
-        <div className="space-y-3">
-          <Label>Adicionar produtos</Label>
+                      return (
+                        <li key={item.id} className="px-4 py-3">
+                          <div className="flex items-start gap-3">
+                            <div className="relative shrink-0">
+                              <ItemThumbnail item={item} size="md" />
+                              {isSelected ? (
+                                <span className="absolute -left-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground shadow-sm">
+                                  {order + 1}
+                                </span>
+                              ) : null}
+                            </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end">
-            <div className="relative min-w-0 flex-1 sm:min-w-[200px]">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                value={searchQuery}
-                disabled={isSubmitting}
-                placeholder="Buscar por nome ou categoria…"
-                className="pl-9"
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+                            <div className="flex min-w-0 flex-1 flex-col gap-2.5 lg:flex-row lg:items-start lg:justify-between">
+                              <div className="min-w-0 space-y-1">
+                                <p className="text-sm font-medium leading-snug break-words">
+                                  {item.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.categoryName}
+                                </p>
+                                <p className="text-xs font-medium text-foreground/80">
+                                  {formatMenuItemPrice(item)}
+                                  {!item.available && (
+                                    <span className="font-normal text-muted-foreground">
+                                      {" "}
+                                      · Indisponível
+                                    </span>
+                                  )}
+                                </p>
+                              </div>
 
-            <div className="space-y-1 sm:w-48">
-              <Label htmlFor="featured-category-filter" className="sr-only">
-                Categoria
-              </Label>
-              <select
-                id="featured-category-filter"
-                value={categoryFilter}
-                disabled={isSubmitting}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="all">Todas as categorias</option>
-                {categoryNames.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <label className="flex cursor-pointer items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={showSelectedOnly}
-                disabled={isSubmitting}
-                onChange={(e) => setShowSelectedOnly(e.target.checked)}
-                className="rounded border-input"
-              />
-              Mostrar só selecionados
-            </label>
+                              <div className="flex shrink-0 items-center justify-end gap-1 self-stretch lg:self-start">
+                                {isSelected ? (
+                                  <>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      disabled={isSubmitting || order === 0}
+                                      onClick={() => moveItem(order, -1)}
+                                      aria-label="Mover para cima"
+                                    >
+                                      <ChevronUp className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8"
+                                      disabled={
+                                        isSubmitting ||
+                                        order === selectedIds.length - 1
+                                      }
+                                      onClick={() => moveItem(order, 1)}
+                                      aria-label="Mover para baixo"
+                                    >
+                                      <ChevronDown className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      type="button"
+                                      variant="outline"
+                                      size="icon"
+                                      className="h-8 w-8 text-muted-foreground hover:border-destructive/30 hover:text-destructive"
+                                      disabled={isSubmitting}
+                                      onClick={() => removeItem(item.id)}
+                                      aria-label="Remover destaque"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={
+                                      isSubmitting ||
+                                      selectedIds.length >= MAX_HIGHLIGHTS
+                                    }
+                                    onClick={() => addItem(item.id)}
+                                  >
+                                    Adicionar
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </>
+            )}
           </div>
-
-          {filteredItems.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Nenhum produto encontrado com os filtros atuais.
-            </p>
-          ) : (
-            <ul className="divide-y rounded-xl border max-h-[420px] overflow-y-auto">
-              {filteredItems.map((item) => {
-                const isSelected = selectedIds.includes(item.id);
-                const order = selectedIds.indexOf(item.id);
-
-                return (
-                  <li key={item.id}>
-                    <div className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/50">
-                      <ItemThumbnail item={item} size="sm" />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium">
-                          {item.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {item.categoryName} · {formatMenuItemPrice(item)}
-                          {!item.available && " · Indisponível"}
-                        </p>
-                      </div>
-                      {isSelected ? (
-                        <span className="shrink-0 text-xs font-semibold text-muted-foreground">
-                          #{order + 1}
-                        </span>
-                      ) : (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          disabled={
-                            isSubmitting || selectedIds.length >= MAX_HIGHLIGHTS
-                          }
-                          onClick={() => addItem(item.id)}
-                        >
-                          Adicionar
-                        </Button>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
-      )}
 
           <Button
             type="button"
