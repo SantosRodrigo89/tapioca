@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +32,38 @@ function galleryItemLayout(
 export function GalleryGrid({ images, layout = "asymmetric" }: GalleryGridProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const activeImage = activeIndex !== null ? images[activeIndex] : null;
+  const hasMultiple = images.length > 1;
+
+  const goToPrevious = useCallback(() => {
+    setActiveIndex((current) => {
+      if (current === null) return null;
+      return (current - 1 + images.length) % images.length;
+    });
+  }, [images.length]);
+
+  const goToNext = useCallback(() => {
+    setActiveIndex((current) => {
+      if (current === null) return null;
+      return (current + 1) % images.length;
+    });
+  }, [images.length]);
+
+  useEffect(() => {
+    if (activeIndex === null) return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        goToPrevious();
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        goToNext();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [activeIndex, goToNext, goToPrevious]);
 
   return (
     <>
@@ -77,32 +109,62 @@ export function GalleryGrid({ images, layout = "asymmetric" }: GalleryGridProps)
         open={activeIndex !== null}
         onOpenChange={(open) => !open && setActiveIndex(null)}
       >
-        <DialogContent className="gallery-lightbox max-w-4xl border-none bg-transparent p-0 shadow-none">
+        <DialogContent className="max-w-[min(92vw,56rem)] border-0 bg-transparent p-0 shadow-none [&>button.absolute]:hidden">
           <DialogTitle className="sr-only">
             {activeImage?.caption ?? "Foto ampliada da galeria"}
           </DialogTitle>
-          {activeImage && (
-            <figure className="gallery-lightbox__figure">
+          {activeImage && activeIndex !== null && (
+            <figure className="relative m-0">
               <button
                 type="button"
                 onClick={() => setActiveIndex(null)}
-                className="gallery-lightbox__close"
+                className="absolute top-3 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border-0 bg-black/55 text-white cursor-pointer"
                 aria-label="Fechar"
               >
                 <X className="h-5 w-5" />
               </button>
-              <div className="gallery-lightbox__image">
+
+              {hasMultiple && (
+                <>
+                  <button
+                    type="button"
+                    onClick={goToPrevious}
+                    className="absolute top-1/2 left-2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-black/55 text-white cursor-pointer sm:left-3"
+                    aria-label="Foto anterior"
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={goToNext}
+                    className="absolute top-1/2 right-2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border-0 bg-black/55 text-white cursor-pointer sm:right-3"
+                    aria-label="Próxima foto"
+                  >
+                    <ChevronRight className="h-6 w-6" />
+                  </button>
+                  <p
+                    className="absolute top-3 left-3 z-10 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white"
+                    aria-live="polite"
+                  >
+                    {activeIndex + 1} / {images.length}
+                  </p>
+                </>
+              )}
+
+              <div className="relative w-full overflow-hidden rounded-2xl bg-black">
                 <Image
                   src={activeImage.url}
                   alt={activeImage.caption ?? "Foto da galeria"}
-                  fill
-                  sizes="(max-width: 896px) 100vw, 896px"
-                  className="object-contain"
+                  width={1600}
+                  height={1200}
+                  sizes="(max-width: 896px) 92vw, 896px"
+                  className="mx-auto max-h-[min(85vh,56rem)] w-auto max-w-full object-contain"
                   priority
                 />
               </div>
+
               {activeImage.caption && (
-                <figcaption className="gallery-lightbox__caption">
+                <figcaption className="mt-3 text-center text-sm text-white">
                   {activeImage.caption}
                 </figcaption>
               )}
