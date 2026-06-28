@@ -156,7 +156,6 @@ function parseDifferentials(value: unknown): SiteDifferential[] | undefined {
       return {
         id,
         title,
-        icon: parseString(item.icon),
         description: parseString(item.description),
       };
     })

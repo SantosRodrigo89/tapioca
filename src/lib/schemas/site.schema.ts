@@ -56,7 +56,6 @@ export const SiteAboutSchema = z.object({
 
 export const SiteDifferentialSchema = z.object({
   id: z.string(),
-  icon: z.string().max(50).optional(),
   title: z.string().min(1).max(80),
   description: z.string().max(300).optional(),
 });

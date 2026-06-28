@@ -52,7 +52,6 @@ export interface SiteAbout {
 
 export interface SiteDifferential {
   id: string;
-  icon?: string;
   title: string;
   description?: string;
 }

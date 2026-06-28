@@ -78,11 +78,10 @@ export function DifferentialsTab({
 
     setIsSubmitting(true);
     try {
-      const cleaned = valid.map((item) => ({
-        ...item,
-        title: item.title.trim(),
-        description: item.description?.trim() || undefined,
-        icon: item.icon?.trim() || undefined,
+      const cleaned = valid.map(({ id, title, description }) => ({
+        id,
+        title: title.trim(),
+        description: description?.trim() || undefined,
       }));
 
       const sectionCopyPatch = buildSectionCopyPatch("differentials", {
@@ -155,31 +154,16 @@ export function DifferentialsTab({
               </Button>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-[4rem_1fr]">
-              <div className="space-y-1">
-                <Label>Ícone</Label>
-                <Input
-                  value={item.icon ?? ""}
-                  disabled={isSubmitting}
-                  onChange={(e) =>
-                    updateItem(item.id, { icon: e.target.value })
-                  }
-                  placeholder="🍕"
-                  className="text-center text-lg"
-                  maxLength={4}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label>Título</Label>
-                <Input
-                  value={item.title}
-                  disabled={isSubmitting}
-                  onChange={(e) =>
-                    updateItem(item.id, { title: e.target.value })
-                  }
-                  placeholder="Ingredientes frescos"
-                />
-              </div>
+            <div className="space-y-1">
+              <Label>Título</Label>
+              <Input
+                value={item.title}
+                disabled={isSubmitting}
+                onChange={(e) =>
+                  updateItem(item.id, { title: e.target.value })
+                }
+                placeholder="Ingredientes frescos"
+              />
             </div>
 
             <div className="space-y-1">
