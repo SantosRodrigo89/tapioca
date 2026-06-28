@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { toast } from "sonner";
 import { ChevronDown, ChevronUp, Loader2, Trash2 } from "lucide-react";
@@ -21,7 +21,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
+import {
+  SectionCopyBlock,
+  buildTitleSubtitleFields,
+} from "@/features/presenca-digital/section-copy-block";
+import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
+import { GalleryPreviewContent } from "@/features/presenca-digital/landing-section-preview-content";
+import { buildPreviewLandingData } from "@/lib/site/landing-preview";
 import type { GalleryImage, SiteConfig, Tenant } from "@/types";
 
 const MAX_IMAGES = 20;
@@ -51,6 +57,17 @@ export function GalleryTab({
     resolvedCopy.gallery.subtitle ?? "",
   );
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const galleryPreviewData = useMemo(() => {
+    const sectionCopyPatch = buildSectionCopyPatch("gallery", {
+      title: sectionTitle,
+      subtitle: sectionSubtitle,
+    });
+    return buildPreviewLandingData(tenant, siteConfig, {
+      gallery: images,
+      sectionCopyPatches: [sectionCopyPatch],
+    });
+  }, [tenant, siteConfig, images, sectionTitle, sectionSubtitle]);
 
   const hasCopyChanges =
     sectionTitle !== (resolvedCopy.gallery.title ?? "") ||
@@ -174,14 +191,27 @@ export function GalleryTab({
         </p>
       </div>
 
-      <SectionHeadingFields
-        title={sectionTitle}
-        subtitle={sectionSubtitle}
+      <SectionCopyBlock
         disabled={isSavingCopy}
-        titlePlaceholder={DEFAULT_SECTION_COPY.gallery.title}
-        subtitlePlaceholder={DEFAULT_SECTION_COPY.gallery.subtitle}
-        onTitleChange={setSectionTitle}
-        onSubtitleChange={setSectionSubtitle}
+        fields={buildTitleSubtitleFields({
+          idPrefix: "gallery",
+          title: sectionTitle,
+          subtitle: sectionSubtitle,
+          titleDefault: DEFAULT_SECTION_COPY.gallery.title,
+          subtitleDefault: DEFAULT_SECTION_COPY.gallery.subtitle,
+          onTitleChange: setSectionTitle,
+          onSubtitleChange: setSectionSubtitle,
+        })}
+        preview={
+          <LandingSectionPreview
+            tenant={tenant}
+            siteConfig={galleryPreviewData.siteConfig}
+            sectionId="gallery"
+            bandIndex={2}
+          >
+            <GalleryPreviewContent data={galleryPreviewData} />
+          </LandingSectionPreview>
+        }
       />
 
       <Button

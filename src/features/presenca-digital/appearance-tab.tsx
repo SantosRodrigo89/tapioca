@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   UpdateTenantAppearanceSchema,
@@ -21,7 +21,13 @@ import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { ColorField } from "./color-field";
 import { ThemeColorPreview } from "./theme-color-preview";
-import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
+import {
+  SectionCopyBlock,
+  buildTitleSubtitleFields,
+} from "@/features/presenca-digital/section-copy-block";
+import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
+import { MenuPreviewContent } from "@/features/presenca-digital/landing-section-preview-content";
+import { buildPreviewLandingData } from "@/lib/site/landing-preview";
 import type { FontPreset, SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -59,6 +65,16 @@ export function AppearanceTab({
   const [menuSubtitle, setMenuSubtitle] = useState<string>(
     resolvedCopy.menu.subtitle ?? "",
   );
+
+  const menuPreviewData = useMemo(() => {
+    const sectionCopyPatch = buildSectionCopyPatch("menu", {
+      title: menuTitle,
+      subtitle: menuSubtitle,
+    });
+    return buildPreviewLandingData(tenant, siteConfig, {
+      sectionCopyPatches: [sectionCopyPatch],
+    });
+  }, [tenant, siteConfig, menuTitle, menuSubtitle]);
 
   const hasChanges =
     name !== tenant.name ||
@@ -205,16 +221,30 @@ export function AppearanceTab({
         </select>
       </div>
 
-      <SectionHeadingFields
-        title={menuTitle}
-        subtitle={menuSubtitle}
+      <SectionCopyBlock
+        blockTitle="Cabeçalho da seção Cardápio"
         disabled={isSubmitting}
-        titleLabel="Título da seção Cardápio"
-        subtitleLabel="Subtítulo do Cardápio"
-        titlePlaceholder={DEFAULT_SECTION_COPY.menu.title}
-        subtitlePlaceholder={DEFAULT_SECTION_COPY.menu.subtitle}
-        onTitleChange={setMenuTitle}
-        onSubtitleChange={setMenuSubtitle}
+        fields={buildTitleSubtitleFields({
+          idPrefix: "menu",
+          title: menuTitle,
+          subtitle: menuSubtitle,
+          titleLabel: "Título da seção Cardápio",
+          subtitleLabel: "Subtítulo do Cardápio",
+          titleDefault: DEFAULT_SECTION_COPY.menu.title,
+          subtitleDefault: DEFAULT_SECTION_COPY.menu.subtitle,
+          onTitleChange: setMenuTitle,
+          onSubtitleChange: setMenuSubtitle,
+        })}
+        preview={
+          <LandingSectionPreview
+            tenant={tenant}
+            siteConfig={menuPreviewData.siteConfig}
+            sectionId="menu"
+            bandIndex={2}
+          >
+            <MenuPreviewContent data={menuPreviewData} />
+          </LandingSectionPreview>
+        }
       />
 
       <Button

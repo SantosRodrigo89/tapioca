@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   formatPhoneInputValue,
@@ -17,10 +17,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ContactCtaFields } from "@/features/presenca-digital/contact-cta-fields";
 import {
-  ContactCtaFields,
-  SectionHeadingFields,
-} from "@/features/presenca-digital/contact-cta-fields";
+  SectionCopyBlock,
+  buildTitleSubtitleFields,
+} from "@/features/presenca-digital/section-copy-block";
+import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
+import {
+  ContactHeadingPreviewContent,
+  LocationHeadingPreviewContent,
+} from "@/features/presenca-digital/landing-section-preview-content";
+import { buildPreviewLandingData } from "@/lib/site/landing-preview";
 import type { SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -72,6 +79,61 @@ export function ContactTab({
   const [locationSubtitle, setLocationSubtitle] = useState<string>(
     resolvedCopy.location.subtitle ?? "",
   );
+
+  const previewData = useMemo(() => {
+    const contactCopyPatch = buildSectionCopyPatch("contact", {
+      title: sectionTitle,
+      subtitle: sectionSubtitle,
+      ctaEyebrow,
+      ctaTitle,
+      ctaSubtitle,
+    });
+    const locationCopyPatch = buildSectionCopyPatch("location", {
+      title: locationTitle,
+      subtitle: locationSubtitle,
+    });
+    const whatsappValue = whatsapp.trim() || undefined;
+    const addressValue = address.trim() || undefined;
+
+    return buildPreviewLandingData(tenant, siteConfig, {
+      siteConfigPatch: {
+        contact: {
+          ...siteConfig.contact,
+          whatsapp: whatsappValue,
+          phone: phone.trim() || undefined,
+          instagram: instagram.trim() || undefined,
+          facebook: facebook.trim() || undefined,
+          tiktok: tiktok.trim() || undefined,
+          email: email.trim() || undefined,
+        },
+        location: {
+          ...siteConfig.location,
+          address: addressValue,
+        },
+      },
+      sectionCopyPatches: [
+        { ...contactCopyPatch, ...locationCopyPatch },
+      ],
+      whatsapp: whatsappValue,
+    });
+  }, [
+    tenant,
+    siteConfig,
+    sectionTitle,
+    sectionSubtitle,
+    ctaEyebrow,
+    ctaTitle,
+    ctaSubtitle,
+    locationTitle,
+    locationSubtitle,
+    whatsapp,
+    phone,
+    instagram,
+    facebook,
+    tiktok,
+    email,
+    address,
+  ]);
 
   const hasChanges =
     whatsapp !== (contact.whatsapp ?? tenant.whatsapp ?? "") ||
@@ -178,14 +240,28 @@ export function ContactTab({
         </p>
       </div>
 
-      <SectionHeadingFields
-        title={sectionTitle}
-        subtitle={sectionSubtitle}
+      <SectionCopyBlock
+        blockTitle="Cabeçalho da seção Contato"
         disabled={isSubmitting}
-        titlePlaceholder={DEFAULT_SECTION_COPY.contact.title}
-        subtitlePlaceholder={DEFAULT_SECTION_COPY.contact.subtitle}
-        onTitleChange={setSectionTitle}
-        onSubtitleChange={setSectionSubtitle}
+        fields={buildTitleSubtitleFields({
+          idPrefix: "contact",
+          title: sectionTitle,
+          subtitle: sectionSubtitle,
+          titleDefault: DEFAULT_SECTION_COPY.contact.title,
+          subtitleDefault: DEFAULT_SECTION_COPY.contact.subtitle,
+          onTitleChange: setSectionTitle,
+          onSubtitleChange: setSectionSubtitle,
+        })}
+        preview={
+          <LandingSectionPreview
+            tenant={tenant}
+            siteConfig={previewData.siteConfig}
+            sectionId="contact"
+            bandIndex={3}
+          >
+            <ContactHeadingPreviewContent data={previewData} />
+          </LandingSectionPreview>
+        }
       />
 
       <ContactCtaFields
@@ -193,6 +269,7 @@ export function ContactTab({
         ctaTitle={ctaTitle}
         ctaSubtitle={ctaSubtitle}
         disabled={isSubmitting}
+        previewData={previewData}
         eyebrowPlaceholder={DEFAULT_SECTION_COPY.contact.ctaEyebrow}
         titlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaTitle}
         subtitlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaSubtitle}
@@ -201,16 +278,30 @@ export function ContactTab({
         onCtaSubtitleChange={setCtaSubtitle}
       />
 
-      <SectionHeadingFields
-        title={locationTitle}
-        subtitle={locationSubtitle}
+      <SectionCopyBlock
+        blockTitle="Cabeçalho da seção Localização"
         disabled={isSubmitting}
-        titleLabel="Título da seção Localização"
-        subtitleLabel="Subtítulo da Localização"
-        titlePlaceholder={DEFAULT_SECTION_COPY.location.title}
-        subtitlePlaceholder={DEFAULT_SECTION_COPY.location.subtitle}
-        onTitleChange={setLocationTitle}
-        onSubtitleChange={setLocationSubtitle}
+        fields={buildTitleSubtitleFields({
+          idPrefix: "location",
+          title: locationTitle,
+          subtitle: locationSubtitle,
+          titleLabel: "Título da seção Localização",
+          subtitleLabel: "Subtítulo da Localização",
+          titleDefault: DEFAULT_SECTION_COPY.location.title,
+          subtitleDefault: DEFAULT_SECTION_COPY.location.subtitle,
+          onTitleChange: setLocationTitle,
+          onSubtitleChange: setLocationSubtitle,
+        })}
+        preview={
+          <LandingSectionPreview
+            tenant={tenant}
+            siteConfig={previewData.siteConfig}
+            sectionId="location"
+            bandIndex={4}
+          >
+            <LocationHeadingPreviewContent data={previewData} />
+          </LandingSectionPreview>
+        }
       />
 
       <div className="grid gap-4 sm:grid-cols-2">

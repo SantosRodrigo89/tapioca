@@ -1,14 +1,16 @@
 "use client";
 
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { SectionHeadingFields } from "./section-heading-fields";
+import { DEFAULT_SECTION_COPY } from "@/lib/site/section-copy";
+import { SectionCopyBlock } from "@/features/presenca-digital/section-copy-block";
+import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
+import { ContactCtaPreviewContent } from "@/features/presenca-digital/landing-section-preview-content";
+import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface ContactCtaFieldsProps {
   ctaEyebrow: string;
   ctaTitle: string;
   ctaSubtitle: string;
+  previewData: LandingPageData;
   disabled?: boolean;
   eyebrowPlaceholder?: string;
   titlePlaceholder?: string;
@@ -22,58 +24,62 @@ export function ContactCtaFields({
   ctaEyebrow,
   ctaTitle,
   ctaSubtitle,
+  previewData,
   disabled = false,
-  eyebrowPlaceholder,
-  titlePlaceholder,
-  subtitlePlaceholder,
+  eyebrowPlaceholder = DEFAULT_SECTION_COPY.contact.ctaEyebrow,
+  titlePlaceholder = DEFAULT_SECTION_COPY.contact.ctaTitle,
+  subtitlePlaceholder = DEFAULT_SECTION_COPY.contact.ctaSubtitle,
   onCtaEyebrowChange,
   onCtaTitleChange,
   onCtaSubtitleChange,
 }: ContactCtaFieldsProps) {
   return (
-    <div className="space-y-4 rounded-xl border border-border/60 bg-muted/20 p-4">
-      <div>
-        <p className="text-sm font-medium">Bloco de pedido WhatsApp</p>
-        <p className="text-xs text-muted-foreground mt-0.5">
-          Textos do destaque de pedido exibido na seção de contato.
-        </p>
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="contact-cta-eyebrow">Destaque</Label>
-        <Input
-          id="contact-cta-eyebrow"
-          value={ctaEyebrow}
-          disabled={disabled}
-          placeholder={eyebrowPlaceholder}
-          onChange={(e) => onCtaEyebrowChange(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="contact-cta-title">Título</Label>
-        <Input
-          id="contact-cta-title"
-          value={ctaTitle}
-          disabled={disabled}
-          placeholder={titlePlaceholder}
-          onChange={(e) => onCtaTitleChange(e.target.value)}
-        />
-      </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="contact-cta-subtitle">Subtítulo</Label>
-        <Textarea
-          id="contact-cta-subtitle"
-          rows={2}
-          value={ctaSubtitle}
-          disabled={disabled}
-          placeholder={subtitlePlaceholder}
-          onChange={(e) => onCtaSubtitleChange(e.target.value)}
-        />
-      </div>
-    </div>
+    <SectionCopyBlock
+      blockTitle="Bloco de pedido WhatsApp"
+      blockDescription="Textos do destaque de pedido exibido na seção de contato."
+      disabled={disabled}
+      fields={[
+        {
+          id: "contact-cta-eyebrow",
+          label: "Destaque",
+          value: ctaEyebrow,
+          defaultValue: eyebrowPlaceholder,
+          placeholder: eyebrowPlaceholder,
+          onChange: onCtaEyebrowChange,
+          onReset: () => onCtaEyebrowChange(""),
+        },
+        {
+          id: "contact-cta-title",
+          label: "Título",
+          value: ctaTitle,
+          defaultValue: titlePlaceholder,
+          placeholder: titlePlaceholder,
+          onChange: onCtaTitleChange,
+          onReset: () => onCtaTitleChange(""),
+        },
+        {
+          id: "contact-cta-subtitle",
+          label: "Subtítulo",
+          value: ctaSubtitle,
+          defaultValue: subtitlePlaceholder,
+          placeholder: subtitlePlaceholder,
+          multiline: true,
+          onChange: onCtaSubtitleChange,
+          onReset: () => onCtaSubtitleChange(""),
+        },
+      ]}
+      preview={
+        <LandingSectionPreview
+          tenant={previewData.tenant}
+          siteConfig={previewData.siteConfig}
+          sectionId="contact"
+          bandIndex={3}
+        >
+          <ContactCtaPreviewContent data={previewData} />
+        </LandingSectionPreview>
+      }
+    />
   );
 }
 
-export { SectionHeadingFields };
+export { SectionCopyBlock } from "@/features/presenca-digital/section-copy-block";

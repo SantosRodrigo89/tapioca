@@ -1,0 +1,309 @@
+/**
+ * Admin landing preview — force mobile layout inside the phone frame.
+ * public-menu.css uses viewport @media and vw units, which follow the
+ * browser window, not the ~390px preview width.
+ */
+
+/* ─── Phone mockup shell ─────────────────────────────────────────────────── */
+
+.phone-device {
+  --phone-screen-height: min(88vh, 844px);
+  --phone-screen-width: calc(var(--phone-screen-height) * 390 / 844);
+  position: relative;
+  width: min(100%, var(--phone-screen-width));
+  margin-inline: auto;
+  padding: 0.2rem;
+  border-radius: 3rem;
+  background: linear-gradient(
+    160deg,
+    #5a5a5c 0%,
+    #2c2c2e 18%,
+    #1c1c1e 50%,
+    #3a3a3c 82%,
+    #636366 100%
+  );
+  box-shadow:
+    0 28px 56px -20px rgb(0 0 0 / 0.45),
+    0 12px 24px -12px rgb(0 0 0 / 0.25),
+    inset 0 1px 0 rgb(255 255 255 / 0.22),
+    inset 0 -1px 0 rgb(0 0 0 / 0.35);
+}
+
+.phone-bezel {
+  width: 100%;
+  padding: 0.2rem;
+  border-radius: 2.75rem;
+  background: #0a0a0a;
+}
+
+.phone-screen {
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: var(--phone-screen-height);
+  border-radius: 2.5rem;
+  background: #000;
+}
+
+.phone-screen-content {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.phone-screen-content::-webkit-scrollbar {
+  display: none;
+}
+
+.phone-status-bar {
+  text-shadow: 0 1px 3px rgb(0 0 0 / 0.55);
+}
+
+.phone-dynamic-island {
+  width: 6.5rem;
+  height: 1.65rem;
+  border-radius: 9999px;
+  background: #000;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.06),
+    0 1px 4px rgb(0 0 0 / 0.35);
+}
+
+.phone-home-indicator {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0.45rem;
+  z-index: 20;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.phone-home-indicator::after {
+  content: "";
+  width: 6.5rem;
+  height: 0.28rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.72);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+}
+
+.phone-button {
+  position: absolute;
+  z-index: 1;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #48484a, #636366, #48484a);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.15),
+    0 1px 2px rgb(0 0 0 / 0.25);
+}
+
+.phone-button--mute {
+  left: -0.12rem;
+  top: 14%;
+  width: 0.18rem;
+  height: 3%;
+}
+
+.phone-button--volume-up {
+  left: -0.12rem;
+  top: 19%;
+  width: 0.18rem;
+  height: 5%;
+}
+
+.phone-button--volume-down {
+  left: -0.12rem;
+  top: 26%;
+  width: 0.18rem;
+  height: 5%;
+}
+
+.phone-button--power {
+  right: -0.12rem;
+  top: 22%;
+  width: 0.18rem;
+  height: 8%;
+}
+
+.landing-preview-root.public-menu {
+  width: 100%;
+  min-height: 100%;
+  --landing-display: 2.25rem;
+  --landing-title: 1.75rem;
+  --landing-lead-size: 1.0625rem;
+}
+
+.landing-preview-root.public-menu .landing-container {
+  width: 100% !important;
+  max-width: none !important;
+  margin-inline: 0 !important;
+  padding-inline: 1rem !important;
+}
+
+.landing-preview-root.public-menu .landing-container:has(#landing-hero) {
+  padding-inline: 0 !important;
+}
+
+.landing-preview-root.public-menu #landing-hero {
+  width: 100%;
+}
+
+.landing-preview-root.public-menu .scroll-reveal {
+  opacity: 1 !important;
+  transform: none !important;
+}
+
+.landing-preview-root.public-menu .landing-container {
+  padding-inline: 1rem !important;
+}
+
+.landing-preview-root.public-menu .landing-section-band {
+  padding-block: 2.5rem !important;
+}
+
+/* ─── Differentials ─────────────────────────────────────────────────────── */
+
+.landing-preview-root.public-menu .differentials-grid {
+  grid-template-columns: 1fr !important;
+  gap: 1rem !important;
+}
+
+.landing-preview-root.public-menu .differential-card {
+  flex-direction: row !important;
+  gap: 1rem !important;
+  padding: 1.25rem !important;
+}
+
+.landing-preview-root.public-menu
+  [data-section="differentials"][data-layout="minimal"]
+  .differentials-grid {
+  grid-template-columns: 1fr !important;
+  gap: 1.25rem !important;
+}
+
+.landing-preview-root.public-menu
+  [data-section="differentials"][data-layout="minimal"]
+  .differential-card {
+  flex-direction: row !important;
+  gap: 0.875rem !important;
+  padding: 0 !important;
+}
+
+/* ─── Highlights ────────────────────────────────────────────────────────── */
+
+.landing-preview-root.public-menu .highlights-track {
+  margin-inline: -1rem !important;
+  padding-inline: 1rem !important;
+}
+
+.landing-preview-root.public-menu .highlight-card--standard {
+  width: 17.5rem !important;
+}
+
+.landing-preview-root.public-menu .highlight-card--hero {
+  width: min(85vw, 22rem) !important;
+}
+
+.landing-preview-root.public-menu .highlights-nav-btn {
+  display: none !important;
+}
+
+/* ─── About ─────────────────────────────────────────────────────────────── */
+
+.landing-preview-root.public-menu .about-editorial--with-image {
+  grid-template-columns: 1fr !important;
+  gap: 2rem !important;
+}
+
+.landing-preview-root.public-menu .about-editorial__image-wrap {
+  aspect-ratio: 4 / 5 !important;
+  border-radius: 1.25rem !important;
+}
+
+.landing-preview-root.public-menu .about-editorial__content {
+  font-size: 1.0625rem !important;
+}
+
+/* ─── Gallery ───────────────────────────────────────────────────────────── */
+
+.landing-preview-root.public-menu .gallery-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.75rem !important;
+  grid-auto-rows: 9rem !important;
+}
+
+.landing-preview-root.public-menu
+  [data-section="gallery"][data-layout="grid"]
+  .gallery-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+}
+
+/* ─── Contact ───────────────────────────────────────────────────────────── */
+
+.landing-preview-root.public-menu .contact-cta {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 1.25rem !important;
+  padding: 1.5rem !important;
+}
+
+.landing-preview-root.public-menu .contact-cta__title {
+  font-size: 1.25rem !important;
+}
+
+.landing-preview-root.public-menu .contact-grid {
+  grid-template-columns: 1fr !important;
+}
+
+/* ─── Menu (heading preview in Aparência) ───────────────────────────────── */
+
+.landing-preview-root.public-menu .menu-category-header {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
+.landing-preview-root.public-menu .menu-items-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.landing-preview-root.public-menu .menu-item-row__thumb {
+  width: 4.5rem !important;
+  height: 4.5rem !important;
+  border-radius: 0.75rem !important;
+}
+
+/* ─── Hero ──────────────────────────────────────────────────────────────── */
+
+.landing-preview-root.public-menu #landing-hero > div {
+  min-height: 100% !important;
+}
+
+.landing-preview-root.public-menu .landing-hero-compact {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  min-height: 100% !important;
+  max-height: none !important;
+  padding-top: 2.5rem !important;
+}
+
+.landing-preview-root.public-menu .landing-hero-compact__media {
+  min-height: 12rem !important;
+}
+
+.landing-preview-root.public-menu .landing-hero-compact__panel {
+  padding: 1.5rem 1rem !important;
+}
+
+.landing-preview-root.public-menu .landing-hero-compact__title {
+  font-size: 1.75rem !important;
+}
+
+.landing-preview-root.public-menu .landing-hero-compact__subtitle {
+  font-size: 1rem !important;
+}

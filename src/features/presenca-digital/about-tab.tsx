@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
 import {
@@ -9,11 +9,14 @@ import {
   mergeSectionCopyPatch,
   resolveSectionCopy,
 } from "@/lib/site/section-copy";
+import { buildPreviewLandingData } from "@/lib/site/landing-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
+import { SectionCopyBlock } from "@/features/presenca-digital/section-copy-block";
+import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
+import { AboutPreviewContent } from "@/features/presenca-digital/landing-section-preview-content";
 import type { SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -38,6 +41,20 @@ export function AboutTab({
     about.description ?? tenant.description ?? "",
   );
   const [eyebrow, setEyebrow] = useState<string>(resolvedCopy.about.eyebrow ?? "");
+
+  const previewData = useMemo(() => {
+    const sectionCopyPatch = buildSectionCopyPatch("about", { eyebrow });
+    return buildPreviewLandingData(tenant, siteConfig, {
+      siteConfigPatch: {
+        about: {
+          ...siteConfig.about,
+          title: title.trim() || undefined,
+          description: description.trim() || undefined,
+        },
+      },
+      sectionCopyPatches: [sectionCopyPatch],
+    });
+  }, [tenant, siteConfig, title, description, eyebrow]);
 
   const hasChanges =
     title !== (about.title ?? "Sobre nós") ||
@@ -94,44 +111,66 @@ export function AboutTab({
         </p>
       </div>
 
-      <SectionHeadingFields
-        showEyebrow
-        showTitle={false}
-        eyebrow={eyebrow}
-        disabled={isSubmitting}
-        eyebrowPlaceholder={DEFAULT_SECTION_COPY.about.eyebrow}
-        onEyebrowChange={setEyebrow}
-      />
+      <div className="grid gap-8 xl:grid-cols-[1fr_min(390px,100%)] xl:items-start">
+        <div className="space-y-6 min-w-0">
+          <SectionCopyBlock
+            blockTitle="Cabeçalho da seção"
+            disabled={isSubmitting}
+            fields={[
+              {
+                id: "about-eyebrow",
+                label: "Destaque acima do título",
+                value: eyebrow,
+                defaultValue: DEFAULT_SECTION_COPY.about.eyebrow,
+                placeholder: DEFAULT_SECTION_COPY.about.eyebrow,
+                onChange: setEyebrow,
+                onReset: () => setEyebrow(""),
+              },
+            ]}
+          />
 
-      <div className="space-y-1">
-        <Label htmlFor="about-title">Título</Label>
-        <Input
-          id="about-title"
-          value={title}
-          disabled={isSubmitting}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+          <div className="space-y-1">
+            <Label htmlFor="about-title">Título</Label>
+            <Input
+              id="about-title"
+              value={title}
+              disabled={isSubmitting}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="about-description">Descrição</Label>
+            <Textarea
+              id="about-description"
+              rows={6}
+              value={description}
+              disabled={isSubmitting}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Conte a história do seu restaurante…"
+            />
+          </div>
+
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isSubmitting || !hasChanges}
+          >
+            {isSubmitting ? "Salvando…" : "Salvar sobre"}
+          </Button>
+        </div>
+
+        <div className="xl:sticky xl:top-6">
+          <LandingSectionPreview
+            tenant={tenant}
+            siteConfig={previewData.siteConfig}
+            sectionId="about"
+            bandIndex={0}
+          >
+            <AboutPreviewContent data={previewData} />
+          </LandingSectionPreview>
+        </div>
       </div>
-
-      <div className="space-y-1">
-        <Label htmlFor="about-description">Descrição</Label>
-        <Textarea
-          id="about-description"
-          rows={6}
-          value={description}
-          disabled={isSubmitting}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Conte a história do seu restaurante…"
-        />
-      </div>
-
-      <Button
-        type="button"
-        onClick={handleSave}
-        disabled={isSubmitting || !hasChanges}
-      >
-        {isSubmitting ? "Salvando…" : "Salvar sobre"}
-      </Button>
     </div>
   );
 }

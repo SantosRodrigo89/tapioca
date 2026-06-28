@@ -10,7 +10,6 @@ import {
   ExternalLink,
   FolderOpen,
   Package,
-  Star,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TenantEntitlements } from "@/lib/platform/entitlements";
@@ -34,7 +33,6 @@ const menuLinks: {
 }[] = [
   { href: "/menu/categories", label: "Categorias", icon: FolderOpen, feature: "categories" },
   { href: "/menu/products", label: "Produtos", icon: Package, feature: "products" },
-  { href: "/menu/highlights", label: "Destaques", icon: Star, feature: "products" },
 ];
 
 interface SidebarNavProps {

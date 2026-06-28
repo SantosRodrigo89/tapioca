@@ -119,6 +119,18 @@ export function resolveSectionCopy(
   } as ResolvedSectionCopy;
 }
 
+/** Resolves admin field value for preview and default badges. */
+export function resolveFieldDisplay(
+  value: string,
+  defaultValue: string,
+): { display: string; isDefault: boolean } {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) {
+    return { display: defaultValue, isDefault: true };
+  }
+  return { display: trimmed, isDefault: trimmed === defaultValue };
+}
+
 function trimOrUndefined(value: string): string | undefined {
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;

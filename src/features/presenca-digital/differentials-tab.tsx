@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { updateSiteConfig } from "@/lib/repositories/tenant.repository";
@@ -10,11 +10,20 @@ import {
   mergeSectionCopyPatch,
   resolveSectionCopy,
 } from "@/lib/site/section-copy";
+import {
+  buildPreviewLandingData,
+  previewDifferentialItems,
+} from "@/lib/site/landing-preview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
+import {
+  SectionCopyBlock,
+  buildTitleSubtitleFields,
+} from "@/features/presenca-digital/section-copy-block";
+import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
+import { DifferentialsPreviewContent } from "@/features/presenca-digital/landing-section-preview-content";
 import type { SiteConfig, SiteDifferential } from "@/types/site";
 import type { Tenant } from "@/types";
 
@@ -42,6 +51,21 @@ export function DifferentialsTab({
   const [sectionSubtitle, setSectionSubtitle] = useState<string>(
     resolvedCopy.differentials.subtitle ?? "",
   );
+
+  const previewData = useMemo(() => {
+    const sectionCopyPatch = buildSectionCopyPatch("differentials", {
+      title: sectionTitle,
+      subtitle: sectionSubtitle,
+    });
+    return buildPreviewLandingData(tenant, siteConfig, {
+      siteConfigPatch: {
+        differentials: previewDifferentialItems(items),
+      },
+      sectionCopyPatches: [sectionCopyPatch],
+    });
+  }, [tenant, siteConfig, items, sectionTitle, sectionSubtitle]);
+
+  const previewSiteConfig = previewData.siteConfig;
 
   const hasChanges =
     JSON.stringify(items) !== JSON.stringify(siteConfig.differentials) ||
@@ -122,86 +146,105 @@ export function DifferentialsTab({
         </p>
       </div>
 
-      <SectionHeadingFields
-        title={sectionTitle}
-        subtitle={sectionSubtitle}
-        disabled={isSubmitting}
-        titlePlaceholder={DEFAULT_SECTION_COPY.differentials.title}
-        subtitlePlaceholder={DEFAULT_SECTION_COPY.differentials.subtitle}
-        onTitleChange={setSectionTitle}
-        onSubtitleChange={setSectionSubtitle}
-      />
+      <div className="grid gap-8 xl:grid-cols-[1fr_min(390px,100%)] xl:items-start">
+        <div className="space-y-6 min-w-0">
+          <SectionCopyBlock
+            disabled={isSubmitting}
+            blockDescription="Personalize o cabeçalho. A pré-visualização mobile atualiza ao lado."
+            fields={buildTitleSubtitleFields({
+              idPrefix: "differentials",
+              title: sectionTitle,
+              subtitle: sectionSubtitle,
+              titleDefault: DEFAULT_SECTION_COPY.differentials.title,
+              subtitleDefault: DEFAULT_SECTION_COPY.differentials.subtitle,
+              onTitleChange: setSectionTitle,
+              onSubtitleChange: setSectionSubtitle,
+            })}
+          />
 
-      <div className="space-y-4 border-t border-border/60 pt-6">
-        {items.map((item, index) => (
-          <div
-            key={item.id}
-            className="rounded-xl border border-border/60 p-4 space-y-3"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground">
-                Diferencial {index + 1}
-              </span>
+          <div className="space-y-4 border-t border-border/60 pt-6">
+            {items.map((item, index) => (
+              <div
+                key={item.id}
+                className="rounded-xl border border-border/60 p-4 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Diferencial {index + 1}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={isSubmitting}
+                    onClick={() => removeItem(item.id)}
+                    aria-label="Remover diferencial"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="space-y-1">
+                  <Label>Título</Label>
+                  <Input
+                    value={item.title}
+                    disabled={isSubmitting}
+                    onChange={(e) =>
+                      updateItem(item.id, { title: e.target.value })
+                    }
+                    placeholder="Ingredientes frescos"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label>Descrição (opcional)</Label>
+                  <Textarea
+                    rows={2}
+                    value={item.description ?? ""}
+                    disabled={isSubmitting}
+                    onChange={(e) =>
+                      updateItem(item.id, { description: e.target.value })
+                    }
+                    placeholder="Selecionamos os melhores produtos…"
+                  />
+                </div>
+              </div>
+            ))}
+
+            <div className="flex flex-wrap items-center gap-3 pt-1">
+              {items.length < MAX_ITEMS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  disabled={isSubmitting}
+                  onClick={addItem}
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Adicionar diferencial
+                </Button>
+              )}
+
               <Button
                 type="button"
-                variant="ghost"
-                size="icon"
-                disabled={isSubmitting}
-                onClick={() => removeItem(item.id)}
-                aria-label="Remover diferencial"
+                onClick={handleSave}
+                disabled={isSubmitting || !hasChanges}
               >
-                <Trash2 className="h-4 w-4" />
+                {isSubmitting ? "Salvando…" : "Salvar diferenciais"}
               </Button>
             </div>
-
-            <div className="space-y-1">
-              <Label>Título</Label>
-              <Input
-                value={item.title}
-                disabled={isSubmitting}
-                onChange={(e) =>
-                  updateItem(item.id, { title: e.target.value })
-                }
-                placeholder="Ingredientes frescos"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label>Descrição (opcional)</Label>
-              <Textarea
-                rows={2}
-                value={item.description ?? ""}
-                disabled={isSubmitting}
-                onChange={(e) =>
-                  updateItem(item.id, { description: e.target.value })
-                }
-                placeholder="Selecionamos os melhores produtos…"
-              />
-            </div>
           </div>
-        ))}
+        </div>
 
-        <div className="flex flex-wrap items-center gap-3 pt-1">
-          {items.length < MAX_ITEMS && (
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              disabled={isSubmitting}
-              onClick={addItem}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Adicionar diferencial
-            </Button>
-          )}
-
-          <Button
-            type="button"
-            onClick={handleSave}
-            disabled={isSubmitting || !hasChanges}
+        <div className="xl:sticky xl:top-6">
+          <LandingSectionPreview
+            tenant={tenant}
+            siteConfig={previewSiteConfig}
+            sectionId="differentials"
+            bandIndex={1}
           >
-            {isSubmitting ? "Salvando…" : "Salvar diferenciais"}
-          </Button>
+            <DifferentialsPreviewContent data={previewData} />
+          </LandingSectionPreview>
         </div>
       </div>
     </div>

@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useEntitlements } from "@/components/admin/entitlements-provider";
 
 const tabs = [
   { href: "/menu/categories", label: "Categorias" },
   { href: "/menu/products", label: "Produtos" },
-  { href: "/menu/highlights", label: "Destaques" },
 ];
 
 export default function MenuLayout({
@@ -16,14 +16,26 @@ export default function MenuLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const entitlements = useEntitlements();
+  const showHighlightsLink = entitlements.landing_page ?? false;
 
   return (
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">Cardápio</h1>
         <p className="text-sm text-muted-foreground">
-          Gerencie categorias, produtos e destaques do seu cardápio.
+          Gerencie categorias e produtos do seu cardápio.
         </p>
+        {showHighlightsLink && (
+          <p className="text-sm">
+            <Link
+              href="/site#featured"
+              className="font-medium text-primary underline-offset-4 hover:underline"
+            >
+              Gerenciar destaques da landing →
+            </Link>
+          </p>
+        )}
       </div>
 
       <nav className="flex gap-1 border-b">
