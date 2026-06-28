@@ -191,18 +191,154 @@ export function GalleryTab({
         </p>
       </div>
 
-      <SectionCopyBlock
-        disabled={isSavingCopy}
-        fields={buildTitleSubtitleFields({
-          idPrefix: "gallery",
-          title: sectionTitle,
-          subtitle: sectionSubtitle,
-          titleDefault: DEFAULT_SECTION_COPY.gallery.title,
-          subtitleDefault: DEFAULT_SECTION_COPY.gallery.subtitle,
-          onTitleChange: setSectionTitle,
-          onSubtitleChange: setSectionSubtitle,
-        })}
-        preview={
+      <div className="grid gap-8 lg:grid-cols-[1fr_min(390px,100%)] lg:items-start">
+        <div className="min-w-0 space-y-6">
+          <SectionCopyBlock
+            disabled={isSavingCopy}
+            fields={buildTitleSubtitleFields({
+              idPrefix: "gallery",
+              title: sectionTitle,
+              subtitle: sectionSubtitle,
+              titleDefault: DEFAULT_SECTION_COPY.gallery.title,
+              subtitleDefault: DEFAULT_SECTION_COPY.gallery.subtitle,
+              onTitleChange: setSectionTitle,
+              onSubtitleChange: setSectionSubtitle,
+            })}
+          />
+
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleSaveCopy}
+            disabled={isSavingCopy || !hasCopyChanges}
+          >
+            {isSavingCopy ? "Salvando…" : "Salvar textos da galeria"}
+          </Button>
+
+          <div className="space-y-2">
+            <Label>Adicionar imagem ({images.length}/{MAX_IMAGES})</Label>
+            <input
+              ref={inputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              disabled={isUploading || images.length >= MAX_IMAGES}
+              className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void handleUpload(file);
+              }}
+            />
+            {isUploading && (
+              <div
+                role="status"
+                aria-live="polite"
+                className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
+              >
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
+                Enviando imagem, aguarde...
+              </div>
+            )}
+          </div>
+
+          {images.length === 0 && !isUploading ? (
+            <p className="text-sm text-muted-foreground">
+              Nenhuma imagem na galeria ainda.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {isUploading && (
+                <li
+                  role="status"
+                  aria-live="polite"
+                  className="flex flex-col gap-3 rounded-xl border border-dashed border-primary/30 bg-muted/30 p-4 sm:flex-row sm:items-start"
+                >
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                    {uploadingPreview && (
+                      <Image
+                        src={uploadingPreview}
+                        alt=""
+                        fill
+                        className="object-cover opacity-60"
+                        sizes="96px"
+                        unoptimized
+                      />
+                    )}
+                    <div className="absolute inset-0 flex items-center justify-center bg-background/50">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                    </div>
+                  </div>
+                  <div className="flex flex-1 items-center">
+                    <p className="text-sm text-muted-foreground">
+                      Processando upload...
+                    </p>
+                  </div>
+                </li>
+              )}
+              {images.map((img, index) => (
+                <li
+                  key={img.id}
+                  className="flex flex-col gap-3 rounded-xl border border-border/60 p-4 sm:flex-row sm:items-start"
+                >
+                  <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
+                    <Image
+                      src={img.url}
+                      alt={img.caption ?? ""}
+                      fill
+                      className="object-cover"
+                      sizes="96px"
+                    />
+                  </div>
+
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      value={img.caption ?? ""}
+                      placeholder="Legenda (opcional)"
+                      disabled={isUploading}
+                      onChange={(e) => handleCaptionChange(img.id, e.target.value)}
+                      onBlur={(e) => handleCaptionSave(img.id, e.target.value)}
+                    />
+
+                    <div className="flex items-center gap-1">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        disabled={isUploading || index === 0}
+                        onClick={() => moveImage(index, -1)}
+                        aria-label="Mover para cima"
+                      >
+                        <ChevronUp className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        disabled={isUploading || index === images.length - 1}
+                        onClick={() => moveImage(index, 1)}
+                        aria-label="Mover para baixo"
+                      >
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={isUploading}
+                        onClick={() => handleDelete(img.id)}
+                        aria-label="Remover imagem"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        <div className="hidden lg:sticky lg:top-6 lg:block">
           <LandingSectionPreview
             tenant={tenant}
             siteConfig={galleryPreviewData.siteConfig}
@@ -211,139 +347,8 @@ export function GalleryTab({
           >
             <GalleryPreviewContent data={galleryPreviewData} />
           </LandingSectionPreview>
-        }
-      />
-
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        onClick={handleSaveCopy}
-        disabled={isSavingCopy || !hasCopyChanges}
-      >
-        {isSavingCopy ? "Salvando…" : "Salvar textos da galeria"}
-      </Button>
-
-      <div className="space-y-2">
-        <Label>Adicionar imagem ({images.length}/{MAX_IMAGES})</Label>
-        <input
-          ref={inputRef}
-          type="file"
-          accept="image/jpeg,image/png,image/webp"
-          disabled={isUploading || images.length >= MAX_IMAGES}
-          className="block w-full text-sm text-muted-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) void handleUpload(file);
-          }}
-        />
-        {isUploading && (
-          <div
-            role="status"
-            aria-live="polite"
-            className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/40 px-4 py-3 text-sm text-muted-foreground"
-          >
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-primary" />
-            Enviando imagem, aguarde...
-          </div>
-        )}
+        </div>
       </div>
-
-      {images.length === 0 && !isUploading ? (
-        <p className="text-sm text-muted-foreground">
-          Nenhuma imagem na galeria ainda.
-        </p>
-      ) : (
-        <ul className="space-y-3">
-          {isUploading && (
-            <li
-              role="status"
-              aria-live="polite"
-              className="flex flex-col gap-3 rounded-xl border border-dashed border-primary/30 bg-muted/30 p-4 sm:flex-row sm:items-start"
-            >
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
-                {uploadingPreview && (
-                  <Image
-                    src={uploadingPreview}
-                    alt=""
-                    fill
-                    className="object-cover opacity-60"
-                    sizes="96px"
-                    unoptimized
-                  />
-                )}
-                <div className="absolute inset-0 flex items-center justify-center bg-background/50">
-                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                </div>
-              </div>
-              <div className="flex flex-1 items-center">
-                <p className="text-sm text-muted-foreground">
-                  Processando upload...
-                </p>
-              </div>
-            </li>
-          )}
-          {images.map((img, index) => (
-            <li
-              key={img.id}
-              className="flex flex-col gap-3 rounded-xl border border-border/60 p-4 sm:flex-row sm:items-start"
-            >
-              <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg border bg-muted">
-                <Image
-                  src={img.url}
-                  alt={img.caption ?? ""}
-                  fill
-                  className="object-cover"
-                  sizes="96px"
-                />
-              </div>
-
-              <div className="flex-1 space-y-2">
-                <Input
-                  value={img.caption ?? ""}
-                  placeholder="Legenda (opcional)"
-                  disabled={isUploading}
-                  onChange={(e) => handleCaptionChange(img.id, e.target.value)}
-                  onBlur={(e) => handleCaptionSave(img.id, e.target.value)}
-                />
-
-                <div className="flex items-center gap-1">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    disabled={isUploading || index === 0}
-                    onClick={() => moveImage(index, -1)}
-                    aria-label="Mover para cima"
-                  >
-                    <ChevronUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    disabled={isUploading || index === images.length - 1}
-                    onClick={() => moveImage(index, 1)}
-                    aria-label="Mover para baixo"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={isUploading}
-                    onClick={() => handleDelete(img.id)}
-                    aria-label="Remover imagem"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
     </div>
   );
 }
