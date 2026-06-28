@@ -1,7 +1,11 @@
 import Image from "next/image";
 import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
+import { LandingButton } from "@/components/public/landing";
+import { SafeExternalLink } from "@/components/public/safe-external-link";
 import { BRAND_TAGLINE } from "@/lib/brand";
+import { formatWhatsAppLink } from "@/lib/utils";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface FooterSectionProps {
@@ -18,28 +22,24 @@ function FooterSocialLink({
   children: React.ReactNode;
 }) {
   return (
-    <Link
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label={label}
-      className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#999] transition-colors hover:bg-[var(--menu-surface)] hover:text-[var(--menu-secondary)]"
-    >
+    <SafeExternalLink href={href} ariaLabel={label} className="landing-footer__social">
       {children}
-    </Link>
+    </SafeExternalLink>
   );
 }
 
 export function FooterSection({ data }: FooterSectionProps) {
   const { tenant, siteConfig } = data;
   const contact = siteConfig.contact;
+  const whatsapp = contact.whatsapp ?? data.whatsapp;
   const tagline =
     siteConfig.hero.subtitle ??
-    tenant.description?.slice(0, 80) ??
+    tenant.description?.slice(0, 100) ??
     null;
 
   const hasAbout =
     siteConfig.about.description || siteConfig.about.imageUrl;
+  const hasGallery = data.gallery.length > 0;
   const hasContact =
     contact.whatsapp ||
     contact.phone ||
@@ -47,55 +47,58 @@ export function FooterSection({ data }: FooterSectionProps) {
     siteConfig.location.address ||
     tenant.address;
 
+  const location = siteConfig.location;
+  const hasLocation =
+    location.address ||
+    tenant.address ||
+    location.directionsUrl ||
+    (location.lat != null && location.lng != null);
+
   const anchorLinks = [
     { href: "#cardapio", label: "Cardápio" },
     ...(hasAbout ? [{ href: "#sobre", label: "Sobre" }] : []),
+    ...(data.highlights.length > 0
+      ? [{ href: "#destaques", label: "Destaques" }]
+      : []),
+    ...(hasGallery ? [{ href: "#galeria", label: "Galeria" }] : []),
     ...(hasContact ? [{ href: "#contato", label: "Contato" }] : []),
+    ...(hasLocation ? [{ href: "#localizacao", label: "Localização" }] : []),
   ];
 
   return (
-    <footer className="border-t border-[var(--menu-border)] bg-[var(--menu-surface)]">
-      <div className="landing-container py-12 sm:py-16">
-        {/* Top: brand identity */}
-        <div className="flex flex-col items-center gap-4 text-center">
+    <footer className="landing-footer">
+      <div className="landing-container landing-footer__inner">
+        <div className="landing-footer__brand">
           {tenant.logoUrl ? (
-            <div className="relative h-14 w-14 overflow-hidden rounded-xl border border-[var(--menu-border)] bg-white shadow-sm">
+            <div className="landing-footer__logo">
               <Image
                 src={tenant.logoUrl}
                 alt={`Logo ${tenant.name}`}
                 fill
-                sizes="56px"
+                sizes="64px"
                 className="object-cover"
               />
             </div>
           ) : (
             <div
-              className="flex h-14 w-14 items-center justify-center rounded-xl text-lg font-bold text-[var(--menu-secondary)] shadow-sm"
-              style={{ background: "var(--menu-primary)" }}
+              className="landing-footer__logo landing-footer__logo--fallback"
+              aria-hidden
             >
               {tenant.name.charAt(0).toUpperCase()}
             </div>
           )}
-          <div className="space-y-1">
-            <p className="text-lg font-semibold text-[var(--menu-secondary)]">
-              {tenant.name}
-            </p>
-            {tagline && (
-              <p className="max-w-sm text-sm text-[#888]">{tagline}</p>
-            )}
+
+          <div className="landing-footer__identity">
+            <p className="landing-footer__name">{tenant.name}</p>
+            {tagline && <p className="landing-footer__tagline">{tagline}</p>}
           </div>
         </div>
 
-        {/* Middle: nav + social */}
-        <div className="mt-8 flex flex-col items-center gap-6">
+        <div className="landing-footer__middle">
           {anchorLinks.length > 0 && (
-            <nav aria-label="Links do site" className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            <nav aria-label="Links do site" className="landing-footer__nav">
               {anchorLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className="text-sm font-medium text-[#666] transition-colors hover:text-[var(--menu-secondary)]"
-                >
+                <Link key={link.href} href={link.href} className="landing-footer__nav-link">
                   {link.label}
                 </Link>
               ))}
@@ -103,11 +106,11 @@ export function FooterSection({ data }: FooterSectionProps) {
           )}
 
           {(contact.instagram || contact.facebook || contact.tiktok) && (
-            <div className="flex gap-2">
+            <div className="landing-footer__socials">
               {contact.instagram && (
                 <FooterSocialLink href={contact.instagram} label="Instagram">
                   <svg
-                    className="h-4 w-4"
+                    className="h-5 w-5"
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
@@ -121,14 +124,14 @@ export function FooterSection({ data }: FooterSectionProps) {
               )}
               {contact.facebook && (
                 <FooterSocialLink href={contact.facebook} label="Facebook">
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                     <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
                   </svg>
                 </FooterSocialLink>
               )}
               {contact.tiktok && (
                 <FooterSocialLink href={contact.tiktok} label="TikTok">
-                  <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <svg className="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
                     <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1v-3.5a6.37 6.37 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.18 8.18 0 0 0 4.78 1.52V6.76a4.85 4.85 0 0 1-1.01-.07z" />
                   </svg>
                 </FooterSocialLink>
@@ -137,14 +140,28 @@ export function FooterSection({ data }: FooterSectionProps) {
           )}
         </div>
 
-        {/* Bottom: copyright */}
-        <div className="mt-10 flex flex-col items-center gap-3 border-t border-[var(--menu-border)] pt-8 text-center">
-          <p className="text-xs text-[#999]">
+        {whatsapp && (
+          <div className="landing-footer__cta">
+            <LandingButton
+              href={formatWhatsAppLink(whatsapp)}
+              variant="primary"
+              size="md"
+              icon={<MessageCircle className="h-4 w-4 shrink-0" aria-hidden />}
+              className="landing-footer__whatsapp w-full sm:w-auto"
+              ariaLabel="Pedir pelo WhatsApp"
+            >
+              WhatsApp
+            </LandingButton>
+          </div>
+        )}
+
+        <div className="landing-footer__bottom">
+          <p className="landing-footer__copyright">
             © {new Date().getFullYear()} {tenant.name}. Todos os direitos reservados.
           </p>
-          <div className="flex items-center gap-2 text-xs text-[#bbb]">
+          <div className="landing-footer__mesio">
             <span>Feito com</span>
-            <Logo size="xs" href="/" showWordmark={false} className="opacity-60" />
+            <Logo size="xs" href="/" showWordmark={false} className="opacity-70" />
             <span>{BRAND_TAGLINE}</span>
           </div>
         </div>

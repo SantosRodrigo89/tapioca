@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MapPin, Navigation } from "lucide-react";
+import { LandingButton, LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
@@ -51,22 +52,25 @@ export function LocationSection({ data }: LocationSectionProps) {
     <section
       aria-labelledby="location-heading"
       id="localizacao"
-      className="landing-section"
+      className="landing-section location-section"
     >
       <ScrollReveal>
-        <h2 id="location-heading" className="landing-heading mb-10 sm:mb-12">
-          Localização
-        </h2>
+        <LandingHeading
+          align="center"
+          title="Localização"
+          titleId="location-heading"
+          subtitle="Venha nos visitar"
+        />
       </ScrollReveal>
 
       <ScrollReveal delay={100}>
-        <div className="menu-card overflow-hidden">
+        <div className="location-block mt-8 sm:mt-10">
           {mapEmbedUrl && (
-            <div className="relative h-56 w-full sm:h-72">
+            <div className="location-map">
               <iframe
                 src={mapEmbedUrl}
                 title="Mapa de localização"
-                className="absolute inset-0 h-full w-full border-0"
+                className="location-map__iframe"
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
                 allowFullScreen
@@ -74,25 +78,25 @@ export function LocationSection({ data }: LocationSectionProps) {
             </div>
           )}
 
-          <div className="space-y-5 p-6 sm:p-8">
+          <div className="location-details">
             {address && (
-              <p className="flex items-start gap-3 text-sm leading-relaxed text-[#666] sm:text-base">
-                <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[var(--menu-primary-dark)]" />
-                {address}
+              <p className="location-details__address">
+                <MapPin className="h-5 w-5 shrink-0 text-[var(--menu-primary-dark)]" aria-hidden />
+                <span>{address}</span>
               </p>
             )}
 
             {directionsUrl && (
-              <Link
+              <LandingButton
                 href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-[var(--menu-secondary)] shadow-sm transition-all hover:shadow-md active:scale-[0.98]"
-                style={{ backgroundColor: "var(--menu-primary)" }}
+                variant="primary"
+                size="md"
+                icon={<Navigation className="h-4 w-4 shrink-0" aria-hidden />}
+                className="location-details__cta w-full sm:w-auto"
+                ariaLabel="Como chegar"
               >
-                <Navigation className="h-4 w-4" />
                 Como chegar
-              </Link>
+              </LandingButton>
             )}
           </div>
         </div>
