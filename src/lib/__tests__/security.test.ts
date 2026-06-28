@@ -85,7 +85,7 @@ describe("safe-url", () => {
   });
 
   it("normalizes instagram handles", () => {
-    expect(normalizeInstagram("@mesio")).toBe("https://instagram.com/mesio");
+    expect(normalizeInstagram("@mesio")).toBe("https://instagram.com/mesio.app");
   });
 
   it("sanitizeHref strips unsafe values", () => {

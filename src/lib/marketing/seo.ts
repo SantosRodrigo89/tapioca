@@ -36,7 +36,7 @@ export function getHomeJsonLd(baseUrl: string) {
         url: baseUrl,
         description: BRAND_DESCRIPTION,
         email: "contato@mesio.com.br",
-        sameAs: ["https://instagram.com/mesio"],
+        sameAs: ["https://instagram.com/mesio.app"],
       },
       {
         "@type": "WebSite",
