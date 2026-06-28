@@ -237,7 +237,7 @@ export function ContactTab({
         </p>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[1fr_min(390px,100%)] xl:items-start">
+      <div className="grid gap-8 lg:grid-cols-[1fr_min(390px,100%)] lg:items-start">
         <div className="min-w-0 space-y-6">
           <SectionCopyBlock
             blockTitle="Cabeçalho da seção Contato"
@@ -384,7 +384,7 @@ export function ContactTab({
           </Button>
         </div>
 
-        <div className="xl:sticky xl:top-6">
+        <div className="hidden lg:sticky lg:top-6 lg:block">
           <LandingMobilePreviewShell
             tenant={tenant}
             siteConfig={previewData.siteConfig}

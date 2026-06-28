@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { updateTenant, updateSiteConfig } from "@/lib/repositories/tenant.repository";
+import { updateTenantAndSiteConfig } from "@/lib/repositories/tenant.repository";
 import {
-  buildSectionCopyPatch,
+  buildSectionCopySavePatch,
   DEFAULT_SECTION_COPY,
   mergeSectionCopyPatch,
-  resolveSectionCopy,
+  resolveSectionCopyOverride,
 } from "@/lib/site/section-copy";
 import { buildPreviewLandingData } from "@/lib/site/landing-preview";
 import { Button } from "@/components/ui/button";
@@ -34,16 +34,20 @@ export function AboutTab({
   onSiteConfigChange,
 }: AboutTabProps) {
   const about = siteConfig.about;
-  const resolvedCopy = resolveSectionCopy(siteConfig.sectionCopy);
+  const savedEyebrow = siteConfig.sectionCopy?.about?.eyebrow ?? "";
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [title, setTitle] = useState(about.title ?? "Sobre nós");
   const [description, setDescription] = useState(
     about.description ?? tenant.description ?? "",
   );
-  const [eyebrow, setEyebrow] = useState<string>(resolvedCopy.about.eyebrow ?? "");
+  const [eyebrow, setEyebrow] = useState<string>(savedEyebrow);
 
   const previewData = useMemo(() => {
-    const sectionCopyPatch = buildSectionCopyPatch("about", { eyebrow });
+    const sectionCopyPatch = buildSectionCopySavePatch(
+      "about",
+      { eyebrow },
+      siteConfig.sectionCopy,
+    );
     return buildPreviewLandingData(tenant, siteConfig, {
       siteConfigPatch: {
         about: {
@@ -56,29 +60,36 @@ export function AboutTab({
     });
   }, [tenant, siteConfig, title, description, eyebrow]);
 
+  const nextEyebrowOverride = resolveSectionCopyOverride(
+    eyebrow,
+    DEFAULT_SECTION_COPY.about.eyebrow,
+  );
+  const savedEyebrowOverride = savedEyebrow || undefined;
+
   const hasChanges =
     title !== (about.title ?? "Sobre nós") ||
     description !== (about.description ?? tenant.description ?? "") ||
-    eyebrow !== (resolvedCopy.about.eyebrow ?? "");
+    nextEyebrowOverride !== savedEyebrowOverride;
 
   const handleSave = async () => {
     setIsSubmitting(true);
     try {
       const descriptionValue = description.trim() || undefined;
 
-      await updateTenant(tenant.id, {
-        description: descriptionValue,
-      });
-
       const aboutPatch = {
         title: title.trim() || undefined,
         description: descriptionValue,
       };
 
-      const sectionCopyPatch = buildSectionCopyPatch("about", { eyebrow });
+      const sectionCopyPatch = buildSectionCopySavePatch(
+        "about",
+        { eyebrow },
+        siteConfig.sectionCopy,
+      );
 
-      await updateSiteConfig(
+      await updateTenantAndSiteConfig(
         tenant.id,
+        { description: descriptionValue },
         { about: aboutPatch, sectionCopy: sectionCopyPatch },
         siteConfig,
       );
@@ -111,7 +122,7 @@ export function AboutTab({
         </p>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[1fr_min(390px,100%)] xl:items-start">
+      <div className="grid gap-8 lg:grid-cols-[1fr_min(390px,100%)] lg:items-start">
         <div className="space-y-6 min-w-0">
           <SectionCopyBlock
             blockTitle="Cabeçalho da seção"
@@ -160,7 +171,7 @@ export function AboutTab({
           </Button>
         </div>
 
-        <div className="xl:sticky xl:top-6">
+        <div className="hidden lg:sticky lg:top-6 lg:block">
           <LandingSectionPreview
             tenant={tenant}
             siteConfig={previewData.siteConfig}

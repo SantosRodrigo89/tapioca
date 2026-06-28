@@ -89,7 +89,7 @@ function CopyFieldRow({
 
 export function SectionCopyBlock({
   blockTitle = "Cabeçalho da seção",
-  blockDescription = "Veja a pré-visualização mobile ao lado. Campos vazios usam o texto padrão.",
+  blockDescription = "Campos vazios usam o texto padrão.",
   disabled = false,
   preview,
   fields,
@@ -110,7 +110,7 @@ export function SectionCopyBlock({
       <div
         className={cn(
           preview
-            ? "flex flex-col gap-6 xl:flex-row xl:items-start"
+            ? "flex flex-col gap-6 lg:flex-row lg:items-start"
             : "space-y-4",
         )}
       >
@@ -119,7 +119,7 @@ export function SectionCopyBlock({
         ))}</div>
 
         {preview ? (
-          <div className="min-w-0 xl:w-[min(100%,390px)] xl:shrink-0">
+          <div className="hidden min-w-0 lg:block lg:w-[min(100%,390px)] lg:shrink-0">
             {preview}
           </div>
         ) : null}

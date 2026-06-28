@@ -146,7 +146,7 @@ export function DifferentialsTab({
         </p>
       </div>
 
-      <div className="grid gap-8 xl:grid-cols-[1fr_min(390px,100%)] xl:items-start">
+      <div className="grid gap-8 lg:grid-cols-[1fr_min(390px,100%)] lg:items-start">
         <div className="space-y-6 min-w-0">
           <SectionCopyBlock
             disabled={isSubmitting}
@@ -236,7 +236,7 @@ export function DifferentialsTab({
           </div>
         </div>
 
-        <div className="xl:sticky xl:top-6">
+        <div className="hidden lg:sticky lg:top-6 lg:block">
           <LandingSectionPreview
             tenant={tenant}
             siteConfig={previewSiteConfig}

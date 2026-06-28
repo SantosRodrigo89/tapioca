@@ -50,7 +50,7 @@ export function LandingMobilePreviewShell({
   });
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn("hidden space-y-2 lg:block", className)}>
       <p className="text-xs font-medium text-muted-foreground">
         Pré-visualização mobile
       </p>

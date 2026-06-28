@@ -48,3 +48,22 @@ export async function updateSiteConfig(
   });
   notifyPublicLandingChanged(tenantId);
 }
+
+/** Updates tenant fields and siteConfig in a single Firestore write. */
+export async function updateTenantAndSiteConfig(
+  tenantId: string,
+  tenantPatch: UpdateTenantData,
+  siteConfigPatch: Partial<SiteConfig>,
+  existingSiteConfig?: SiteConfig,
+): Promise<void> {
+  await ensureClientAuthForWrite(tenantId);
+  const base = existingSiteConfig ?? createDefaultSiteConfig();
+  const siteConfig = stripUndefined(mergeSiteConfigPatch(base, siteConfigPatch));
+
+  await updateDoc(doc(getClientDb(), "tenants", tenantId), {
+    ...tenantPatch,
+    siteConfig,
+    updatedAt: serverTimestamp(),
+  });
+  notifyPublicLandingChanged(tenantId);
+}

@@ -222,7 +222,7 @@ export function BannerTab({
           </div>
         </div>
 
-        <div className="min-w-0 lg:w-[min(100%,390px)] lg:shrink-0">
+        <div className="hidden min-w-0 lg:block lg:w-[min(100%,390px)] lg:shrink-0">
           <LandingMobilePreviewShell
             tenant={tenant}
             siteConfig={previewData.siteConfig}

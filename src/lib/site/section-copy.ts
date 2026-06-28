@@ -136,6 +136,21 @@ function trimOrUndefined(value: string): string | undefined {
   return trimmed.length > 0 ? trimmed : undefined;
 }
 
+function normalizeCopyValue(value: string, defaultValue: string): string | undefined {
+  const trimmed = trimOrUndefined(value.normalize("NFC"));
+  if (trimmed === undefined) return undefined;
+  if (trimmed === defaultValue.normalize("NFC")) return undefined;
+  return trimmed;
+}
+
+/** Normalizes an admin field to the persisted override (undefined = platform default). */
+export function resolveSectionCopyOverride(
+  value: string,
+  defaultValue: string,
+): string | undefined {
+  return normalizeCopyValue(value, defaultValue);
+}
+
 /** Persists only values that differ from defaults (empty = omit). */
 export function buildSectionCopyPatch<K extends keyof SiteSectionCopy>(
   section: K,
@@ -146,15 +161,48 @@ export function buildSectionCopyPatch<K extends keyof SiteSectionCopy>(
 
   for (const [key, defaultValue] of Object.entries(defaults)) {
     const raw = (values as Record<string, string | undefined>)[key] ?? "";
-    const trimmed = trimOrUndefined(raw);
-    if (trimmed !== undefined && trimmed !== defaultValue) {
-      patch[key] = trimmed;
+    const override = normalizeCopyValue(raw, defaultValue);
+    if (override !== undefined) {
+      patch[key] = override;
     }
   }
 
   return Object.keys(patch).length > 0
     ? ({ [section]: patch } as SiteSectionCopy)
     : {};
+}
+
+/**
+ * Builds a sectionCopy patch for admin save/preview.
+ * Returns `{ [section]: {} }` when a persisted override should be cleared.
+ */
+export function buildSectionCopySavePatch<K extends keyof SiteSectionCopy>(
+  section: K,
+  values: NonNullable<SiteSectionCopy[K]>,
+  existing?: SiteSectionCopy,
+): SiteSectionCopy {
+  const persistPatch = buildSectionCopyPatch(section, values);
+  if (Object.keys(persistPatch).length > 0) {
+    return persistPatch;
+  }
+
+  if (existing?.[section] === undefined) {
+    return {};
+  }
+
+  const defaults = DEFAULT_SECTION_COPY[section];
+  const persisted = existing[section] as Record<string, string | undefined>;
+
+  for (const key of Object.keys(defaults)) {
+    const raw = (values as Record<string, string | undefined>)[key] ?? "";
+    const defaultValue = defaults[key as keyof typeof defaults];
+    const override = normalizeCopyValue(raw, defaultValue);
+    if (override === undefined && persisted[key] !== undefined) {
+      return { [section]: {} } as SiteSectionCopy;
+    }
+  }
+
+  return {};
 }
 
 export function mergeSectionCopyPatch(
