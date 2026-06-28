@@ -137,6 +137,24 @@ body {
   color: var(--foreground);
 }
 
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(
+      [type="button"]
+    ):not([type="submit"]):not([type="reset"]):not([type="range"]):not(
+      [type="color"]
+    ):not(:disabled),
+  textarea:not(:disabled) {
+    cursor: text;
+    color: var(--foreground);
+    caret-color: var(--foreground);
+  }
+}
+
 @keyframes float {
   0%,
   100% {
