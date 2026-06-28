@@ -22,11 +22,8 @@ import {
   SectionCopyBlock,
   buildTitleSubtitleFields,
 } from "@/features/presenca-digital/section-copy-block";
-import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
-import {
-  ContactHeadingPreviewContent,
-  LocationHeadingPreviewContent,
-} from "@/features/presenca-digital/landing-section-preview-content";
+import { LandingMobilePreviewShell } from "@/features/presenca-digital/landing-mobile-preview-shell";
+import { ContactPreviewContent } from "@/features/presenca-digital/landing-section-preview-content";
 import { buildPreviewLandingData } from "@/lib/site/landing-preview";
 import type { SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
@@ -240,71 +237,54 @@ export function ContactTab({
         </p>
       </div>
 
-      <SectionCopyBlock
-        blockTitle="Cabeçalho da seção Contato"
-        disabled={isSubmitting}
-        fields={buildTitleSubtitleFields({
-          idPrefix: "contact",
-          title: sectionTitle,
-          subtitle: sectionSubtitle,
-          titleDefault: DEFAULT_SECTION_COPY.contact.title,
-          subtitleDefault: DEFAULT_SECTION_COPY.contact.subtitle,
-          onTitleChange: setSectionTitle,
-          onSubtitleChange: setSectionSubtitle,
-        })}
-        preview={
-          <LandingSectionPreview
-            tenant={tenant}
-            siteConfig={previewData.siteConfig}
-            sectionId="contact"
-            bandIndex={3}
-          >
-            <ContactHeadingPreviewContent data={previewData} />
-          </LandingSectionPreview>
-        }
-      />
+      <div className="grid gap-8 xl:grid-cols-[1fr_min(390px,100%)] xl:items-start">
+        <div className="min-w-0 space-y-6">
+          <SectionCopyBlock
+            blockTitle="Cabeçalho da seção Contato"
+            blockDescription="Campos vazios usam o texto padrão."
+            disabled={isSubmitting}
+            fields={buildTitleSubtitleFields({
+              idPrefix: "contact",
+              title: sectionTitle,
+              subtitle: sectionSubtitle,
+              titleDefault: DEFAULT_SECTION_COPY.contact.title,
+              subtitleDefault: DEFAULT_SECTION_COPY.contact.subtitle,
+              onTitleChange: setSectionTitle,
+              onSubtitleChange: setSectionSubtitle,
+            })}
+          />
 
-      <ContactCtaFields
-        ctaEyebrow={ctaEyebrow}
-        ctaTitle={ctaTitle}
-        ctaSubtitle={ctaSubtitle}
-        disabled={isSubmitting}
-        previewData={previewData}
-        eyebrowPlaceholder={DEFAULT_SECTION_COPY.contact.ctaEyebrow}
-        titlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaTitle}
-        subtitlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaSubtitle}
-        onCtaEyebrowChange={setCtaEyebrow}
-        onCtaTitleChange={setCtaTitle}
-        onCtaSubtitleChange={setCtaSubtitle}
-      />
+          <ContactCtaFields
+            ctaEyebrow={ctaEyebrow}
+            ctaTitle={ctaTitle}
+            ctaSubtitle={ctaSubtitle}
+            disabled={isSubmitting}
+            eyebrowPlaceholder={DEFAULT_SECTION_COPY.contact.ctaEyebrow}
+            titlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaTitle}
+            subtitlePlaceholder={DEFAULT_SECTION_COPY.contact.ctaSubtitle}
+            onCtaEyebrowChange={setCtaEyebrow}
+            onCtaTitleChange={setCtaTitle}
+            onCtaSubtitleChange={setCtaSubtitle}
+          />
 
-      <SectionCopyBlock
-        blockTitle="Cabeçalho da seção Localização"
-        disabled={isSubmitting}
-        fields={buildTitleSubtitleFields({
-          idPrefix: "location",
-          title: locationTitle,
-          subtitle: locationSubtitle,
-          titleLabel: "Título da seção Localização",
-          subtitleLabel: "Subtítulo da Localização",
-          titleDefault: DEFAULT_SECTION_COPY.location.title,
-          subtitleDefault: DEFAULT_SECTION_COPY.location.subtitle,
-          onTitleChange: setLocationTitle,
-          onSubtitleChange: setLocationSubtitle,
-        })}
-        preview={
-          <LandingSectionPreview
-            tenant={tenant}
-            siteConfig={previewData.siteConfig}
-            sectionId="location"
-            bandIndex={4}
-          >
-            <LocationHeadingPreviewContent data={previewData} />
-          </LandingSectionPreview>
-        }
-      />
+          <SectionCopyBlock
+            blockTitle="Cabeçalho da seção Localização"
+            blockDescription="Campos vazios usam o texto padrão."
+            disabled={isSubmitting}
+            fields={buildTitleSubtitleFields({
+              idPrefix: "location",
+              title: locationTitle,
+              subtitle: locationSubtitle,
+              titleLabel: "Título da seção Localização",
+              subtitleLabel: "Subtítulo da Localização",
+              titleDefault: DEFAULT_SECTION_COPY.location.title,
+              subtitleDefault: DEFAULT_SECTION_COPY.location.subtitle,
+              onTitleChange: setLocationTitle,
+              onSubtitleChange: setLocationSubtitle,
+            })}
+          />
 
-      <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1">
           <Label htmlFor="whatsapp">WhatsApp</Label>
           <Input
@@ -384,24 +364,35 @@ export function ContactTab({
         </div>
       </div>
 
-      <div className="space-y-1">
-        <Label htmlFor="address">Endereço</Label>
-        <Input
-          id="address"
-          value={address}
-          disabled={isSubmitting}
-          onChange={(e) => setAddress(e.target.value)}
-          placeholder="Rua Exemplo, 123 — Bairro, Cidade/UF"
-        />
-      </div>
+          <div className="space-y-1">
+            <Label htmlFor="address">Endereço</Label>
+            <Input
+              id="address"
+              value={address}
+              disabled={isSubmitting}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="Rua Exemplo, 123 — Bairro, Cidade/UF"
+            />
+          </div>
 
-      <Button
-        type="button"
-        onClick={handleSave}
-        disabled={isSubmitting || !hasChanges}
-      >
-        {isSubmitting ? "Salvando…" : "Salvar contato"}
-      </Button>
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isSubmitting || !hasChanges}
+          >
+            {isSubmitting ? "Salvando…" : "Salvar contato"}
+          </Button>
+        </div>
+
+        <div className="xl:sticky xl:top-6">
+          <LandingMobilePreviewShell
+            tenant={tenant}
+            siteConfig={previewData.siteConfig}
+          >
+            <ContactPreviewContent data={previewData} />
+          </LandingMobilePreviewShell>
+        </div>
+      </div>
     </div>
   );
 }

@@ -2,15 +2,11 @@
 
 import { DEFAULT_SECTION_COPY } from "@/lib/site/section-copy";
 import { SectionCopyBlock } from "@/features/presenca-digital/section-copy-block";
-import { LandingSectionPreview } from "@/features/presenca-digital/landing-section-preview";
-import { ContactCtaPreviewContent } from "@/features/presenca-digital/landing-section-preview-content";
-import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface ContactCtaFieldsProps {
   ctaEyebrow: string;
   ctaTitle: string;
   ctaSubtitle: string;
-  previewData: LandingPageData;
   disabled?: boolean;
   eyebrowPlaceholder?: string;
   titlePlaceholder?: string;
@@ -24,7 +20,6 @@ export function ContactCtaFields({
   ctaEyebrow,
   ctaTitle,
   ctaSubtitle,
-  previewData,
   disabled = false,
   eyebrowPlaceholder = DEFAULT_SECTION_COPY.contact.ctaEyebrow,
   titlePlaceholder = DEFAULT_SECTION_COPY.contact.ctaTitle,
@@ -68,16 +63,6 @@ export function ContactCtaFields({
           onReset: () => onCtaSubtitleChange(""),
         },
       ]}
-      preview={
-        <LandingSectionPreview
-          tenant={previewData.tenant}
-          siteConfig={previewData.siteConfig}
-          sectionId="contact"
-          bandIndex={3}
-        >
-          <ContactCtaPreviewContent data={previewData} />
-        </LandingSectionPreview>
-      }
     />
   );
 }

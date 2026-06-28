@@ -7,8 +7,11 @@ import { DifferentialsSection } from "@/features/landing/differentials-section";
 import { FeaturedSection } from "@/features/landing/featured-section";
 import { AboutSection } from "@/features/landing/about-section";
 import { GallerySection } from "@/features/landing/gallery-section";
-import { MenuSection } from "@/features/landing/menu-section";
 import { HeroSection } from "@/features/landing/hero-section";
+import { MenuSection } from "@/features/landing/menu-section";
+import { ContactSection } from "@/features/landing/contact-section";
+import { LocationSection } from "@/features/landing/location-section";
+import { LandingPreviewBand } from "@/features/presenca-digital/landing-preview-band";
 import { LandingPreviewProductProvider } from "@/features/presenca-digital/landing-preview-product-provider";
 import type { LandingPageData } from "@/lib/site/landing-types";
 import { getPreviewSectionVariant } from "@/lib/site/landing-preview";
@@ -131,69 +134,26 @@ export function HeroPreviewContent({ data }: SectionPreviewContentProps) {
   return <HeroSection data={data} variant={variant} />;
 }
 
-export function ContactHeadingPreviewContent({ data }: SectionPreviewContentProps) {
-  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).contact;
-  const variant = getPreviewSectionVariant(data.tenant, "contact");
+export function ContactPreviewContent({ data }: SectionPreviewContentProps) {
+  const contactVariant = getPreviewSectionVariant(data.tenant, "contact");
+  const locationVariant = getPreviewSectionVariant(data.tenant, "location");
 
   return (
-    <section
-      className="landing-section"
-      {...sectionLayoutProps("contact", variant)}
-    >
-      <LandingHeading
-        align="center"
-        title={copy.title}
-        subtitle={copy.subtitle}
-      />
-    </section>
-  );
-}
-
-export function ContactCtaPreviewContent({ data }: SectionPreviewContentProps) {
-  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).contact;
-  const variant = getPreviewSectionVariant(data.tenant, "contact");
-
-  return (
-    <section
-      className="landing-section"
-      {...sectionLayoutProps("contact", variant)}
-    >
-      <LandingHeading
-        align="center"
-        title={copy.title}
-        subtitle={copy.subtitle}
-      />
-      <div className="contact-cta mt-8 sm:mt-10">
-        <div className="contact-cta__copy">
-          <p className="contact-cta__eyebrow">{copy.ctaEyebrow}</p>
-          <h3 className="contact-cta__title">{copy.ctaTitle}</h3>
-          <p className="contact-cta__subtitle">{copy.ctaSubtitle}</p>
-        </div>
-        <span className="landing-btn landing-btn--primary landing-btn--lg contact-cta__button w-full">
-          Pedir pelo WhatsApp
-        </span>
-      </div>
-    </section>
-  );
-}
-
-export function LocationHeadingPreviewContent({ data }: SectionPreviewContentProps) {
-  const copy = resolveSectionCopy(data.siteConfig.sectionCopy).location;
-  const variant = getPreviewSectionVariant(data.tenant, "location");
-
-  return (
-    <section
-      className="landing-section"
-      {...sectionLayoutProps("location", variant)}
-    >
-      <LandingHeading
-        align="center"
-        title={copy.title}
-        subtitle={copy.subtitle}
-      />
-      <p className="mt-8 px-4 text-center text-sm text-[var(--menu-text-muted)]">
-        {data.siteConfig.location.address ?? "Endereço do restaurante"}
-      </p>
-    </section>
+    <>
+      <LandingPreviewBand
+        tenant={data.tenant}
+        sectionId="contact"
+        bandIndex={3}
+      >
+        <ContactSection data={data} variant={contactVariant} />
+      </LandingPreviewBand>
+      <LandingPreviewBand
+        tenant={data.tenant}
+        sectionId="location"
+        bandIndex={4}
+      >
+        <LocationSection data={data} variant={locationVariant} />
+      </LandingPreviewBand>
+    </>
   );
 }

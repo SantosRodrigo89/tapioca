@@ -261,6 +261,17 @@
   grid-template-columns: 1fr !important;
 }
 
+/* ─── Location ─────────────────────────────────────────────────────────── */
+
+.landing-preview-root.public-menu .location-map {
+  height: 12rem !important;
+}
+
+.landing-preview-root.public-menu .location-details {
+  flex-direction: column !important;
+  align-items: flex-start !important;
+}
+
 /* ─── Menu (heading preview in Aparência) ───────────────────────────────── */
 
 .landing-preview-root.public-menu .menu-category-header {
