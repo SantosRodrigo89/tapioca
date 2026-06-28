@@ -193,9 +193,8 @@ export function buildSectionCopySavePatch<K extends keyof SiteSectionCopy>(
   const defaults = DEFAULT_SECTION_COPY[section];
   const persisted = existing[section] as Record<string, string | undefined>;
 
-  for (const key of Object.keys(defaults)) {
+  for (const [key, defaultValue] of Object.entries(defaults)) {
     const raw = (values as Record<string, string | undefined>)[key] ?? "";
-    const defaultValue = defaults[key as keyof typeof defaults];
     const override = normalizeCopyValue(raw, defaultValue);
     if (override === undefined && persisted[key] !== undefined) {
       return { [section]: {} } as SiteSectionCopy;
