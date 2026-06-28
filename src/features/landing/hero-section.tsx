@@ -12,9 +12,11 @@ import {
 } from "@/lib/utils/opening-hours";
 import type { LandingPageData } from "@/lib/site/landing-types";
 import type { SiteButton } from "@/types/site";
+import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 
 interface HeroSectionProps {
   data: LandingPageData;
+  variant?: string;
 }
 
 function resolveHeroButtons(
@@ -58,7 +60,7 @@ function mapButtonVariant(
   return "primary";
 }
 
-export function HeroSection({ data }: HeroSectionProps) {
+export function HeroSection({ data, variant = "immersive" }: HeroSectionProps) {
   const { tenant, siteConfig, whatsapp } = data;
   const hero = siteConfig.hero;
 
@@ -84,6 +86,7 @@ export function HeroSection({ data }: HeroSectionProps) {
       id="landing-hero"
       aria-label="Apresentação"
       className="landing-hero relative"
+      {...sectionLayoutProps("hero", variant)}
     >
       <div className="relative flex min-h-[92svh] flex-col justify-end sm:min-h-[88vh] lg:min-h-[90vh]">
         {/* Background */}

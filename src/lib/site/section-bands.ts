@@ -1,21 +1,23 @@
 import type { SiteSectionId } from "@/types/site";
+import type { TemplateBandOverrides } from "@/types/platform/landing-layout";
 
 export type LandingBandVariant = "white" | "tinted" | "surface";
 
 const BAND_CYCLE: LandingBandVariant[] = ["white", "tinted", "surface"];
 
-const SECTION_BAND_OVERRIDES: Partial<Record<SiteSectionId, LandingBandVariant>> =
-  {
-    gallery: "surface",
-    menu: "white",
-  };
+const DEFAULT_BAND_OVERRIDES: TemplateBandOverrides = {
+  gallery: "surface",
+  menu: "white",
+};
 
 export function resolveBandVariant(
   sectionId: SiteSectionId,
   bandIndex: number,
+  templateOverrides?: TemplateBandOverrides,
 ): LandingBandVariant {
+  const overrides = templateOverrides ?? DEFAULT_BAND_OVERRIDES;
   return (
-    SECTION_BAND_OVERRIDES[sectionId] ??
+    overrides[sectionId as keyof TemplateBandOverrides] ??
     BAND_CYCLE[bandIndex % BAND_CYCLE.length]
   );
 }

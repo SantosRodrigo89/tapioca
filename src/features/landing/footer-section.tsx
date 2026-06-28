@@ -6,10 +6,12 @@ import { LandingButton } from "@/components/public/landing";
 import { SafeExternalLink } from "@/components/public/safe-external-link";
 import { BRAND_TAGLINE } from "@/lib/brand";
 import { formatWhatsAppLink } from "@/lib/utils";
+import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface FooterSectionProps {
   data: LandingPageData;
+  variant?: string;
 }
 
 function FooterSocialLink({
@@ -28,7 +30,7 @@ function FooterSocialLink({
   );
 }
 
-export function FooterSection({ data }: FooterSectionProps) {
+export function FooterSection({ data, variant = "full" }: FooterSectionProps) {
   const { tenant, siteConfig } = data;
   const contact = siteConfig.contact;
   const whatsapp = contact.whatsapp ?? data.whatsapp;
@@ -66,7 +68,7 @@ export function FooterSection({ data }: FooterSectionProps) {
   ];
 
   return (
-    <footer className="landing-footer">
+    <footer className="landing-footer" {...sectionLayoutProps("footer", variant)}>
       <div className="landing-container landing-footer__inner">
         <div className="landing-footer__brand">
           {tenant.logoUrl ? (

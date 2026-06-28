@@ -16,10 +16,12 @@ import {
 import { LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import { resolveSectionCopy } from "@/lib/site/section-copy";
+import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface DifferentialsSectionProps {
   data: LandingPageData;
+  variant?: string;
 }
 
 const ICON_MAP: Record<string, LucideIcon> = {
@@ -55,7 +57,10 @@ function DifferentialIcon({ icon }: { icon?: string }) {
   );
 }
 
-export function DifferentialsSection({ data }: DifferentialsSectionProps) {
+export function DifferentialsSection({
+  data,
+  variant = "cards",
+}: DifferentialsSectionProps) {
   const differentials = data.siteConfig.differentials;
   const copy = resolveSectionCopy(data.siteConfig.sectionCopy).differentials;
 
@@ -65,6 +70,7 @@ export function DifferentialsSection({ data }: DifferentialsSectionProps) {
     <section
       aria-labelledby="differentials-heading"
       className="landing-section"
+      {...sectionLayoutProps("differentials", variant)}
     >
       <ScrollReveal>
         <LandingHeading

@@ -2,13 +2,15 @@ import { GalleryGrid } from "@/components/public/gallery-grid";
 import { LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import { resolveSectionCopy } from "@/lib/site/section-copy";
+import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface GallerySectionProps {
   data: LandingPageData;
+  variant?: string;
 }
 
-export function GallerySection({ data }: GallerySectionProps) {
+export function GallerySection({ data, variant = "asymmetric" }: GallerySectionProps) {
   const gallery = data.gallery;
   const copy = resolveSectionCopy(data.siteConfig.sectionCopy).gallery;
 
@@ -19,6 +21,7 @@ export function GallerySection({ data }: GallerySectionProps) {
       aria-labelledby="gallery-heading"
       id="galeria"
       className="landing-section"
+      {...sectionLayoutProps("gallery", variant)}
     >
       <ScrollReveal>
         <LandingHeading

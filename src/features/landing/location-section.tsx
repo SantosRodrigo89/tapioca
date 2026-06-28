@@ -3,10 +3,12 @@ import { MapPin, Navigation } from "lucide-react";
 import { LandingButton, LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import { resolveSectionCopy } from "@/lib/site/section-copy";
+import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface LocationSectionProps {
   data: LandingPageData;
+  variant?: string;
 }
 
 function buildDirectionsUrl(data: LandingPageData): string | null {
@@ -41,7 +43,10 @@ function buildMapEmbedUrl(data: LandingPageData): string | null {
   return null;
 }
 
-export function LocationSection({ data }: LocationSectionProps) {
+export function LocationSection({
+  data,
+  variant = "map-first",
+}: LocationSectionProps) {
   const address =
     data.siteConfig.location.address ?? data.tenant.address;
   const copy = resolveSectionCopy(data.siteConfig.sectionCopy).location;
@@ -55,6 +60,7 @@ export function LocationSection({ data }: LocationSectionProps) {
       aria-labelledby="location-heading"
       id="localizacao"
       className="landing-section location-section"
+      {...sectionLayoutProps("location", variant)}
     >
       <ScrollReveal>
         <LandingHeading

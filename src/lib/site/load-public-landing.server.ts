@@ -15,6 +15,7 @@ import {
   filterCategoriesWithItems,
   getTenantCatalogServer,
 } from "@/lib/site/tenant-catalog.server";
+import { resolveTemplateLayout } from "@/lib/site/template-registry";
 import { getResolvedSiteConfig } from "@/services/site.service";
 import type { Tenant, TenantStatus } from "@/types";
 
@@ -71,6 +72,7 @@ async function loadPublicLandingUncached(
   const pageData: LandingPageData = {
     tenant,
     siteConfig,
+    layout: resolveTemplateLayout(tenant.templateId),
     gallery,
     categoriesWithItems,
     visibleCategories,

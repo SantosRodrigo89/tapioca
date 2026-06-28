@@ -3,13 +3,15 @@ import { LandingHeading } from "@/components/public/landing";
 import { ReadMoreText } from "@/components/public/read-more-text";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import { resolveSectionCopy } from "@/lib/site/section-copy";
+import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface AboutSectionProps {
   data: LandingPageData;
+  variant?: string;
 }
 
-export function AboutSection({ data }: AboutSectionProps) {
+export function AboutSection({ data, variant = "editorial" }: AboutSectionProps) {
   const about = data.siteConfig.about;
   const copy = resolveSectionCopy(data.siteConfig.sectionCopy).about;
   const title = about.title ?? "Sobre nós";
@@ -19,7 +21,12 @@ export function AboutSection({ data }: AboutSectionProps) {
   if (!description && !hasImage) return null;
 
   return (
-    <section aria-labelledby="about-heading" id="sobre" className="landing-section">
+    <section
+      aria-labelledby="about-heading"
+      id="sobre"
+      className="landing-section"
+      {...sectionLayoutProps("about", variant)}
+    >
       <ScrollReveal>
         <LandingHeading
           title={title}

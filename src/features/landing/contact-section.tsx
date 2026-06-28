@@ -19,10 +19,12 @@ import {
 } from "@/lib/utils/opening-hours";
 import { cn } from "@/lib/utils";
 import { resolveSectionCopy } from "@/lib/site/section-copy";
+import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface ContactSectionProps {
   data: LandingPageData;
+  variant?: string;
 }
 
 function InstagramIcon() {
@@ -110,7 +112,7 @@ function ContactChannelLink({
   );
 }
 
-export function ContactSection({ data }: ContactSectionProps) {
+export function ContactSection({ data, variant = "split" }: ContactSectionProps) {
   const contact = data.siteConfig.contact;
   const location = data.siteConfig.location;
   const copy = resolveSectionCopy(data.siteConfig.sectionCopy).contact;
@@ -158,6 +160,7 @@ export function ContactSection({ data }: ContactSectionProps) {
       aria-labelledby="contact-heading"
       id="contato"
       className="landing-section"
+      {...sectionLayoutProps("contact", variant)}
     >
       <ScrollReveal>
         <LandingHeading

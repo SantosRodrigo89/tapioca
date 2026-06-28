@@ -1,4 +1,5 @@
 import type { SiteTemplate, TemplateCategory } from "@/types/platform/template";
+import { getTemplateSiteConfigPreset } from "@/lib/site/template-registry";
 import { DEFAULT_TENANT_THEME } from "@/lib/utils/theme";
 
 const TEMPLATE_DEFINITIONS: Omit<
@@ -10,7 +11,7 @@ const TEMPLATE_DEFINITIONS: Omit<
     name: "Restaurante",
     description: "Layout versátil para restaurantes em geral",
     category: "restaurante",
-    siteConfigPreset: {},
+    siteConfigPreset: getTemplateSiteConfigPreset("restaurante"),
     themePreset: DEFAULT_TENANT_THEME,
     status: "active",
     order: 0,
@@ -20,7 +21,7 @@ const TEMPLATE_DEFINITIONS: Omit<
     name: "Hamburgueria",
     description: "Visual bold para hamburguerias",
     category: "hamburgueria",
-    siteConfigPreset: {},
+    siteConfigPreset: getTemplateSiteConfigPreset("hamburgueria"),
     themePreset: {
       primaryColor: "#dc2626",
       primaryDarkColor: "#991b1b",
@@ -34,7 +35,7 @@ const TEMPLATE_DEFINITIONS: Omit<
     name: "Bar",
     description: "Atmosfera noturna para bares",
     category: "bar",
-    siteConfigPreset: {},
+    siteConfigPreset: getTemplateSiteConfigPreset("bar"),
     themePreset: {
       primaryColor: "#1e293b",
       primaryDarkColor: "#0f172a",
@@ -48,7 +49,7 @@ const TEMPLATE_DEFINITIONS: Omit<
     name: "Pizzaria",
     description: "Cores quentes para pizzarias",
     category: "pizzaria",
-    siteConfigPreset: {},
+    siteConfigPreset: getTemplateSiteConfigPreset("pizzaria"),
     themePreset: {
       primaryColor: "#ea580c",
       primaryDarkColor: "#c2410c",
@@ -62,7 +63,7 @@ const TEMPLATE_DEFINITIONS: Omit<
     name: "Cafeteria",
     description: "Visual acolhedor para cafeterias",
     category: "cafeteria",
-    siteConfigPreset: {},
+    siteConfigPreset: getTemplateSiteConfigPreset("cafeteria"),
     themePreset: {
       primaryColor: "#78350f",
       primaryDarkColor: "#451a03",
@@ -76,7 +77,7 @@ const TEMPLATE_DEFINITIONS: Omit<
     name: "Açaí",
     description: "Vibrante para lojas de açaí",
     category: "acai",
-    siteConfigPreset: {},
+    siteConfigPreset: getTemplateSiteConfigPreset("acai"),
     themePreset: {
       primaryColor: "#7c3aed",
       primaryDarkColor: "#5b21b6",
@@ -90,7 +91,7 @@ const TEMPLATE_DEFINITIONS: Omit<
     name: "Doceria",
     description: "Doce e elegante para confeitarias",
     category: "doceria",
-    siteConfigPreset: {},
+    siteConfigPreset: getTemplateSiteConfigPreset("doceria"),
     themePreset: {
       primaryColor: "#db2777",
       primaryDarkColor: "#9d174d",

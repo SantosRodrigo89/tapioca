@@ -103,60 +103,80 @@ const FooterSection = dynamic(
 
 type SectionRenderer = (data: LandingPageData) => React.ReactNode;
 
+function renderWithLayout(
+  sectionId: keyof LandingPageData["layout"]["sections"],
+  render: (variant: string) => React.ReactNode,
+  data: LandingPageData,
+) {
+  return render(data.layout.sections[sectionId]);
+}
+
 export const SECTION_COMPONENTS: Partial<
   Record<SiteSectionId, SectionRenderer>
 > = {
-  hero: (data) => <HeroSection data={data} />,
-  about: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <AboutSection data={data} />
-    </Suspense>
-  ),
-  differentials: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <DifferentialsSection data={data} />
-    </Suspense>
-  ),
-  featured: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <FeaturedSection data={data} />
-    </Suspense>
-  ),
-  menu: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <MenuSection data={data} />
-    </Suspense>
-  ),
-  gallery: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <GallerySection data={data} />
-    </Suspense>
-  ),
-  contact: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <ContactSection data={data} />
-    </Suspense>
-  ),
-  location: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <LocationSection data={data} />
-    </Suspense>
-  ),
-  footer: (data) => (
-    <Suspense fallback={<SectionSkeleton />}>
-      <FooterSection data={data} />
-    </Suspense>
-  ),
+  hero: (data) =>
+    renderWithLayout("hero", (variant) => (
+      <HeroSection data={data} variant={variant} />
+    ), data),
+  about: (data) =>
+    renderWithLayout("about", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <AboutSection data={data} variant={variant} />
+      </Suspense>
+    ), data),
+  differentials: (data) =>
+    renderWithLayout("differentials", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <DifferentialsSection data={data} variant={variant} />
+      </Suspense>
+    ), data),
+  featured: (data) =>
+    renderWithLayout("featured", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <FeaturedSection data={data} variant={variant} />
+      </Suspense>
+    ), data),
+  menu: (data) =>
+    renderWithLayout("menu", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <MenuSection data={data} variant={variant} />
+      </Suspense>
+    ), data),
+  gallery: (data) =>
+    renderWithLayout("gallery", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <GallerySection data={data} variant={variant} />
+      </Suspense>
+    ), data),
+  contact: (data) =>
+    renderWithLayout("contact", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <ContactSection data={data} variant={variant} />
+      </Suspense>
+    ), data),
+  location: (data) =>
+    renderWithLayout("location", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <LocationSection data={data} variant={variant} />
+      </Suspense>
+    ), data),
+  footer: (data) =>
+    renderWithLayout("footer", (variant) => (
+      <Suspense fallback={<SectionSkeleton />}>
+        <FooterSection data={data} variant={variant} />
+      </Suspense>
+    ), data),
 };
 
 function wrapInBand(
   sectionId: SiteSectionId,
   content: React.ReactNode,
   bandIndex: number,
+  bandOverrides?: LandingPageData["layout"]["bandOverrides"],
 ) {
   if (!BANDED_SECTIONS.has(sectionId)) return content;
 
-  const variant = resolveBandVariant(sectionId, bandIndex);
+  const variant = resolveBandVariant(sectionId, bandIndex, bandOverrides);
 
   return (
     <div className={`landing-section-band ${bandVariantToClass(variant)}`}>
@@ -226,7 +246,8 @@ export function renderLandingSections(
 
   return (
     <>
-      {sections.map((section) => {
+      <div data-template={data.layout.templateId}>
+        {sections.map((section) => {
         if (!sectionHasContent(section.id, data)) return null;
 
         const render = SECTION_COMPONENTS[section.id];
@@ -249,11 +270,24 @@ export function renderLandingSections(
         }
 
         const wrapped = BANDED_SECTIONS.has(section.id)
-          ? wrapInBand(section.id, content, bandIndex++)
+          ? wrapInBand(
+              section.id,
+              content,
+              bandIndex++,
+              data.layout.bandOverrides,
+            )
           : content;
 
         return <Fragment key={section.id}>{wrapped}</Fragment>;
       })}
+      </div>
     </>
   );
 }
+
+export {
+  CLASSIC_TEMPLATE_ID,
+  SECTION_REGISTRY,
+  resolveTemplateLayout,
+  resolveTemplateSections,
+} from "./template-registry";
