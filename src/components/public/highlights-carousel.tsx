@@ -7,6 +7,8 @@ import type { HighlightEntry } from "@/components/public/highlights-section";
 
 interface HighlightsCarouselProps {
   entries: HighlightEntry[];
+  /** When false, all cards use the standard size (bar / cafeteria carousel). */
+  heroFirstCard?: boolean;
 }
 
 function getScrollStep(track: HTMLDivElement): number {
@@ -20,7 +22,10 @@ function getScrollStep(track: HTMLDivElement): number {
   return card.offsetWidth + gap;
 }
 
-export function HighlightsCarousel({ entries }: HighlightsCarouselProps) {
+export function HighlightsCarousel({
+  entries,
+  heroFirstCard = true,
+}: HighlightsCarouselProps) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -95,7 +100,7 @@ export function HighlightsCarousel({ entries }: HighlightsCarouselProps) {
             <HighlightCard
               key={entry.item.id}
               entry={entry}
-              variant={index === 0 ? "hero" : "standard"}
+              variant={heroFirstCard && index === 0 ? "hero" : "standard"}
             />
           ))}
         </div>

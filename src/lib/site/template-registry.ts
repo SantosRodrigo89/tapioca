@@ -35,8 +35,7 @@ function defineTemplate(
 
 /**
  * Registry of landing layout variants per SaaS template.
- * Variants are declarative — rendering still uses classic components until
- * alternate layouts are implemented.
+ * Variants map to section `variant` props + CSS `[data-section][data-layout]`.
  */
 export const SECTION_REGISTRY: Record<LandingTemplateId, TemplateLayoutDefinition> =
   {

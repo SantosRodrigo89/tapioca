@@ -32,7 +32,10 @@ export function GallerySection({ data, variant = "asymmetric" }: GallerySectionP
       </ScrollReveal>
 
       <div className="mt-8 sm:mt-10">
-        <GalleryGrid images={gallery} />
+        <GalleryGrid
+          images={gallery}
+          layout={variant === "grid" ? "uniform" : "asymmetric"}
+        />
       </div>
     </section>
   );

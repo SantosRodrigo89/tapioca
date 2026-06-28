@@ -2,6 +2,7 @@ import Image from "next/image";
 import { LandingHeading } from "@/components/public/landing";
 import { ReadMoreText } from "@/components/public/read-more-text";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { cn } from "@/lib/utils";
 import { resolveSectionCopy } from "@/lib/site/section-copy";
 import { sectionLayoutProps } from "@/lib/site/section-layout-props";
 import type { LandingPageData } from "@/lib/site/landing-types";
@@ -17,6 +18,7 @@ export function AboutSection({ data, variant = "editorial" }: AboutSectionProps)
   const title = about.title ?? "Sobre nós";
   const description = about.description;
   const hasImage = !!about.imageUrl;
+  const isCentered = variant === "centered";
 
   if (!description && !hasImage) return null;
 
@@ -29,6 +31,7 @@ export function AboutSection({ data, variant = "editorial" }: AboutSectionProps)
     >
       <ScrollReveal>
         <LandingHeading
+          align={isCentered ? "center" : undefined}
           title={title}
           titleId="about-heading"
           eyebrow={copy.eyebrow}
@@ -36,11 +39,25 @@ export function AboutSection({ data, variant = "editorial" }: AboutSectionProps)
       </ScrollReveal>
 
       <div
-        className={`about-editorial mt-10 sm:mt-12 ${hasImage ? "about-editorial--with-image" : ""}`}
+        className={cn(
+          "mt-10 sm:mt-12",
+          isCentered
+            ? "about-centered"
+            : cn("about-editorial", hasImage && "about-editorial--with-image"),
+        )}
       >
         {hasImage && (
-          <ScrollReveal className="about-editorial__media" delay={100}>
-            <div className="about-editorial__image-wrap">
+          <ScrollReveal
+            className={isCentered ? "about-centered__media" : "about-editorial__media"}
+            delay={100}
+          >
+            <div
+              className={
+                isCentered
+                  ? "about-centered__image-wrap"
+                  : "about-editorial__image-wrap"
+              }
+            >
               <Image
                 src={about.imageUrl!}
                 alt=""
@@ -53,7 +70,12 @@ export function AboutSection({ data, variant = "editorial" }: AboutSectionProps)
         )}
 
         {description && (
-          <ScrollReveal className="about-editorial__content" delay={200}>
+          <ScrollReveal
+            className={
+              isCentered ? "about-centered__content" : "about-editorial__content"
+            }
+            delay={200}
+          >
             <ReadMoreText text={description} maxLines={6} mobileOnly />
           </ScrollReveal>
         )}

@@ -14,16 +14,22 @@ import type { GalleryImage } from "@/types/site";
 
 interface GalleryGridProps {
   images: GalleryImage[];
+  layout?: "asymmetric" | "uniform";
 }
 
-function galleryItemLayout(index: number, total: number): string {
+function galleryItemLayout(
+  index: number,
+  total: number,
+  layout: "asymmetric" | "uniform",
+): string {
+  if (layout === "uniform") return "";
   if (total === 1) return "gallery-grid__item--solo";
   if (index === 0 && total >= 3) return "gallery-grid__item--featured";
   if (index === 1 && total === 2) return "gallery-grid__item--tall";
   return "";
 }
 
-export function GalleryGrid({ images }: GalleryGridProps) {
+export function GalleryGrid({ images, layout = "asymmetric" }: GalleryGridProps) {
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const activeImage = activeIndex !== null ? images[activeIndex] : null;
 
@@ -37,7 +43,7 @@ export function GalleryGrid({ images }: GalleryGridProps) {
             as="figure"
             className={cn(
               "gallery-grid__item group",
-              galleryItemLayout(index, images.length),
+              galleryItemLayout(index, images.length, layout),
             )}
           >
             <button

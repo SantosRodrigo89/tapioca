@@ -42,7 +42,10 @@ export function HighlightsSection({
       </ScrollReveal>
 
       <div className="mt-8 sm:mt-10">
-        <HighlightsCarousel entries={entries} />
+        <HighlightsCarousel
+          entries={entries}
+          heroFirstCard={layoutVariant === "carousel-hero"}
+        />
       </div>
     </section>
   );
