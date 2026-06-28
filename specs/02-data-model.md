@@ -1,10 +1,12 @@
 # Spec 02 — Modelo de Dados
 
+> **Estado:** v1. Dados públicos servidos via Admin SDK; client SDK lê/escreve apenas no painel autenticado. Coleções SaaS em `src/types/platform/`.
+
 ## Visão Geral — Estrutura Firestore
 
 ```
 slugIndex/
-  {slug}                    # lookup público slug → tenantId
+  {slug}                    # lookup slug → tenantId (Admin SDK only)
 
 tenants/
   {tenantId}/               # documento do restaurante
@@ -14,6 +16,13 @@ tenants/
           {itemId}          # item do cardápio
     gallery/
       {imageId}             # imagem da galeria do site
+
+platform/settings         # configurações globais (singleton)
+plans/{planId}            # planos SaaS
+features/{featureId}      # catálogo de recursos
+templates/{templateId}    # templates visuais
+invites/{inviteId}        # convites de admin
+auditLogs/{logId}         # auditoria
 ```
 
 ## Collection: `slugIndex`
@@ -27,7 +36,7 @@ tenants/
 
 **Caminho:** `slugIndex/{slug}`
 
-**Regras:** leitura pública, escrita apenas pelo servidor.
+**Regras:** leitura negada no client SDK; lookup via Admin SDK no servidor. Escrita via Admin SDK na criação de tenant.
 
 ## Collection: `tenants`
 
@@ -47,14 +56,20 @@ Documento principal de cada restaurante (tenant).
 | `createdAt` | `Timestamp` | ✅ | Data de criação |
 | `updatedAt` | `Timestamp` | ✅ | Data da última atualização |
 | `siteConfig` | `SiteConfig` | ❌ | Configuração do site público (seções, conteúdo, SEO) |
+| `planId` | `PlanId` | ❌ | Plano SaaS atribuído |
+| `templateId` | `string` | ❌ | Template visual |
+| `featureOverrides` | `Record<FeatureId, boolean>` | ❌ | Overrides de recursos por tenant |
+| `lastAccessAt` | `Timestamp` | ❌ | Último acesso ao painel |
+| `createdBy` | `string` | ❌ | UID do super_admin que criou |
+| `metrics` | `TenantMetrics` | ❌ | Métricas (views = placeholder) |
 
 **Caminho:** `tenants/{tenantId}`
 
-**Regras:**
-- Leitura pública
-- Criação: usuário autenticado onde `request.auth.uid == ownerUid`
-- Atualização: tenant admin ou super admin
-- Exclusão: super admin apenas
+**Regras (client SDK):**
+- Leitura: tenant admin ou super admin
+- Criação: negada (`allow create: if false`) — via Admin SDK
+- Atualização: tenant admin (allowlist de campos) ou super admin via API
+- Exclusão: super admin
 
 ## Subcollection: `tenants/{tenantId}/categories`
 
@@ -66,10 +81,11 @@ Categorias do cardápio (ex: "Entradas", "Pratos Principais", "Bebidas").
 | `name` | `string` | ✅ | Nome da categoria |
 | `order` | `number` | ✅ | Posição de exibição (crescente) |
 | `active` | `boolean` | ✅ | Se `false`, não aparece no cardápio público |
+| `availability` | `AvailabilitySchedule` | ❌ | Horários de disponibilidade (herdável pelos items) |
 | `createdAt` | `Timestamp` | ✅ | Data de criação |
 | `updatedAt` | `Timestamp` | ✅ | Data da última atualização |
 
-**Regras:** leitura pública, escrita apenas pelo tenant admin ou super admin.
+**Regras:** leitura/escrita pelo tenant admin ou super admin (tenant ativo).
 
 **Índice:** `active ASC, order ASC`
 
@@ -87,10 +103,12 @@ Items individuais do cardápio.
 | `available` | `boolean` | ✅ | Se `false`, não aparece no cardápio público |
 | `order` | `number` | ✅ | Posição dentro da categoria (crescente) |
 | `configurationGroups` | `ConfigurationGroup[]` | ❌ | Grupos de configuração do produto (ver abaixo) |
+| `availability` | `AvailabilitySchedule` | ❌ | Horários próprios (override da categoria) |
+| `badge` | `MenuItemBadge` | ❌ | Badge exibido no cardápio (ex: "Novo") — sem UI admin na v1 |
 | `createdAt` | `Timestamp` | ✅ | Data de criação |
 | `updatedAt` | `Timestamp` | ✅ | Data da última atualização |
 
-**Regras:** leitura pública, escrita apenas pelo tenant admin ou super admin.
+**Regras:** leitura/escrita pelo tenant admin ou super admin (tenant ativo).
 
 **Índice:** `available ASC, order ASC`
 
@@ -151,9 +169,24 @@ Imagens exibidas na seção galeria do site público.
 | `order` | `number` | ✅ | Posição de exibição (crescente) |
 | `createdAt` | `Timestamp` | ✅ | Data de criação |
 
-**Regras:** leitura pública, escrita apenas pelo tenant admin ou super admin.
+**Regras:** leitura/escrita pelo tenant admin ou super admin (tenant ativo).
 
 **Índice:** `order ASC`
+
+## Coleções SaaS (spec 08)
+
+| Collection | Caminho | Descrição |
+|---|---|---|
+| Settings | `platform/settings` | Configurações globais da plataforma |
+| Plans | `plans/{planId}` | 4 planos fixos com mapa de features |
+| Features | `features/{featureId}` | 13 recursos (`globalEnabled`, categoria) |
+| Templates | `templates/{templateId}` | Identidade visual (cores, fontes) |
+| Invites | `invites/{inviteId}` | Convites de onboarding |
+| Audit logs | `auditLogs/{logId}` | Trilha de auditoria |
+
+**Regras:** super_admin only no client SDK. APIs `/api/super/*` usam Admin SDK.
+
+Entitlements: `resolveFeature()` combina global → plano → override do tenant.
 
 ## Firebase Storage
 
@@ -187,3 +220,4 @@ Os tipos em `src/types/index.ts` mapeiam diretamente este modelo:
 - `GalleryImage` → `gallery/{id}`
 - `SlugIndexEntry` → `slugIndex/{slug}`
 - `AuthUser` → usuário Firebase Auth com claims
+- Tipos em `src/types/platform/` → planos, features, templates, invites, audit

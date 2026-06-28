@@ -1,54 +1,52 @@
 # Spec 03 — Autenticação e Autorização
 
+> **Estado:** v1. Onboarding via **convite** (Super Admin). Cadastro público desabilitado.
+
 ## Estratégia
 
-O sistema usa **Firebase Auth** para identidade + **session cookie HttpOnly** para sessões server-side. Isso garante:
+Firebase Auth para identidade + **session cookie HttpOnly** para sessões server-side:
 
-- Token não fica exposto no `localStorage` (XSS)
-- Middleware Next.js pode verificar a sessão sem chamar Firebase no Edge
-- Server Components podem verificar a sessão via Admin SDK
+- Token não fica no `localStorage` (proteção XSS)
+- `src/proxy.ts` faz gate rápido por cookie em rotas admin/super
+- Server Components e Route Handlers verificam sessão via Admin SDK
 
 ## Custom Claims
 
-O token Firebase de cada usuário deve conter as seguintes custom claims:
+**Tenant admin:**
 
 ```json
-{
-  "role": "tenant_admin",
-  "tenantId": "<document ID do tenant>"
-}
+{ "role": "tenant_admin", "tenantId": "<document ID do tenant>" }
 ```
 
-Para Super Admins:
+**Super admin:**
 
 ```json
-{
-  "role": "super_admin"
-}
+{ "role": "super_admin" }
 ```
 
-As claims são setadas pelo servidor via Admin SDK após o signup/criação do tenant.
+Claims setadas via Admin SDK no aceite de convite ou manualmente para super_admin.
 
-## Fluxo de Signup
+## Fluxo de Onboarding (convite)
 
 ```
-Cliente                     Next.js Server              Firebase
+Super Admin                 Next.js Server              Firebase
   |                               |                         |
-  |-- POST /auth/signup --------->|                         |
-  |   { name, email, password,   |                         |
-  |     restaurantName }         |                         |
-  |                               |-- createUser() -------->|
-  |                               |<-- { uid } -------------|
-  |                               |-- createTenant(uid) --->| (Firestore)
-  |                               |-- createSlugIndex() --->| (Firestore)
-  |                               |-- setCustomClaims() --->| (Admin Auth)
-  |                               |   { role, tenantId }   |
-  |                               |-- createSessionCookie ->| (Admin Auth)
+  |-- POST /api/super/tenants --->|                         |
+  |   (wizard)                    |-- createTenant() ------>| Firestore
+  |                               |-- createInvite() ------>| invites/
+  |                               |-- createSlugIndex() --->| slugIndex/
+  |<-- invite link ---------------|                         |
+  |                               |                         |
+Admin (convidado)                 |                         |
+  |-- GET /auth/invite/[token] -->|                         |
+  |-- POST .../accept ----------->|                         |
+  |   { name, email, password }   |-- createUser() -------->| (se novo)
+  |                               |-- setCustomClaims() --->|
+  |                               |-- update ownerUid ----->| Firestore
+  |                               |-- createSessionCookie ->|
   |<-- Set-Cookie: __session -----|                         |
-  |    redirect: /dashboard       |                         |
+  |    redirect: /dashboard         |                         |
 ```
-
-> O signup é feito via Server Action ou Route Handler para garantir que as custom claims sejam setadas antes do primeiro acesso ao dashboard.
 
 ## Fluxo de Login
 
@@ -57,88 +55,75 @@ Cliente                     Next.js Server              Firebase
   |                               |                         |
   |-- signInWithEmailAndPassword->|                         | (client SDK)
   |<-- idToken -------------------|                         |
-  |                               |                         |
   |-- POST /api/auth/session ---->|                         |
   |   { idToken }                 |-- verifyIdToken() ----->|
-  |                               |<-- decodedToken --------|
   |                               |-- createSessionCookie ->|
-  |                               |<-- sessionCookie -------|
   |<-- Set-Cookie: __session -----|                         |
-  |    200 OK                     |                         |
+  |    200 OK + audit log         |                         |
 ```
+
+Se tenant `suspended`/`cancelled`: layout admin redireciona para `/auth/account-blocked`.
 
 ## Fluxo de Logout
 
 ```
-Cliente                     Next.js Server              Firebase
-  |                               |                         |
-  |-- signOut() ----------------->|                         | (client SDK)
-  |-- DELETE /api/auth/session -->|                         |
-  |                               |-- revokeRefreshTokens ->|
-  |                               |-- deleteCookie -------->|
-  |<-- 200 OK --------------------|                         |
-  | redirect: /auth/login         |                         |
+Cliente                     Next.js Server
+  |-- signOut() ----------------->| (client SDK)
+  |-- DELETE /api/auth/session -->|
+  |                               |-- revokeRefreshTokens
+  |                               |-- deleteCookie
+  |<-- 200 OK --------------------|
+  | redirect: /auth/login         |
 ```
+
+## Cadastro público (desabilitado)
+
+- `/auth/signup` → redirect `/auth/login`
+- `POST /api/tenants` → `403 { code: "SIGNUP_DISABLED" }`
 
 ## API Routes
 
 ### `POST /api/auth/session`
 
-Troca um ID token do Firebase por um session cookie seguro.
+Troca ID token por session cookie. Rate limited.
 
-**Request body:**
-```json
-{ "idToken": "<Firebase ID token>" }
-```
+**Request:** `{ "idToken": "<Firebase ID token>" }`
 
 **Processo:**
-1. Verifica `idToken` com `adminAuth.verifyIdToken(idToken)`
-2. Verifica expiração: o token deve ter no máximo 5 minutos (`checkRevoked: true`)
-3. Cria session cookie com `adminAuth.createSessionCookie(idToken, { expiresIn })`
-4. Seta cookie `__session` com flags `httpOnly: true`, `secure: true`, `sameSite: "strict"`
-
-**Response:** `200 OK`
+1. `adminAuth.verifyIdToken(idToken, checkRevoked: true)`
+2. `adminAuth.createSessionCookie(idToken, { expiresIn })`
+3. Cookie `__session`: `httpOnly`, `secure`, `sameSite: "strict"`
+4. Audit log `login` quando aplicável
 
 ### `DELETE /api/auth/session`
 
-Destrói a sessão.
+Revoga refresh tokens e deleta cookie.
 
-**Processo:**
-1. Lê o cookie `__session`
-2. Verifica o cookie com `adminAuth.verifySessionCookie(sessionCookie)`
-3. Revoga refresh tokens: `adminAuth.revokeRefreshTokens(uid)`
-4. Deleta o cookie `__session`
+### `GET /api/invites/[token]`
 
-**Response:** `200 OK`
+Preview do convite (público, rate limited).
 
-### Custom claims no signup
+### `POST /api/invites/[token]/accept`
 
-As custom claims são setadas por `POST /api/tenants` via Admin SDK após criar o documento do tenant:
+Aceita convite, cria/atualiza usuário, seta claims, preenche `ownerUid`.
 
-```json
-{ "role": "tenant_admin", "tenantId": "<tenantId>" }
-```
+## Proteção de Rotas — `src/proxy.ts`
 
-## Middleware Next.js
+Cookie gate (sem verificação de assinatura — feita downstream):
 
-O `src/middleware.ts` verifica a presença do cookie `__session` em rotas protegidas.
+**Rotas protegidas:** `/dashboard`, `/site`, `/menu`, `/catalog`, `/settings`, `/super`
 
-**Rotas protegidas:** `/dashboard`, `/catalog`, `/settings`, `/super`
+**Rate limiting:** `/api/auth/session`, `/api/tenants`, `/api/invites/*`
 
-O middleware **não verifica** a assinatura do cookie — isso ocorre nos Server Components e Route Handlers usando o Admin SDK. O middleware só faz o redirect rápido quando o cookie está ausente.
+Matcher em `export const config` do `proxy.ts`.
 
-## Verificação de Sessão em Server Components
+## Verificação de Sessão
 
 ```typescript
 // src/lib/auth/session.ts
-import { cookies } from 'next/headers'
-import { adminAuth } from '@/lib/firebase/admin'
-
 export async function getSessionUser() {
-  const cookieStore = await cookies()
-  const sessionCookie = cookieStore.get('__session')?.value
+  const sessionCookie = (await cookies()).get('__session')?.value
   if (!sessionCookie) return null
-  
   try {
     return await adminAuth.verifySessionCookie(sessionCookie, true)
   } catch {
@@ -151,38 +136,21 @@ export async function getSessionUser() {
 
 | Ação | Cliente Final | Tenant Admin | Super Admin |
 |---|---|---|---|
-| Ler cardápio público | ✅ | ✅ | ✅ |
+| Ver landing pública | ✅ | ✅ | ✅ |
 | Editar próprio tenant | ❌ | ✅ | ✅ |
-| Editar categorias/items | ❌ | ✅ | ✅ |
-| Fazer upload de imagens | ❌ | ✅ | ✅ |
+| Editar cardápio | ❌ | ✅ | ✅ |
+| Upload de imagens | ❌ | ✅ | ✅ |
 | Mudar status do tenant | ❌ | ❌ | ✅ |
-| Criar/excluir tenants | ❌ | ❌ | ✅ |
+| Criar tenants / convites | ❌ | ❌ | ✅ |
+| Gerenciar planos/features | ❌ | ❌ | ✅ |
 | Acessar `/super` | ❌ | ❌ | ✅ |
 
 ## Cookies
 
-| Cookie | Valor | Flags |
+| Cookie | Flags | Duração |
 |---|---|---|
-| `__session` | Session cookie Firebase (JWT assinado) | `httpOnly`, `secure`, `sameSite=strict`, `path=/` |
-
-**Duração:** 5 dias (configurável via `SESSION_DURATION_MS`)
+| `__session` | `httpOnly`, `secure`, `sameSite=strict`, `path=/` | 5 dias (`SESSION_DURATION_MS`) |
 
 ## Variáveis de Ambiente
 
-```bash
-# Client SDK
-NEXT_PUBLIC_FIREBASE_API_KEY=
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=
-NEXT_PUBLIC_FIREBASE_APP_ID=
-
-# Admin SDK (server only)
-FIREBASE_ADMIN_PROJECT_ID=
-FIREBASE_ADMIN_CLIENT_EMAIL=
-FIREBASE_ADMIN_PRIVATE_KEY=
-
-# App
-NEXT_PUBLIC_APP_URL=
-```
+Ver `.env.example` — Firebase client + Admin SDK + `NEXT_PUBLIC_APP_URL`.

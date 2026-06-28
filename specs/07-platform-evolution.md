@@ -1,5 +1,7 @@
 # Spec 07 — Evolução da Plataforma Mesio
 
+> **Estado:** v1 concluída (jun/2026). Roadmap de implementação (etapas 0–6) entregue. Etapa 7 (polish) em progresso incremental.
+
 ## Posicionamento
 
 **Mesio — Plataforma de Presença Digital para Restaurantes**
@@ -122,16 +124,36 @@ Analytics, Fidelidade, CRM, IA, Reservas, Pedidos, Marketing, Domínio próprio,
 
 ## Roadmap de implementação
 
-| Etapa | Entrega |
-|-------|---------|
-| 0 | Spec, types, schemas, site.service, brand copy |
-| 1 | Sidebar 4 pilares, rotas `/site` e `/menu/*`, redirects |
-| 2 | Dashboard centro de comando |
-| 3 | Módulo Cardápio (split catalog-client) |
-| 4 | Persistência siteConfig + galeria Firestore |
-| 5 | Editor Presença Digital completo |
-| 6 | Landing page modular pública |
-| 7 | Polish, performance, migração incremental |
+| Etapa | Entrega | Status |
+|-------|---------|--------|
+| 0 | Spec, types, schemas, site.service, brand copy | ✅ |
+| 1 | Sidebar 4 pilares, rotas `/site` e `/menu/*`, redirects | ✅ |
+| 2 | Dashboard centro de comando | ✅ |
+| 3 | Módulo Cardápio (split catalog-client) | ✅ |
+| 4 | Persistência siteConfig + galeria Firestore | ✅ |
+| 5 | Editor Presença Digital completo | ✅ |
+| 6 | Landing page modular pública | ✅ |
+| 7 | Polish, performance, migração incremental | 🔄 |
+
+## v1 — Entregue
+
+- Navegação admin em 4 pilares com entitlements
+- Editor `/site` com 10 tabs
+- Cardápio em `/menu/*` com DnD, configuração avançada e destaques
+- Landing modular em `/{slug}` com cache e revalidation
+- Super Admin completo (spec 08)
+- Onboarding por convite
+- Site de marketing em `/`
+- Rate limiting, audit log, regras Firestore restritivas
+
+## v1 — Pendências conhecidas
+
+- Migração completa de `components/admin|public/` para `features/`
+- DnD de ordem de seções na landing
+- UI admin para FAQ, depoimentos e badge de produto
+- Cascade na exclusão de categorias
+- Conteúdo das páginas legais
+- Analytics, billing, pedidos online (Fase 2)
 
 ## Extensibilidade futura
 

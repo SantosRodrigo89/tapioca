@@ -10,13 +10,15 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 **Slogan:** Sua presença digital começa aqui.
 
+**Estado:** v1 concluída (jun/2026). Onboarding **somente por convite** (Super Admin).
+
 ## Personas
 
 | Persona | Acesso | O que faz |
 |---|---|---|
-| Admin do restaurante | `/dashboard`, `/site`, `/menu/*`, `/settings` | Edita site, cardápio, aparência e dados do tenant |
+| Admin do restaurante | `/dashboard`, `/site`, `/menu/*`, `/settings` | Edita site, cardápio, aparência e link público |
 | Cliente final | `/{slug}` | Consulta cardápio e pede via WhatsApp |
-| Super Admin | `/super` | Gerencia tenants e status (`trial`, `active`, `suspended`, `cancelled`) |
+| Super Admin | `/super/*` | Cria tenants, convites, planos, features, templates, status |
 
 ## Stack
 
@@ -37,7 +39,7 @@ npm run lint         # ESLint
 npm run export:brand # gera PNGs/favicon a partir dos SVGs de marca
 ```
 
-Variáveis em `.env.local` (ver `.env.example`). Emulador Firebase: `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true npm run dev`.
+Variáveis em `.env.local` (ver `.env.example`). Emulador: `NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true npm run dev`.
 
 ## Estrutura do código
 
@@ -46,116 +48,131 @@ src/
 ├── app/
 │   ├── (admin)/           # painel autenticado (layout verifica sessão)
 │   ├── (public)/[slug]/   # landing + cardápio público (SSR)
-│   ├── auth/              # login, signup, forgot-password
-│   ├── super/             # painel super admin
-│   └── api/               # sessão, tenants, etc.
-├── features/              # UI por domínio (landing, cardapio, presenca-digital, dashboard)
+│   ├── auth/              # login, convite, forgot-password, account-blocked
+│   ├── super/             # painel super admin (9 módulos)
+│   ├── page.tsx           # marketing Mesio (/)
+│   └── api/               # sessão, convites, super, revalidate
+├── features/              # landing, cardapio, presenca-digital, dashboard, super, marketing
 ├── components/
-│   ├── admin/             # formulários e painéis
-│   ├── public/            # componentes da página pública
+│   ├── admin/             # formulários e painéis (legado ativo)
+│   ├── public/            # cardápio, drawer, tema
 │   ├── brand/             # logo Mesio
 │   └── ui/                # shadcn/ui
-├── layouts/               # shell do admin (sidebar, header)
+├── layouts/               # AdminShell, SuperShell
 ├── lib/
 │   ├── auth/              # sessão, roles, redirect
 │   ├── firebase/          # client.ts + admin.ts
+│   ├── platform/          # planos, features, entitlements
 │   ├── repositories/      # Firestore (client) + server/ (Admin SDK)
 │   ├── schemas/           # Zod
 │   ├── catalog/           # parse/serialize de configuração de produtos
 │   ├── pricing/           # preço fixo vs "a partir de"
 │   ├── storage/           # upload de imagens
 │   └── utils/             # preço, slug, horários, telefone
-├── services/              # lógica de domínio (site, onboarding)
-├── types/                 # tipos compartilhados
+├── services/              # site, onboarding, platform/*
+├── types/                 # core + platform/
 └── assets/brand/          # identidade visual (SVG fonte)
-specs/                     # especificação do produto (SDD) — ler antes de mudanças grandes
+specs/                     # SDD — ler antes de mudanças grandes
 firestore.rules
 storage.rules
 ```
 
-## Navegação admin (estado atual)
+## Navegação admin (4 pilares)
 
 | Rota | Descrição |
 |---|---|
-| `/dashboard` | Resumo, onboarding, atalhos |
-| `/site` | Editor de presença digital (tabs internas: aparência, banner, sobre, etc.) |
+| `/dashboard` | Onboarding, resumo, atalhos |
+| `/site` | Editor de presença digital (10 tabs) |
 | `/menu/categories` | CRUD de categorias |
 | `/menu/products` | CRUD de produtos |
 | `/menu/highlights` | Destaques do cardápio |
-| `/settings` | Conta e dados básicos do tenant |
-| `/catalog` | **Legado** — redirect para `/menu/products` |
+| `/settings` | Slug, URL pública, link para `/site` |
+| `/catalog` | **Legado** — redirect → `/menu/products` |
 
-Princípio do produto: **simplicidade**. Evitar rotas e abstrações desnecessárias. Detalhes em `specs/07-platform-evolution.md`.
+Super Admin: `/super`, `/super/restaurants`, `/super/invites`, `/super/plans`, `/super/features`, `/super/templates`, `/super/metrics`, `/super/logs`, `/super/settings`.
+
+Princípio: **simplicidade**. Detalhes em `specs/07-platform-evolution.md`.
 
 ## Autenticação e multi-tenant
 
-- Firebase Auth no cliente; sessão server-side via cookie `__session` (`POST/DELETE /api/auth/session`)
+- Firebase Auth no cliente; sessão via cookie `__session` (`POST/DELETE /api/auth/session`)
 - Custom claims: `{ role: "tenant_admin" | "super_admin", tenantId }`
-- Layout `(admin)/layout.tsx` chama `getSessionUser()` e redireciona se não autenticado
-- `src/proxy.ts` existe para proteção de rotas admin (matcher configurado); o layout admin também valida sessão server-side
+- Onboarding: Super Admin cria tenant + convite → admin aceita em `/auth/invite/[token]`
+- `/auth/signup` redireciona para login; `POST /api/tenants` retorna 403
+- Layout `(admin)/layout.tsx` valida sessão; tenant suspenso → `/auth/account-blocked`
+- `src/proxy.ts` — cookie gate + rate limiting em auth/invite
 - Isolamento: tenant só acessa dados do próprio `tenantId`
-- Super Admin sem `tenantId` é redirecionado para `/super`
+- Super Admin sem `tenantId` → `/super`
+- Dados públicos servidos **apenas via Admin SDK** (rules negam leitura client-side)
 
 ## Modelo de dados (Firestore)
 
 ```
 slugIndex/{slug}              → { tenantId }
-tenants/{tenantId}            → restaurante + siteConfig
-  categories/{categoryId}     → seção do cardápio
-    items/{itemId}            → produto
-  gallery/{imageId}           → fotos da galeria
+tenants/{tenantId}            → restaurante + siteConfig + campos SaaS
+  categories/{categoryId}/items/{itemId}
+  gallery/{imageId}
+plans, features, templates, invites, auditLogs
+platform/settings
 ```
 
-Campos importantes do tenant: `slug` (imutável), `status`, `whatsapp`, `siteConfig` (seções, cores, conteúdo, SEO).
+Campos importantes: `slug` (imutável), `status`, `whatsapp`, `siteConfig`, `planId`, `featureOverrides`.
 
-Detalhes completos: `specs/02-data-model.md`.
+Detalhes: `specs/02-data-model.md`.
 
 ## Regras de negócio
 
-- Preços armazenados em **centavos** (`price: number`); exibir com `formatPrice()` (`pt-BR`, BRL)
-- Produtos podem ter **grupos de configuração** (tamanho, adicionais) — ver `src/lib/catalog/` e `src/lib/pricing/`
-- **Disponibilidade por horário** em categorias e itens (`availability`); item fora do horário fica visível, sem CTA de pedido
-- `available: false` ou categoria `active: false` → não aparece no cardápio público
-- Slug não pode colidir com rotas reservadas (`auth`, `dashboard`, `menu`, `site`, etc.)
-- Imagens: `image/*`, máx. 5 MB (Storage)
-- Sem billing no app — mudança de status do tenant é manual (Super Admin)
-- Pedidos via **WhatsApp** (`formatWhatsAppLink`), não há checkout
+- Preços em **centavos**; exibir com `formatPrice()` (pt-BR, BRL)
+- **Grupos de configuração** em produtos — `src/lib/catalog/`, `src/lib/pricing/`
+- **Disponibilidade por horário** (`availability`); fora do horário = visível, sem CTA
+- `available: false` ou categoria `active: false` → oculto no cardápio público
+- Slug não colide com rotas reservadas (`auth`, `dashboard`, `site`, `menu`, etc.)
+- Imagens: `image/*`, máx. 5 MB
+- Sem billing — status manual via Super Admin
+- Pedidos via **WhatsApp**; sem checkout
+- Entitlements: `resolveFeature()` — global → plano → override tenant
+
+## Limitações v1 (não implementar sem pedido explícito)
+
+- Cadastro público, analytics real, billing, carrinho/checkout
+- FAQ/depoimentos na UI admin; badge de produto no formulário
+- Cascade na exclusão de categorias (bug conhecido)
+- DnD de ordem de seções na landing
 
 ## Padrões de código
 
-- **UI e copy em português (pt-BR)** — labels, mensagens, formatação de moeda e telefone
-- **Server Components** por padrão nas páginas; `"use client"` só quando necessário (forms, dnd, hooks)
-- **Repositórios**: `*.repository.ts` usa Firebase client (admin autenticado); `server/*.server.ts` usa Admin SDK (páginas públicas, API, layout)
-- **Validação**: schemas Zod em `src/lib/schemas/`; tipos em `src/types/`
+- **UI e copy em pt-BR**
+- **Server Components** por padrão; `"use client"` só quando necessário
+- **Repositórios**: `*.repository.ts` (client SDK autenticado); `server/*.server.ts` (Admin SDK)
+- **Validação**: Zod em `src/lib/schemas/`; tipos em `src/types/`
 - **Formulários**: React Hook Form + `@hookform/resolvers/zod`
-- **Estilo**: Tailwind + `cn()`; componentes base em `src/components/ui/`
-- **Marca**: constantes em `src/lib/brand.ts`; assets em `src/assets/brand/`; guidelines em `BRAND-GUIDELINES.md`
-- Não commitar `.env.local` nem credenciais do Admin SDK
+- **Estilo**: Tailwind + `cn()`; base em `src/components/ui/`
+- **Marca**: `src/lib/brand.ts`, `src/assets/brand/`, `BRAND-GUIDELINES.md`
+- Não commitar `.env.local` nem credenciais Admin SDK
 
 ## Página pública `/{slug}`
 
-Landing page configurável por seções (`SiteSectionId`: hero, about, menu, gallery, contact, etc.). Tema por tenant via `PublicTheme`. Cardápio integrado com navegação por categorias, destaques e drawer de detalhe do produto.
+Landing modular (`SiteSectionId`: hero, about, menu, gallery, contact, etc.). Tema via `PublicTheme`. Cardápio com drawer de produto. Componentes: `src/features/landing/` + `src/components/public/`.
 
-Ver `specs/05-public-menu.md` e componentes em `src/features/landing/` + `src/components/public/`.
+Ver `specs/05-public-menu.md`.
 
 ## Especificação (SDD)
-
-Consultar `specs/` antes de implementar fluxos novos ou alterar arquitetura:
 
 | Arquivo | Conteúdo |
 |---|---|
 | `01-overview.md` | Personas, fluxos, rotas |
 | `02-data-model.md` | Firestore e campos |
-| `03-auth.md` | Auth, claims, sessão |
-| `04-admin-panel.md` | Painel (parcialmente superseded por 07) |
-| `05-public-menu.md` | Cardápio público |
+| `03-auth.md` | Auth, convites, sessão |
+| `04-admin-panel.md` | Painel do restaurante |
+| `05-public-menu.md` | Landing pública |
 | `06-security-rules.md` | Regras Firestore/Storage |
-| `07-platform-evolution.md` | **Navegação e evolução atuais** |
+| `07-platform-evolution.md` | **Navegação e roadmap v1** |
+| `08-saas-foundation.md` | Super Admin e SaaS |
 
 ## Ao implementar mudanças
 
-1. Ler a spec relevante e o código existente no mesmo domínio (`features/`, `repositories/`, `schemas/`)
-2. Manter diff mínimo; seguir convenções já usadas no arquivo vizinho
-3. Preferir estender repositórios/schemas existentes em vez de duplicar acesso ao Firestore
-4. Testar fluxo admin e público quando tocar cardápio, auth ou regras de visibilidade
-5. Deploy de regras Firebase: `npx firebase deploy --only firestore:rules,storage`
+1. Ler spec relevante e código no mesmo domínio (`features/`, `repositories/`, `schemas/`)
+2. Diff mínimo; seguir convenções do arquivo vizinho
+3. Estender repositórios/schemas existentes
+4. Testar fluxo admin e público ao tocar cardápio, auth ou visibilidade
+5. Deploy regras: `npx firebase deploy --only firestore:rules,storage`

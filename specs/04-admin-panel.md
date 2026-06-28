@@ -1,183 +1,170 @@
 # Spec 04 — Painel Admin
 
+> **Estado:** v1 concluída. Navegação e rotas atuais estão em `07-platform-evolution.md`. Este documento descreve a implementação real do painel.
+
 ## Estrutura de Rotas
 
-Todas as rotas admin ficam no route group `(admin)` em `src/app/(admin)/`. O layout verifica a sessão server-side e redireciona para `/auth/login` se não autenticado.
+Todas as rotas admin ficam no route group `(admin)/` em `src/app/(admin)/`. O layout verifica sessão server-side, bloqueia tenants suspensos/cancelados e envolve `EntitlementsProvider`.
 
 ```
 src/app/
 ├── (admin)/
-│   ├── layout.tsx              # Shell autenticado com sidebar
-│   ├── dashboard/
-│   │   └── page.tsx            # Visão geral do tenant
-│   ├── catalog/
-│   │   ├── page.tsx            # Listagem de categorias e items
-│   │   ├── categories/
-│   │   │   ├── new/page.tsx    # Criar categoria
-│   │   │   └── [id]/
-│   │   │       └── edit/page.tsx  # Editar categoria
-│   │   └── items/
-│   │       ├── new/page.tsx    # Criar item (recebe categoryId via search param)
-│   │       └── [id]/
-│   │           └── edit/page.tsx  # Editar item
-│   └── settings/
-│       └── page.tsx            # Configurações do restaurante
+│   ├── layout.tsx              # Sessão, blocked redirect, AdminShell
+│   ├── dashboard/page.tsx      # Centro de comando
+│   ├── site/page.tsx           # Editor de presença digital
+│   ├── menu/
+│   │   ├── layout.tsx          # Tabs internas (Categorias / Produtos / Destaques)
+│   │   ├── page.tsx            # Redirect → /menu/products
+│   │   ├── categories/page.tsx
+│   │   ├── products/page.tsx
+│   │   └── highlights/page.tsx
+│   ├── catalog/page.tsx        # Redirect legado → /menu/products
+│   └── settings/page.tsx       # Slug e URL pública
 ├── auth/
-│   ├── login/page.tsx
-│   ├── signup/page.tsx
-│   └── forgot-password/page.tsx
-└── (public)/
-    └── [slug]/page.tsx
+│   ├── login/
+│   ├── signup/                 # Redirect → /auth/login
+│   ├── forgot-password/
+│   ├── invite/[token]/
+│   └── account-blocked/
+└── (public)/[slug]/page.tsx
 ```
 
 ## Layout Admin — `(admin)/layout.tsx`
 
 - Server Component
-- Chama `getSessionUser()` para verificar sessão
-- Se não autenticado: `redirect('/auth/login')`
-- Se tenant com status `suspended` ou `cancelled`: exibe banner de aviso
-- Renderiza shell com sidebar e header
+- `getSessionUser()` — redirect para `/auth/login` se ausente
+- Tenant `suspended` ou `cancelled` → redirect `/auth/account-blocked`
+- `EntitlementsProvider` — feature flags por plano/tenant
+- `AdminShell` (sidebar + header) em `src/layouts/`
+- Touch de `lastAccessAt` a cada 15 min
 
-**Sidebar links:**
-- Dashboard (`/dashboard`)
-- Cardápio (`/catalog`)
-- Configurações (`/settings`)
-- Link para ver cardápio público (`/{slug}`, `target="_blank"`)
-- Botão de logout
+**Sidebar (4 pilares):**
+
+| Item | Rota |
+|---|---|
+| Dashboard | `/dashboard` |
+| Presença Digital | `/site` |
+| Cardápio | `/menu/categories`, `/menu/products`, `/menu/highlights` |
+| Configurações | `/settings` |
+
+Itens condicionais por entitlements. Link externo para `/{slug}`.
 
 ## Dashboard — `/dashboard`
 
-### Dados exibidos
+Três blocos (`src/features/dashboard/`):
 
-- Nome e logo do restaurante
-- Status do tenant (badge colorido)
-- Link para o cardápio público com o slug
-- Contagem de categorias ativas
-- Contagem de items disponíveis
-- Atalhos para ações rápidas (adicionar categoria, adicionar item)
+1. **Continue configurando** — cards de onboarding com progresso
+2. **Resumo** — contagem de produtos, categorias, link público
+3. **Ações rápidas** — abrir site, QR Code, copiar link
 
-### Componentes
+## Presença Digital — `/site`
 
-- `TenantHeader` — nome, logo, status badge
-- `StatsGrid` — cards com contagens
-- `QuickActions` — botões de atalho
+Editor único com tabs internas (`src/features/presenca-digital/site-editor.tsx`):
 
-## Catálogo — `/catalog`
+| Tab | Conteúdo |
+|---|---|
+| Aparência | Logo, nome, cores, template |
+| Banner | Imagem, título, subtítulo, CTA |
+| Sobre | Título, descrição, imagem |
+| Diferenciais | Cards (ícone, título, descrição) |
+| Destaques | Seleção de produtos em destaque |
+| Galeria | Upload, ordem, legenda |
+| Contato | WhatsApp, telefone, redes, email, endereço |
+| Horários | Dias, aberto/fechado |
+| SEO | Title, description, OG, keywords |
+| QR Code | Geração e download |
 
-### Visualização
+Persistência: `tenant.repository` (`updateSiteConfig`) + `gallery.repository`.
 
-- Lista de categorias em ordem (`order ASC`)
-- Cada categoria é expansível mostrando seus items
-- Cada item exibe: nome, preço formatado, badge de disponibilidade, imagem thumbnail
+## Cardápio — `/menu/*`
 
-### Ações por Categoria
+Implementado em `src/features/cardapio/`:
 
-- Criar nova categoria (abre modal ou navega para `/catalog/categories/new`)
-- Editar nome e status (`active`)
-- Reordenar via drag-and-drop ou botões ↑↓
-- Excluir (com confirmação — só permite se sem items)
+### Categorias (`/menu/categories`)
 
-### Ações por Item
+- Lista com drag-and-drop para reordenar
+- Dialog de criar/editar (`category-dialogs.tsx`)
+- Campos: `name`, `active`, `availability` (horários opcionais)
+- Exclusão com confirmação
 
-- Criar novo item dentro de uma categoria
-- Editar todos os campos
-- Toggle de disponibilidade (`available`) in-line
-- Upload de imagem
-- Reordenar dentro da categoria
-- Excluir (com confirmação)
+### Produtos (`/menu/products`)
 
-### Formulário de Categoria
+- Lista agrupada por categoria, DnD dentro da categoria
+- Dialog de criar/editar (`product-dialogs.tsx`)
+- Formulário em `src/components/admin/menu-item-form.tsx`
+- Campos: nome, descrição, preço (R$ → centavos), imagem, `available`, `availability`
+- Configuração avançada: grupos de opções, modo pizza, editor avançado
 
-**Campos:**
-| Campo | Tipo | Validação |
-|---|---|---|
-| `name` | texto | obrigatório, min 2, max 50 caracteres |
-| `active` | checkbox | padrão `true` |
+### Destaques (`/menu/highlights`)
 
-### Formulário de Item
-
-**Campos:**
-| Campo | Tipo | Validação |
-|---|---|---|
-| `name` | texto | obrigatório, min 2, max 100 caracteres |
-| `description` | textarea | opcional, max 300 caracteres |
-| `price` | moeda (R$) | obrigatório, min 0; persistido em centavos no Firestore |
-| `imageUrl` | file upload | opcional, image/*, max 5 MB |
-| `available` | checkbox | padrão `true` |
+- Seleção e ordem de produtos em destaque (`highlights-settings.tsx`)
+- Persiste em `siteConfig.featured` / `highlightItemIds`
 
 ## Configurações — `/settings`
 
-### Seções
+Escopo mínimo (v1):
 
-1. **Informações do Restaurante**
-   - Nome (`name`)
-   - Descrição (`description`)
-   - Endereço (`address`)
-   - WhatsApp (`whatsapp`)
-   - Logo (upload)
+- Slug (read-only)
+- URL pública com botão copiar
+- Link para editar presença digital em `/site`
 
-2. **Link do Cardápio**
-   - Exibe o slug (read-only, imutável)
-   - Exibe a URL completa com botão de copiar
-   - QR Code para download
-
-3. **Conta**
-   - Email (read-only, vem do Firebase Auth)
-   - Botão de alterar senha (envia email de reset)
-   - Botão de excluir conta (perigoso, com confirmação)
-
-### Formulário de Informações
-
-**Campos:**
-| Campo | Tipo | Validação |
-|---|---|---|
-| `name` | texto | obrigatório, min 2, max 100 |
-| `description` | textarea | opcional, max 500 |
-| `address` | texto | opcional, max 200 |
-| `whatsapp` | texto | opcional, formato numérico |
-| `logo` | file | opcional, image/*, max 5 MB |
+Edição de nome, logo, WhatsApp, endereço etc. fica em `/site` (tabs Contato, Aparência, etc.).
 
 ## Auth Pages
 
 ### Login — `/auth/login`
 
-- Formulário com email e senha
-- Validação client-side com Zod + React Hook Form
-- Submit: `signInWithEmailAndPassword` → `POST /api/auth/session`
-- Link para `/auth/signup` e `/auth/forgot-password`
-- Redirect para `/dashboard` após sucesso (ou `?redirect=` param)
+- Email + senha → `signInWithEmailAndPassword` → `POST /api/auth/session`
+- Links para forgot-password; signup redireciona para login
+- Param `?redirect=` preservado
 
 ### Signup — `/auth/signup`
 
-- Campos: nome do usuário, email, senha, nome do restaurante
-- Validação client-side com Zod + React Hook Form
-- Submit: Server Action que cria user + tenant + claims + session
-- Redirect para `/dashboard` após sucesso
+Redirect permanente para `/auth/login`. Cadastro público desabilitado.
+
+### Convite — `/auth/invite/[token]`
+
+- Preview via `GET /api/invites/[token]`
+- Aceite via `POST /api/invites/[token]/accept`
+- Cria usuário ou associa sessão existente; seta claims e `ownerUid`
 
 ### Forgot Password — `/auth/forgot-password`
 
-- Campo de email
-- Submit: `sendPasswordResetEmail` (client SDK)
-- Feedback de sucesso/erro
+- `sendPasswordResetEmail` via client SDK
 
-## Componentes Compartilhados Admin
+### Conta bloqueada — `/auth/account-blocked`
+
+- Exibida quando tenant está `suspended` ou `cancelled`
+
+## Componentes
 
 ```
-src/components/
-├── admin/
-│   ├── sidebar.tsx
-│   ├── header.tsx
-│   ├── tenant-status-badge.tsx
-│   ├── category-card.tsx
-│   ├── menu-item-card.tsx
-│   ├── image-upload.tsx
-│   └── confirm-dialog.tsx
-└── ui/                         # shadcn/ui components
+src/features/
+├── cardapio/           # Painéis de categorias, produtos, destaques
+├── presenca-digital/   # Tabs do editor /site
+├── dashboard/          # Onboarding, resumo, ações rápidas
+└── auth/               # Invite accept client
+
+src/components/admin/
+├── menu-item-form.tsx
+├── category-form.tsx
+├── product-configuration-section.tsx
+├── advanced-configuration-editor.tsx
+├── pizza-mode-editor.tsx
+├── highlights-settings.tsx
+├── menu-qr-code.tsx
+├── image-upload.tsx
+└── availability-schedule-fields.tsx
+
+src/layouts/
+├── admin-shell.tsx
+└── admin-sidebar.tsx
 ```
 
 ## Estados e Feedback
 
-- Loading states com skeleton em listas
-- Toast notifications para ações (criado, atualizado, excluído, erro)
-- Formulários desabilitados durante submit (`isSubmitting`)
-- Confirmação modal para ações destrutivas (excluir)
+- Skeleton loading em listas e landing pública
+- Toast para ações CRUD
+- Formulários desabilitados durante submit
+- Confirmação modal para exclusões
+- Entitlements ocultam tabs/módulos indisponíveis no plano

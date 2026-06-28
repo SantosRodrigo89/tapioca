@@ -1,105 +1,75 @@
 # Spec 06 — Regras de Segurança
 
+> **Estado:** v1. Regras em `firestore.rules` e `storage.rules`. Dados públicos do cardápio são servidos **apenas via Admin SDK** no servidor — o client SDK do browser não lê tenants, categorias ou items.
+
 ## Firestore Rules
-
-### Estrutura Atual
-
-As regras em `firestore.rules` estão bem estruturadas para multi-tenant. A análise abaixo documenta as decisões de design e identifica gaps.
 
 ### Helpers
 
 ```javascript
-function isSignedIn() {
-  return request.auth != null;
-}
-
-function isSuperAdmin() {
-  return isSignedIn() && request.auth.token.role == 'super_admin';
-}
-
-function isTenantAdmin(tenantId) {
-  return isSignedIn() && request.auth.token.tenantId == tenantId;
-}
-
-function isOwnerOrSuperAdmin(tenantId) {
-  return isTenantAdmin(tenantId) || isSuperAdmin();
-}
+function isSignedIn() { return request.auth != null; }
+function isSuperAdmin() { return isSignedIn() && request.auth.token.role == 'super_admin'; }
+function isTenantAdmin(tenantId) { return isSignedIn() && request.auth.token.tenantId == tenantId; }
+function isOwnerOrSuperAdmin(tenantId) { return isTenantAdmin(tenantId) || isSuperAdmin(); }
+function isTenantActive(tenantId) { /* status trial|active|null */ }
+function canWriteTenantData(tenantId) { /* owner + tenant ativo, ou super_admin */ }
+function canUpdateTenantDoc(tenantId) { /* idem para update do doc tenant */ }
 ```
 
-**Dependência crítica:** `isTenantAdmin` depende do custom claim `tenantId` no token. Se o claim não for setado no momento do signup, o admin não conseguirá escrever dados. O fluxo de signup **deve** setar claims antes de redirecionar para o dashboard.
+**Dependência crítica:** `isTenantAdmin` exige custom claim `tenantId`. Claims são setadas no aceite de convite (`acceptInviteServer`) ou manualmente para super_admin.
 
 ### `slugIndex/{slug}`
 
 ```javascript
-allow read: if true;               // Cardápio público faz lookup por slug
-allow write: if isSuperAdmin();    // Apenas servidor/super admin cria slugs
+allow read: if false;           // lookup apenas via Admin SDK (SSR)
+allow write: if isSuperAdmin();
 ```
 
-**Risco:** Qualquer pessoa pode ler todos os slugs. Isso é intencional e necessário para o cardápio público. A escrita é restrita ao servidor.
-
-**Gap:** Atualmente `write` permite super_admin via client SDK. Para maior segurança, considerar permitir apenas via Admin SDK (sem rules de escrita para cliente) e usar regras de `deny all` para writes do client.
+Escrita na prática ocorre via Admin SDK na criação de tenant (Super Admin wizard).
 
 ### `tenants/{tenantId}`
 
 ```javascript
-allow read: if true;
-allow create: if isSignedIn() && request.auth.uid == request.resource.data.ownerUid;
-allow update: if isOwnerOrSuperAdmin(tenantId);
+allow read: if isOwnerOrSuperAdmin(tenantId);
+allow create: if false;         // tenants criados apenas via Admin SDK
+allow update: if canUpdateTenantDoc(tenantId)
+  && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+    'name', 'description', 'address', 'whatsapp', 'logoUrl', 'bannerUrl',
+    'theme', 'openingHours', 'highlightItemIds', 'siteConfig',
+    'updatedAt', 'lastAccessAt',
+  ]);
 allow delete: if isSuperAdmin();
 ```
 
-**Nota:** `create` valida que o `ownerUid` no documento é o UID do usuário criador. Isso evita que um usuário crie um tenant "em nome de outro".
+**Imutabilidade:** `slug`, `ownerUid`, `planId`, `status` e campos SaaS não estão no allowlist — tenant admin não pode alterá-los via client SDK. Super Admin usa Admin SDK nas APIs `/api/super/*`.
 
-**Gap identificado:** A regra `update` não impede que o admin mude o `slug` ou `ownerUid`. Adicionar validação:
-
-```javascript
-allow update: if isOwnerOrSuperAdmin(tenantId)
-  && request.resource.data.slug == resource.data.slug    // slug imutável
-  && request.resource.data.ownerUid == resource.data.ownerUid;  // ownerUid imutável
-```
-
-### `tenants/{tenantId}/categories/{categoryId}`
+### Subcollections (`categories`, `items`, `gallery`)
 
 ```javascript
-allow read: if true;
-allow write: if isOwnerOrSuperAdmin(tenantId);
+allow read: if isOwnerOrSuperAdmin(tenantId);
+allow write: if canWriteTenantData(tenantId);
 ```
 
-**Correto.** Leitura pública para o cardápio público.
+Leitura pública negada no client. Páginas públicas usam Admin SDK.
 
-### `tenants/{tenantId}/categories/{categoryId}/items/{itemId}`
+Tenants `suspended`/`cancelled` não podem escrever (exceto super_admin).
 
-```javascript
-allow read: if true;
-allow write: if isOwnerOrSuperAdmin(tenantId);
+### Coleções SaaS (super_admin only)
+
+```
+platform/{document=**}
+plans/{planId}
+features/{featureId}
+templates/{templateId}
+invites/{inviteId}
+auditLogs/{logId}
 ```
 
-**Correto.** Leitura pública para o cardápio público.
+Todas: `allow read, write: if isSuperAdmin();`
 
-### Validação de Campos (a adicionar)
-
-Considerar adicionar validação de campos nas rules para segurança extra:
-
-```javascript
-function isValidCategory() {
-  let data = request.resource.data;
-  return data.name is string && data.name.size() >= 2 && data.name.size() <= 50
-    && data.order is int
-    && data.active is bool;
-}
-
-function isValidMenuItem() {
-  let data = request.resource.data;
-  return data.name is string && data.name.size() >= 2 && data.name.size() <= 100
-    && data.price is int && data.price >= 0
-    && data.available is bool
-    && data.order is int;
-}
-```
+Operações reais também passam por Route Handlers com verificação de sessão super_admin.
 
 ## Storage Rules
-
-### Estrutura Atual
 
 ```javascript
 match /tenants/{tenantId}/{allPaths=**} {
@@ -109,45 +79,51 @@ match /tenants/{tenantId}/{allPaths=**} {
 }
 ```
 
-**Correto.** O path `/tenants/{tenantId}/` isola os arquivos de cada tenant.
+**`isValidImage()`:** `contentType` começa com `image/`, máx. 5 MB.
 
-**`isValidImage()`** valida:
-- `contentType` começa com `image/`
-- Tamanho máximo de 5 MB
+Paths usados:
 
-### Gaps Identificados
+```
+tenants/{tenantId}/logo.{ext}
+tenants/{tenantId}/banner.{ext}
+tenants/{tenantId}/items/{itemId}.{ext}
+tenants/{tenantId}/items/{itemId}/options/{optionId}.{ext}
+tenants/{tenantId}/gallery/{imageId}.{ext}
+```
 
-1. **Sem limite de path depth:** `{allPaths=**}` permite qualquer estrutura. Considerar paths mais específicos:
-   ```javascript
-   match /tenants/{tenantId}/logo.{ext} { ... }
-   match /tenants/{tenantId}/items/{filename} { ... }
-   ```
+## Proteção de Rotas (Next.js)
 
-2. **Extensões não validadas:** A rule valida `contentType` mas não a extensão do arquivo. Um cliente poderia enviar `image/svg+xml` (potencial XSS via SVG). Considerar restringir a `image/jpeg`, `image/png`, `image/webp`.
+`src/proxy.ts` (matcher configurado):
 
-## Checklist de Segurança
+- Cookie gate em `/dashboard`, `/site`, `/menu`, `/catalog`, `/settings`, `/super`
+- Rate limiting em `/api/auth/session`, `/api/tenants`, `/api/invites/*`
+- Verificação de assinatura do cookie ocorre nos Server Components e Route Handlers (Admin SDK)
 
-| Item | Status | Ação Necessária |
-|---|---|---|
-| Isolamento por tenantId | ✅ Implementado | — |
-| Leitura pública do cardápio | ✅ Implementado | — |
-| Custom claims para escrita | ✅ Nas rules | Garantir no fluxo de signup |
-| Slug imutável nas rules | ❌ Gap | Adicionar validação no update |
-| ownerUid imutável nas rules | ❌ Gap | Adicionar validação no update |
-| Validação de tipos de campo | ❌ Gap | Adicionar functions de validação |
-| Restrição de content-type de imagem | ⚠️ Parcial | Restringir SVG |
-| Deny all por padrão | ✅ (implícito no Firestore) | — |
+Layouts `(admin)/layout.tsx` e `super/layout.tsx` também validam sessão server-side.
+
+## Checklist de Segurança (v1)
+
+| Item | Status |
+|---|---|
+| Isolamento por tenantId | ✅ |
+| Dados públicos via Admin SDK only | ✅ |
+| Custom claims para escrita | ✅ |
+| Slug/owner/plan imutáveis no client update | ✅ (allowlist) |
+| Tenant create bloqueado no client | ✅ |
+| Writes bloqueados para tenant suspenso | ✅ |
+| Coleções SaaS restritas a super_admin | ✅ |
+| Rate limiting em auth/invite | ✅ |
+| Audit log em ações super | ✅ |
+| Validação de tipos de campo nas rules | ⚠️ Parcial |
+| Restrição de SVG no Storage | ⚠️ Parcial (`image/*`) |
 
 ## Indexes Firestore
 
-Os indexes em `firestore.indexes.json` suportam as queries do cardápio público:
+`firestore.indexes.json`:
 
 ```json
-// Query: WHERE active=true ORDER BY order (para categorias)
 { "collectionGroup": "categories", "fields": ["active ASC", "order ASC"] }
-
-// Query: WHERE available=true ORDER BY order (para items)
 { "collectionGroup": "items", "fields": ["available ASC", "order ASC"] }
 ```
 
-Esses indexes são suficientes para o cardápio público. Queries admin que filtram apenas por tenant não precisam de index composto (a collection já está aninhada por tenant).
+Queries admin filtram por tenant (subcollection); indexes compostos acima servem queries públicas no servidor.

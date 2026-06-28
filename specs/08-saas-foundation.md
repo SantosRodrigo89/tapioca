@@ -1,5 +1,7 @@
 # Spec 08 — SaaS Foundation (Tenant Management)
 
+> **Estado:** v1 concluída (jun/2026). Entregas 0–13 implementadas. Billing e analytics real ficam para Fase 2.
+
 ## Escopo
 
 Fundação SaaS do Mesio **sem cobrança**. Prepara planos, recursos (feature flags), templates, convites, auditoria e configurações globais para escala operacional (centenas/milhares de tenants).
@@ -52,23 +54,23 @@ Resolução: `resolveFeature()` em `src/lib/platform/features/resolve-feature.ts
 - Pedidos online, CRM, IA
 - Regras complexas de entitlements
 
-## Entregas
+## Entregas (v1)
 
-Ver roadmap no documento de arquitetura da Fase 2.
-
-- Entregas 0–2: tipos, seed, shell, dashboard
-- Entrega 3: listagem de restaurantes com busca, filtros por status, ordenação, paginação (20/página) e colunas completas
-- Entrega 4: wizard `/super/restaurants/new`, `POST /api/super/tenants`, criação de tenant + convite + audit log
-- Entrega 5: aceite em `/auth/invite/[token]`, `POST /api/invites/[token]/accept`, claims + `ownerUid`
-- Entrega 6: módulo `/super/invites` com reenviar, cancelar, copiar link e detalhes
-- Entrega 7: CRUD de planos em `/super/plans` (edição dos 4 planos fixos + audit `plan_changed`)
-- Entrega 8: módulo `/super/features` — toggles global, por plano e por restaurante + `resolveFeature()`
-- Entrega 9: CRUD de templates em `/super/templates` (edição + tema visual)
-- Entrega 10: métricas em `/super/metrics` com seções e `GET /api/super/metrics`
-- Entrega 11: logs em `/super/logs` com filtros, detalhes e hooks de auditoria (login, suspensão, reativação)
-- Entrega 12: configurações globais editáveis em `/super/settings`, `PATCH /api/super/settings` e audit `settings_changed`
-- Entrega 13: polish — signup com plano/template padrão, hook `lastAccessAt` no layout admin (15 min), proxy `/super` e regras Firestore para campos SaaS imutáveis no tenant admin
+| # | Entrega | Status |
+|---|---------|--------|
+| 0–2 | Tipos, seed, SuperShell, dashboard | ✅ |
+| 3 | Listagem paginada de restaurantes | ✅ |
+| 4 | Wizard de criação + `POST /api/super/tenants` | ✅ |
+| 5 | Aceite de convite em `/auth/invite/[token]` | ✅ |
+| 6 | Módulo de convites (reenviar, cancelar, copiar) | ✅ |
+| 7 | Edição de planos em `/super/plans` | ✅ |
+| 8 | Feature toggles (global, plano, tenant) | ✅ |
+| 9 | Templates visuais em `/super/templates` | ✅ |
+| 10 | Métricas em `/super/metrics` (views = placeholder) | ✅ |
+| 11 | Audit logs em `/super/logs` | ✅ |
+| 12 | Configurações globais em `/super/settings` | ✅ |
+| 13 | Polish: `lastAccessAt`, proxy `/super`, regras imutáveis | ✅ |
 
 Listagem: `listTenantsPaginatedServer()` + query params em `/super/restaurants`.
-Cadastro: `createTenantWithInviteServer()` — tenant com `ownerUid` vazio até aceite do convite.
-Aceite: `acceptInviteServer()` — cria usuário Firebase ou usa sessão existente.
+Cadastro: `createTenantWithInviteServer()` — `ownerUid` vazio até aceite.
+Aceite: `acceptInviteServer()` — cria usuário ou usa sessão existente.

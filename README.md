@@ -4,38 +4,46 @@ Plataforma multi-tenant de presença digital para restaurantes. Cada estabelecim
 
 **Slogan:** Sua presença digital começa aqui.
 
+**Estado:** v1 concluída (jun/2026).
+
 ## O que o produto faz
 
 | Persona | Acesso | Principais ações |
 |---|---|---|
-| **Admin do restaurante** | `/dashboard`, `/site`, `/menu/*`, `/settings` | Edita landing page, cardápio, aparência e dados do tenant |
+| **Admin do restaurante** | `/dashboard`, `/site`, `/menu/*`, `/settings` | Edita landing page, cardápio, aparência e link público |
 | **Cliente final** | `/{slug}` | Consulta o site e cardápio, pede pelo WhatsApp |
-| **Super Admin** | `/super` | Gerencia tenants, planos, convites, templates e status (`trial`, `active`, `suspended`, `cancelled`) |
+| **Super Admin** | `/super/*` | Cria restaurantes, convites, planos, features, templates e gerencia status |
+
+Onboarding de novos restaurantes é **somente por convite** (Super Admin). Cadastro público em `/auth/signup` está desabilitado.
 
 ## Funcionalidades
 
 ### Painel do restaurante
 
 - **Dashboard** (`/dashboard`) — onboarding com progresso, resumo (produtos, categorias, link público) e ações rápidas (abrir site, QR Code, copiar link)
-- **Presença Digital** (`/site`) — editor único da landing page com tabs: aparência, banner, sobre, diferenciais, destaques, galeria, contato, horários, SEO e QR Code
-- **Cardápio** (`/menu/*`) — CRUD de categorias e produtos, drag-and-drop para reordenar, upload de fotos, destaques e preços em R$ (armazenados em centavos)
-- **Horários por seção ou item** — ex.: pratos feitos 11:00–15:00; o item pode herdar o horário da categoria ou ter regra própria
-- **Configurações** (`/settings`) — conta, slug, dados básicos do tenant
+- **Presença Digital** (`/site`) — editor da landing page com tabs: aparência, banner, sobre, diferenciais, destaques, galeria, contato, horários, SEO e QR Code
+- **Cardápio** (`/menu/*`) — CRUD de categorias e produtos, drag-and-drop, upload de fotos, destaques, configuração avançada (tamanho, adicionais, modo pizza) e preços em R$ (centavos no Firestore)
+- **Horários por seção ou item** — item fora do horário fica visível, sem CTA de pedido
+- **Configurações** (`/settings`) — slug, URL pública e link para o editor em `/site`
 
 ### Landing page pública (`/{slug}`)
 
-- Página única com seções modulares (hero, sobre, diferenciais, destaques, cardápio, galeria, contato, mapa)
-- Layout mobile-first com tema por tenant (cores customizáveis)
-- Cardápio integrado com navegação por categorias, scroll spy e drawer de detalhe do produto
-- Pedido via WhatsApp; itens fora do horário permanecem visíveis, mas sem CTA de pedido
-- Produtos com grupos de configuração (tamanho, adicionais) e preço fixo ou "a partir de"
+- Seções modulares (hero, sobre, diferenciais, destaques, cardápio, galeria, contato, mapa)
+- Layout mobile-first com tema por tenant e templates
+- Cardápio com navegação por categorias, scroll spy e drawer de detalhe
+- Pedido via WhatsApp; produtos com preço fixo ou "a partir de"
+- Cache server-side com revalidação por tag
 
-### Plataforma
+### Super Admin
 
-- Autenticação Firebase com session cookie (`__session`)
-- Multi-tenant com custom claims (`tenantId`, `role`)
-- Super Admin com planos, feature flags, templates, convites e auditoria (sem cobrança integrada)
-- Regras de segurança Firestore e Storage
+- Dashboard, restaurantes, convites, planos, recursos (feature flags), templates, métricas, logs e configurações globais
+- Wizard de criação de restaurante + convite de admin
+- Auditoria de ações privilegiadas
+- Sem cobrança integrada (status manual)
+
+### Marketing
+
+- Site institucional do Mesio em `/`
 
 ## Stack
 
@@ -50,24 +58,35 @@ Plataforma multi-tenant de presença digital para restaurantes. Cada estabelecim
 
 | Rota | Quem acessa |
 |---|---|
+| `/` | Público — site de marketing Mesio |
 | `/{slug}` | Público — landing page do restaurante |
-| `/auth/login`, `/auth/signup`, `/auth/forgot-password` | Anônimo |
-| `/dashboard` | Admin do tenant |
-| `/site` | Admin do tenant — editor de presença digital |
-| `/menu/categories`, `/menu/products`, `/menu/highlights` | Admin do tenant — cardápio |
-| `/settings` | Admin do tenant |
+| `/auth/login`, `/auth/forgot-password` | Anônimo |
+| `/auth/signup` | Redirect → `/auth/login` |
+| `/auth/invite/[token]` | Convite de onboarding |
+| `/dashboard`, `/site`, `/menu/*`, `/settings` | Admin do tenant |
 | `/catalog` | Redirect legado → `/menu/products` |
-| `/super`, `/super/restaurants`, `/super/invites`, … | Super Admin |
-| `/api/auth/session` | API de sessão (login/logout) |
+| `/super/*` | Super Admin |
+| `/termos`, `/privacidade` | Público (stub) |
 
-> O slug do restaurante não pode colidir com rotas reservadas (`auth`, `dashboard`, `site`, `menu`, `catalog`, `settings`, `super`, `api`, etc.).
+> Slug não pode colidir com rotas reservadas (`auth`, `dashboard`, `site`, `menu`, etc.).
+
+## Limitações conhecidas (v1)
+
+| Item | Status |
+|---|---|
+| Cadastro público | Desabilitado |
+| Analytics / billing | Placeholder |
+| FAQ / depoimentos | Sem UI admin |
+| Badge de produto | Campo existe; sem formulário admin |
+| Exclusão de categoria | Não remove items aninhados |
+| Páginas legais | Conteúdo stub |
 
 ## Começando
 
 ### Pré-requisitos
 
 - Node.js 20+
-- Projeto Firebase com Auth, Firestore e Storage habilitados
+- Projeto Firebase com Auth, Firestore e Storage
 
 ### Instalação
 
@@ -78,7 +97,7 @@ npm install
 cp .env.example .env.local
 ```
 
-Preencha `.env.local` com as credenciais do Firebase (client + Admin SDK). Veja `.env.example` para a lista completa de variáveis.
+Preencha `.env.local` com credenciais Firebase (client + Admin SDK). Veja `.env.example`.
 
 ```bash
 npm run dev
@@ -94,14 +113,12 @@ Acesse [http://localhost:3000](http://localhost:3000).
 | `npm run build` | `export:brand` + build de produção |
 | `npm run start` | Serve o build |
 | `npm run lint` | ESLint |
-| `npm run export:brand` | Gera PNGs, favicon e app icon a partir dos SVGs |
+| `npm run export:brand` | Gera PNGs, favicon e app icon |
 | `npm run sync:logo` | Copia logo horizontal para `public/logo.png` |
 
 ### Identidade visual
 
-Documentação completa em [`src/assets/brand/BRAND-GUIDELINES.md`](src/assets/brand/BRAND-GUIDELINES.md).
-
-Vetores em `src/assets/brand/svg/`. Para regenerar todos os PNGs:
+[`src/assets/brand/BRAND-GUIDELINES.md`](src/assets/brand/BRAND-GUIDELINES.md). Vetores em `src/assets/brand/svg/`.
 
 ```bash
 npm run export:brand
@@ -111,50 +128,30 @@ npm run export:brand
 
 ```bash
 npx firebase emulators:start
-```
-
-Em outro terminal:
-
-```bash
 NEXT_PUBLIC_USE_FIREBASE_EMULATOR=true npm run dev
 ```
 
 ### Super Admin
 
-Usuários com custom claim `role: "super_admin"` acessam `/super` após o login. A claim é definida manualmente via Firebase Admin SDK ou console — não há tela de promoção no app.
+Claim `role: "super_admin"` definida manualmente via Admin SDK. Após login, acesso a `/super`. Seed inicial: `POST /api/super/seed`.
 
 ## Estrutura do projeto
 
 ```
 src/
 ├── app/
-│   ├── (admin)/          # Painel do restaurante (autenticado)
-│   ├── (public)/[slug]/  # Landing page pública (SSR)
-│   ├── super/            # Painel Super Admin
-│   ├── auth/             # Login, cadastro, recuperação de senha
-│   └── api/              # Rotas de API (sessão, tenants, super)
-├── features/             # UI por domínio (landing, cardápio, presença digital, dashboard, super)
-├── components/
-│   ├── admin/            # Formulários e painéis
-│   ├── brand/            # Logo Mesio
-│   ├── public/           # Componentes da página pública
-│   └── ui/               # shadcn/ui
-├── layouts/              # Shell do admin e super (sidebar, header)
-├── lib/
-│   ├── auth/             # Sessão, roles, redirect
-│   ├── brand.ts          # Constantes de marca
-│   ├── catalog/          # Parse/serialize de configuração de produtos
-│   ├── firebase/         # Client SDK + Admin SDK
-│   ├── platform/         # Planos, features, entitlements
-│   ├── pricing/          # Preço fixo vs "a partir de"
-│   ├── repositories/     # Firestore (client + server)
-│   ├── schemas/          # Validação Zod
-│   ├── storage/          # Upload de imagens
-│   └── utils/            # Preço, slug, horários, telefone
-├── services/             # Lógica de domínio (site, onboarding)
-├── assets/brand/         # Identidade visual (SVG fonte)
-└── types/
-specs/                    # Especificação do produto (SDD)
+│   ├── (admin)/          # Painel do restaurante
+│   ├── (public)/[slug]/  # Landing pública (SSR)
+│   ├── super/            # Super Admin
+│   ├── auth/             # Login, convite, recuperação
+│   └── api/              # Sessão, convites, super, revalidate
+├── features/             # UI por domínio (landing, cardápio, site, dashboard, super, marketing)
+├── components/           # admin/, public/, ui/, brand/
+├── layouts/              # AdminShell, SuperShell
+├── lib/                  # auth, firebase, repositories, schemas, platform, catalog, pricing
+├── services/             # site, onboarding, platform/*
+└── types/                # Core + platform/
+specs/                    # Especificação (SDD)
 firestore.rules
 storage.rules
 ```
@@ -163,42 +160,31 @@ storage.rules
 
 ```
 slugIndex/{slug}              → tenantId
-
 tenants/{tenantId}            → restaurante + siteConfig
-  categories/{categoryId}     → seção do cardápio (+ availability opcional)
-    items/{itemId}            → produto (+ availability opcional)
-  gallery/{imageId}           → fotos da galeria
-
-plans/{planId}                → planos SaaS
-features/{featureId}          → catálogo de recursos
-templates/{templateId}        → templates visuais
-invites/{inviteId}            → convites de admin
-auditLogs/{logId}             → auditoria
-platform/settings             → configurações globais
+  categories/{categoryId}/items/{itemId}
+  gallery/{imageId}
+plans, features, templates, invites, auditLogs
+platform/settings
 ```
 
-Detalhes completos em [`specs/02-data-model.md`](specs/02-data-model.md).
+Detalhes: [`specs/02-data-model.md`](specs/02-data-model.md).
 
 ## Especificação
 
-A documentação de produto e arquitetura (SDD) está em [`specs/`](specs/):
-
 | Arquivo | Conteúdo |
 |---|---|
-| `01-overview.md` | Visão geral, personas, fluxos |
+| `01-overview.md` | Visão geral, fluxos, rotas |
 | `02-data-model.md` | Firestore e campos |
-| `03-auth.md` | Autenticação e claims |
-| `04-admin-panel.md` | Painel do restaurante (parcialmente superseded) |
-| `05-public-menu.md` | Cardápio e landing pública |
+| `03-auth.md` | Auth, convites, sessão |
+| `04-admin-panel.md` | Painel do restaurante |
+| `05-public-menu.md` | Landing pública e cardápio |
 | `06-security-rules.md` | Regras Firestore/Storage |
-| `07-platform-evolution.md` | **Navegação e evolução atuais** |
-| `08-saas-foundation.md` | Planos, features, convites, auditoria |
+| `07-platform-evolution.md` | Navegação e roadmap v1 |
+| `08-saas-foundation.md` | Super Admin e SaaS |
 
 ## Deploy
 
-O build espera variáveis de ambiente do Firebase no ambiente de CI/CD ou hosting. `NEXT_PUBLIC_APP_URL` deve apontar para a URL pública (usada no QR Code e links do painel).
-
-Regras do Firebase:
+Variáveis Firebase no CI/CD. `NEXT_PUBLIC_APP_URL` para QR Code e links.
 
 ```bash
 npx firebase deploy --only firestore:rules,storage
