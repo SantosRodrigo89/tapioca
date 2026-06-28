@@ -12,11 +12,13 @@ import { MenuItemForm } from "@/components/admin/menu-item-form";
 import { ConfirmDialog } from "@/components/admin/confirm-dialog";
 import type { CreateMenuItemInput } from "@/lib/schemas";
 import type { CategoryWithItems } from "@/features/cardapio/types";
+import type { Complement } from "@/types";
 import type { ProductDialogState } from "@/features/cardapio/use-products-panel";
 
 interface ProductDialogsProps {
   dialog: ProductDialogState;
   categories: CategoryWithItems[];
+  complements: Complement[];
   pickCategoryId: string;
   onPickCategoryIdChange: (id: string) => void;
   onClose: () => void;
@@ -38,6 +40,7 @@ interface ProductDialogsProps {
 export function ProductDialogs({
   dialog,
   categories,
+  complements,
   pickCategoryId,
   onPickCategoryIdChange,
   onClose,
@@ -97,6 +100,7 @@ export function ProductDialogs({
               <DialogTitle>Novo produto</DialogTitle>
             </DialogHeader>
             <MenuItemForm
+              complements={complements}
               categoryAvailability={
                 categories.find((c) => c.id === dialog.categoryId)?.availability
               }
@@ -117,6 +121,7 @@ export function ProductDialogs({
               <DialogTitle>Editar produto</DialogTitle>
             </DialogHeader>
             <MenuItemForm
+              complements={complements}
               currentImageUrl={dialog.item.imageUrl}
               categoryAvailability={
                 categories.find((c) => c.id === dialog.categoryId)?.availability
@@ -128,6 +133,7 @@ export function ProductDialogs({
                 available: dialog.item.available,
                 availability: dialog.item.availability,
                 configurationGroups: dialog.item.configurationGroups,
+                complementIds: dialog.item.complementIds,
               }}
               onSubmit={(data, imageFile) =>
                 onUpdate(dialog.categoryId, dialog.item.id, data, imageFile)

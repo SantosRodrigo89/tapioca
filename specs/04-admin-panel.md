@@ -44,7 +44,7 @@ src/app/
 |---|---|
 | Dashboard | `/dashboard` |
 | Presença Digital | `/site` |
-| Cardápio | `/menu/categories`, `/menu/products`, `/menu/highlights` |
+| Cardápio | `/menu/categories`, `/menu/complements`, `/menu/products`, `/menu/highlights` |
 | Configurações | `/settings` |
 
 Itens condicionais por entitlements. Link externo para `/{slug}`.
@@ -87,13 +87,22 @@ Implementado em `src/features/cardapio/`:
 - Campos: `name`, `active`, `availability` (horários opcionais)
 - Exclusão com confirmação
 
+### Complementos (`/menu/complements`)
+
+- Catálogo global de adicionais reutilizáveis entre produtos
+- Lista com drag-and-drop para reordenar
+- Dialog de criar/editar (`complement-dialogs.tsx`)
+- Campos: `name`, `description`, `price`, `enabled`
+- Exclusão bloqueada se complemento estiver vinculado a produtos
+
 ### Produtos (`/menu/products`)
 
 - Lista agrupada por categoria, DnD dentro da categoria
 - Dialog de criar/editar (`product-dialogs.tsx`)
 - Formulário em `src/components/admin/menu-item-form.tsx`
 - Campos: nome, descrição, preço (R$ → centavos), imagem, `available`, `availability`
-- Configuração avançada: grupos de opções, modo pizza, editor avançado
+- Seção **Complementos**: modal com checkboxes para vincular itens do catálogo global (`complementIds`)
+- Configuração avançada: grupos de opções, modo pizza, editor avançado (sem complementos inline)
 
 ### Destaques (`/menu/highlights`)
 

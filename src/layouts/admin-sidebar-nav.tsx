@@ -9,6 +9,7 @@ import {
   Settings,
   ExternalLink,
   FolderOpen,
+  ListPlus,
   Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const menuLinks: {
   feature: FeatureId;
 }[] = [
   { href: "/menu/categories", label: "Categorias", icon: FolderOpen, feature: "categories" },
+  { href: "/menu/complements", label: "Complementos", icon: ListPlus, feature: "products" },
   { href: "/menu/products", label: "Produtos", icon: Package, feature: "products" },
 ];
 

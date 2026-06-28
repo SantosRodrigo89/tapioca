@@ -27,6 +27,7 @@ Sempre priorizar **simplicidade**. Evitar excesso de abstrações, múltiplas ro
 
 - `/menu` → redirect para `/menu/products`
 - `/menu/categories` — CRUD de categorias
+- `/menu/complements` — catálogo global de complementos
 - `/menu/products` — CRUD de produtos
 - `/menu/highlights` — produtos em destaque
 

@@ -84,6 +84,7 @@ storage.rules
 | `/dashboard` | Onboarding, resumo, atalhos |
 | `/site` | Editor de presença digital (10 tabs) |
 | `/menu/categories` | CRUD de categorias |
+| `/menu/complements` | Catálogo global de complementos |
 | `/menu/products` | CRUD de produtos |
 | `/menu/highlights` | Destaques do cardápio |
 | `/settings` | Slug, URL pública, link para `/site` |

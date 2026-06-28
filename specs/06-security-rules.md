@@ -43,7 +43,7 @@ allow delete: if isSuperAdmin();
 
 **Imutabilidade:** `slug`, `ownerUid`, `planId`, `status` e campos SaaS não estão no allowlist — tenant admin não pode alterá-los via client SDK. Super Admin usa Admin SDK nas APIs `/api/super/*`.
 
-### Subcollections (`categories`, `items`, `gallery`)
+### Subcollections (`categories`, `items`, `gallery`, `complements`)
 
 ```javascript
 allow read: if isOwnerOrSuperAdmin(tenantId);

@@ -7,13 +7,12 @@ import {
   requireFeature,
   requireTenantEntitlements,
 } from "@/lib/platform/require-entitlements.server";
-import { getTenantCatalogServer } from "@/lib/site/tenant-catalog.server";
 import { getComplementsByTenantServer } from "@/lib/repositories/server/complement.server";
-import { ProductsPanel } from "@/features/cardapio/products-panel";
+import { ComplementsPanel } from "@/features/cardapio/complements-panel";
 
-export const metadata: Metadata = { title: "Produtos" };
+export const metadata: Metadata = { title: "Complementos" };
 
-export default async function MenuProductsPage() {
+export default async function MenuComplementsPage() {
   const sessionUser = await getSessionUser();
   if (!sessionUser?.tenantId) redirect("/auth/login");
 
@@ -24,18 +23,11 @@ export default async function MenuProductsPage() {
   const entitlements = await requireTenantEntitlements(tenant);
   requireFeature(entitlements, "products");
 
-  const [categoriesWithItems, complements] = await Promise.all([
-    getTenantCatalogServer(tenantId),
-    getComplementsByTenantServer(tenantId),
-  ]);
+  const complements = await getComplementsByTenantServer(tenantId);
 
   return (
     <Suspense>
-      <ProductsPanel
-        tenantId={tenantId}
-        initialCategories={categoriesWithItems}
-        complements={complements}
-      />
+      <ComplementsPanel tenantId={tenantId} initialComplements={complements} />
     </Suspense>
   );
 }

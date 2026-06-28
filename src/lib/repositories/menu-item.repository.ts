@@ -34,6 +34,15 @@ function parseAvailability(
   return raw;
 }
 
+function parseComplementIds(
+  data: Record<string, unknown>,
+): string[] | undefined {
+  const raw = data.complementIds;
+  if (!Array.isArray(raw)) return undefined;
+  const ids = raw.filter((id): id is string => typeof id === "string" && id.length > 0);
+  return ids.length > 0 ? ids : undefined;
+}
+
 function docToMenuItem(id: string, data: Record<string, unknown>): MenuItem {
   return {
     id,
@@ -44,6 +53,7 @@ function docToMenuItem(id: string, data: Record<string, unknown>): MenuItem {
     available: data.available as boolean,
     availability: parseAvailability(data),
     configurationGroups: parseConfigurationGroups(data.configurationGroups),
+    complementIds: parseComplementIds(data),
     order: data.order as number,
     createdAt: timestampToDate(data.createdAt),
     updatedAt: timestampToDate(data.updatedAt),
@@ -91,6 +101,7 @@ export async function createMenuItem(
     available?: boolean;
     availability?: AvailabilitySchedule;
     configurationGroups?: ConfigurationGroup[];
+    complementIds?: string[];
     order?: number;
   },
 ): Promise<MenuItem> {
@@ -109,6 +120,10 @@ export async function createMenuItem(
     available: data.available ?? true,
     ...(data.availability?.enabled ? { availability: data.availability } : {}),
     configurationGroups: serializeConfigurationGroups(data.configurationGroups),
+    complementIds:
+      data.complementIds && data.complementIds.length > 0
+        ? data.complementIds
+        : null,
     order: nextOrder,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
@@ -125,6 +140,7 @@ export async function createMenuItem(
     available: data.available ?? true,
     availability: data.availability?.enabled ? data.availability : undefined,
     configurationGroups: data.configurationGroups,
+    complementIds: data.complementIds,
     order: nextOrder,
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -143,6 +159,7 @@ export async function updateMenuItem(
     available?: boolean;
     availability?: AvailabilitySchedule | null;
     configurationGroups?: ConfigurationGroup[] | null;
+    complementIds?: string[] | null;
     order?: number;
   },
 ): Promise<void> {
@@ -156,6 +173,13 @@ export async function updateMenuItem(
     payload.configurationGroups = serializeConfigurationGroups(
       data.configurationGroups,
     );
+  }
+
+  if (data.complementIds !== undefined) {
+    payload.complementIds =
+      data.complementIds && data.complementIds.length > 0
+        ? data.complementIds
+        : null;
   }
 
   if (data.availability === null) {

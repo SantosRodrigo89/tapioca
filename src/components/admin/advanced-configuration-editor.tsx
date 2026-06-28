@@ -35,12 +35,43 @@ const PRICING_STRATEGIES: {
 const GROUP_TYPES = [
   "Variação",
   "Sabores",
-  "Adicionais",
-  "Complementos",
   "Bebidas",
   "Molhos",
   "Bordas",
 ] as const;
+
+/** Preserved for existing products — not offered when creating new groups. */
+const LEGACY_GROUP_TYPES = ["Adicionais", "Complementos"] as const;
+
+function isPresetGroupType(type: string): type is (typeof GROUP_TYPES)[number] {
+  return (GROUP_TYPES as readonly string[]).includes(type);
+}
+
+function isLegacyGroupType(
+  type: string,
+): type is (typeof LEGACY_GROUP_TYPES)[number] {
+  return (LEGACY_GROUP_TYPES as readonly string[]).includes(type);
+}
+
+function getGroupTypeSelectValue(type: string): string {
+  const trimmed = type.trim();
+  return trimmed || "Variação";
+}
+
+function getGroupTypeSelectOptions(type: string): string[] {
+  const current = getGroupTypeSelectValue(type);
+
+  if (isPresetGroupType(current)) {
+    return [...GROUP_TYPES];
+  }
+
+  if (isLegacyGroupType(current)) {
+    return [current, ...GROUP_TYPES];
+  }
+
+  // Custom type from older data — preserve without overwriting on edit.
+  return [current, ...GROUP_TYPES];
+}
 
 interface AdvancedConfigurationEditorProps {
   value: ConfigurationGroupInput[];
@@ -240,7 +271,8 @@ export function AdvancedConfigurationEditor({
     <div className="space-y-3">
       <div className="flex items-center justify-between gap-2">
         <p className="text-xs text-muted-foreground">
-          Configuração avançada com grupos e estratégias de preço.
+          Configuração avançada com grupos e estratégias de preço. Para
+          adicionais simples, use a seção Complementos abaixo.
         </p>
         <Button
           type="button"
@@ -268,11 +300,9 @@ export function AdvancedConfigurationEditor({
             const usesVariantPricing =
               !group.definesBasePrice &&
               linkedSizeGroup?.definesBasePrice === true;
-            const groupTypeValue = GROUP_TYPES.includes(
-              group.type as (typeof GROUP_TYPES)[number],
-            )
-              ? group.type
-              : "Variação";
+            const groupTypeValue = getGroupTypeSelectValue(group.type);
+            const groupTypeOptions = getGroupTypeSelectOptions(group.type);
+            const isLegacyType = isLegacyGroupType(groupTypeValue);
 
             return (
               <div key={group.id} className="rounded-md border bg-muted/20">
@@ -318,12 +348,19 @@ export function AdvancedConfigurationEditor({
                           }
                           className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-xs transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         >
-                          {GROUP_TYPES.map((type) => (
+                          {groupTypeOptions.map((type) => (
                             <option key={type} value={type}>
                               {type}
+                              {isLegacyGroupType(type) ? " (legado)" : ""}
                             </option>
                           ))}
                         </select>
+                        {isLegacyType && (
+                          <p className="text-xs text-muted-foreground">
+                            Tipo legado preservado. Para novos adicionais, use a
+                            seção Complementos abaixo.
+                          </p>
+                        )}
                       </div>
                     </div>
 

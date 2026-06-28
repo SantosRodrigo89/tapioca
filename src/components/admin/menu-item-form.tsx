@@ -10,7 +10,8 @@ import {
 } from "@/lib/schemas";
 import { AvailabilityScheduleFields } from "@/components/admin/availability-schedule-fields";
 import { ProductConfigurationSection } from "@/components/admin/product-configuration-section";
-import type { AvailabilitySchedule } from "@/types";
+import { ProductComplementsSection } from "@/components/admin/product-complements-section";
+import type { AvailabilitySchedule, Complement } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,6 +23,7 @@ interface MenuItemFormProps {
   currentImageUrl?: string;
   defaultValues?: Partial<CreateMenuItemInput>;
   categoryAvailability?: AvailabilitySchedule;
+  complements: Complement[];
   onSubmit: (data: CreateMenuItemInput, imageFile: File | null) => Promise<void>;
   onCancel: () => void;
   submitLabel?: string;
@@ -31,6 +33,7 @@ export function MenuItemForm({
   currentImageUrl,
   defaultValues,
   categoryAvailability,
+  complements,
   onSubmit,
   onCancel,
   submitLabel = "Salvar",
@@ -42,6 +45,9 @@ export function MenuItemForm({
   const [configurationGroups, setConfigurationGroups] = useState<
     ConfigurationGroupInput[]
   >(defaultValues?.configurationGroups ?? []);
+  const [complementIds, setComplementIds] = useState<string[]>(
+    defaultValues?.complementIds ?? [],
+  );
   const [configError, setConfigError] = useState<string | null>(null);
 
   const hasBasePriceGroup = configurationGroups.some(
@@ -66,6 +72,7 @@ export function MenuItemForm({
           availability,
           configurationGroups:
             configurationGroups.length > 0 ? configurationGroups : undefined,
+          complementIds: complementIds.length > 0 ? complementIds : undefined,
         };
 
         const parsed = CreateMenuItemSchema.safeParse(payload);
@@ -159,6 +166,13 @@ export function MenuItemForm({
       {configError && (
         <p className="text-xs text-destructive">{configError}</p>
       )}
+
+      <ProductComplementsSection
+        complements={complements}
+        value={complementIds}
+        onChange={setComplementIds}
+        disabled={isSubmitting}
+      />
 
       <AvailabilityScheduleFields
         value={availability}

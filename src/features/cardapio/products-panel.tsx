@@ -10,15 +10,18 @@ import { useProductsPanel } from "@/features/cardapio/use-products-panel";
 import { ProductCategorySection } from "@/features/cardapio/product-category-section";
 import { ProductDialogs } from "@/features/cardapio/product-dialogs";
 import type { CategoryWithItems } from "@/features/cardapio/types";
+import type { Complement } from "@/types";
 
 interface ProductsPanelProps {
   tenantId: string;
   initialCategories: CategoryWithItems[];
+  complements: Complement[];
 }
 
 export function ProductsPanel({
   tenantId,
   initialCategories,
+  complements,
 }: ProductsPanelProps) {
   useMenuAuth();
   const sensors = useCatalogDndSensors();
@@ -111,6 +114,7 @@ export function ProductsPanel({
       <ProductDialogs
         dialog={dialog}
         categories={categories}
+        complements={complements}
         pickCategoryId={pickCategoryId}
         onPickCategoryIdChange={setPickCategoryId}
         onClose={() => setDialog({ type: "none" })}

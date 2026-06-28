@@ -97,6 +97,7 @@ export function useProductsPanel({
         configurationGroups: data.configurationGroups?.length
           ? data.configurationGroups
           : null,
+        complementIds: data.complementIds?.length ? data.complementIds : null,
         ...(imageUrl ? { imageUrl } : {}),
       });
 
@@ -114,6 +115,7 @@ export function useProductsPanel({
                           ? data.availability
                           : undefined,
                         configurationGroups: data.configurationGroups,
+                        complementIds: data.complementIds,
                         ...(imageUrl ? { imageUrl } : {}),
                       }
                     : i,

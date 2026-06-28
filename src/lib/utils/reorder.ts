@@ -5,6 +5,7 @@ export interface Orderable {
 
 export const CATEGORY_DND_PREFIX = "category::";
 export const ITEM_DND_PREFIX = "item::";
+export const COMPLEMENT_DND_PREFIX = "complement::";
 
 export function categoryDndId(categoryId: string): string {
   return `${CATEGORY_DND_PREFIX}${categoryId}`;
@@ -14,16 +15,28 @@ export function itemDndId(categoryId: string, itemId: string): string {
   return `${ITEM_DND_PREFIX}${categoryId}::${itemId}`;
 }
 
+export function complementDndId(complementId: string): string {
+  return `${COMPLEMENT_DND_PREFIX}${complementId}`;
+}
+
 export function parseDndId(
   dndId: string,
 ):
   | { type: "category"; categoryId: string }
   | { type: "item"; categoryId: string; itemId: string }
+  | { type: "complement"; complementId: string }
   | null {
   if (dndId.startsWith(CATEGORY_DND_PREFIX)) {
     return {
       type: "category",
       categoryId: dndId.slice(CATEGORY_DND_PREFIX.length),
+    };
+  }
+
+  if (dndId.startsWith(COMPLEMENT_DND_PREFIX)) {
+    return {
+      type: "complement",
+      complementId: dndId.slice(COMPLEMENT_DND_PREFIX.length),
     };
   }
 

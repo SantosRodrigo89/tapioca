@@ -86,6 +86,11 @@ service cloud.firestore {
         allow read: if isOwnerOrSuperAdmin(tenantId);
         allow write: if canWriteTenantData(tenantId);
       }
+
+      match /complements/{complementId} {
+        allow read: if isOwnerOrSuperAdmin(tenantId);
+        allow write: if canWriteTenantData(tenantId);
+      }
     }
 
     // ─── Platform (SaaS foundation) — super_admin only ───────────────────────

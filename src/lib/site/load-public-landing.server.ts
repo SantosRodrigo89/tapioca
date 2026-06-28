@@ -58,6 +58,7 @@ async function loadPublicLandingUncached(
     getTenantCatalogServer(tenant.id, {
       activeCategoriesOnly: true,
       availableItemsOnly: true,
+      resolveComplements: true,
     }),
     entitlements.gallery
       ? getGalleryByTenantServer(tenant.id)

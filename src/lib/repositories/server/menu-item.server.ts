@@ -1,7 +1,8 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { parseConfigurationGroups } from "@/lib/catalog/parse-configuration";
+import { resolveMenuItemsWithComplements } from "@/lib/catalog/resolve-complements";
 import { isMenuItemBadge } from "@/types/menu-item-badge";
-import type { MenuItem, AvailabilitySchedule } from "@/types";
+import type { Complement, MenuItem, AvailabilitySchedule } from "@/types";
 
 function parseAvailability(
   data: FirebaseFirestore.DocumentData,
@@ -9,6 +10,15 @@ function parseAvailability(
   const raw = data.availability as AvailabilitySchedule | undefined;
   if (!raw?.enabled) return undefined;
   return raw;
+}
+
+function parseComplementIds(
+  data: FirebaseFirestore.DocumentData,
+): string[] | undefined {
+  const raw = data.complementIds;
+  if (!Array.isArray(raw)) return undefined;
+  const ids = raw.filter((id): id is string => typeof id === "string" && id.length > 0);
+  return ids.length > 0 ? ids : undefined;
 }
 
 function docToMenuItem(
@@ -24,6 +34,7 @@ function docToMenuItem(
     available: data.available as boolean,
     availability: parseAvailability(data),
     configurationGroups: parseConfigurationGroups(data.configurationGroups),
+    complementIds: parseComplementIds(data),
     badge: isMenuItemBadge(data.badge) ? data.badge : undefined,
     order: data.order as number,
     createdAt: (data.createdAt as FirebaseFirestore.Timestamp).toDate(),
@@ -31,10 +42,20 @@ function docToMenuItem(
   };
 }
 
+export interface GetItemsOptions {
+  availableOnly?: boolean;
+  resolveComplements?: boolean;
+  complementsCatalog?: Complement[];
+}
+
 export async function getItemsByCategoryServer(
   tenantId: string,
   categoryId: string,
-  { availableOnly = false }: { availableOnly?: boolean } = {},
+  {
+    availableOnly = false,
+    resolveComplements = false,
+    complementsCatalog,
+  }: GetItemsOptions = {},
 ): Promise<MenuItem[]> {
   let query = adminDb
     .collection(`tenants/${tenantId}/categories/${categoryId}/items`)
@@ -45,22 +66,28 @@ export async function getItemsByCategoryServer(
   }
 
   const snap = await query.get();
-  return snap.docs.map((d) => docToMenuItem(d.id, d.data()));
+  const items = snap.docs.map((d) => docToMenuItem(d.id, d.data()));
+
+  if (!resolveComplements || !complementsCatalog) {
+    return items;
+  }
+
+  return resolveMenuItemsWithComplements(items, complementsCatalog, {
+    publicOnly: availableOnly,
+  });
 }
 
 /** Fetches items for multiple categories in parallel (one query per category). */
 export async function getItemsByCategoriesServer(
   tenantId: string,
   categoryIds: string[],
-  { availableOnly = false }: { availableOnly?: boolean } = {},
+  options: GetItemsOptions = {},
 ): Promise<Map<string, MenuItem[]>> {
   if (categoryIds.length === 0) return new Map();
 
   const entries = await Promise.all(
     categoryIds.map(async (categoryId) => {
-      const items = await getItemsByCategoryServer(tenantId, categoryId, {
-        availableOnly,
-      });
+      const items = await getItemsByCategoryServer(tenantId, categoryId, options);
       return [categoryId, items] as const;
     }),
   );

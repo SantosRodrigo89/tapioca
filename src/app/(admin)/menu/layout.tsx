@@ -7,6 +7,7 @@ import { useEntitlements } from "@/components/admin/entitlements-provider";
 
 const tabs = [
   { href: "/menu/categories", label: "Categorias" },
+  { href: "/menu/complements", label: "Complementos" },
   { href: "/menu/products", label: "Produtos" },
 ];
 
@@ -24,7 +25,7 @@ export default function MenuLayout({
       <div className="space-y-1">
         <h1 className="text-2xl font-bold tracking-tight">Cardápio</h1>
         <p className="text-sm text-muted-foreground">
-          Gerencie categorias e produtos do seu cardápio.
+          Gerencie categorias, complementos e produtos do seu cardápio.
         </p>
         {showHighlightsLink && (
           <p className="text-sm">

@@ -13,6 +13,7 @@ export const MenuItemSchema = z.object({
   imageUrl: z.string().url().optional(),
   available: z.boolean(),
   configurationGroups: ConfigurationGroupsSchema.optional(),
+  complementIds: z.array(z.string().min(1)).optional(),
   badge: MenuItemBadgeSchema.optional(),
   order: z.number().int().nonnegative(),
   createdAt: z.date(),
@@ -35,6 +36,7 @@ export const CreateMenuItemSchema = z.object({
   available: z.boolean(),
   availability: AvailabilityScheduleSchema.optional(),
   configurationGroups: ConfigurationGroupsSchema.optional(),
+  complementIds: z.array(z.string().min(1)).optional(),
   badge: MenuItemBadgeSchema.optional(),
 });
 
@@ -58,6 +60,7 @@ export const UpdateMenuItemSchema = z.object({
   order: z.number().int().nonnegative().optional(),
   imageUrl: z.string().url().optional().nullable(),
   configurationGroups: ConfigurationGroupsSchema.optional().nullable(),
+  complementIds: z.array(z.string().min(1)).optional().nullable(),
   badge: MenuItemBadgeSchema.optional().nullable(),
 });
 

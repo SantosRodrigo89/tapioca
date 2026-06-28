@@ -1,5 +1,6 @@
 import { getCategoriesByTenantServer } from "@/lib/repositories/server/category.server";
 import { getItemsByCategoriesServer } from "@/lib/repositories/server/menu-item.server";
+import { getComplementsByTenantServer } from "@/lib/repositories/server/complement.server";
 import type { CategoryWithItems } from "@/lib/site/landing-types";
 
 export interface TenantCatalogOptions {
@@ -7,6 +8,8 @@ export interface TenantCatalogOptions {
   activeCategoriesOnly?: boolean;
   /** When true, only items with available === true. */
   availableItemsOnly?: boolean;
+  /** When true, merges global complements into item configurationGroups. */
+  resolveComplements?: boolean;
 }
 
 /**
@@ -17,7 +20,7 @@ export async function getTenantCatalogServer(
   tenantId: string,
   options: TenantCatalogOptions = {},
 ): Promise<CategoryWithItems[]> {
-  const { activeCategoriesOnly = false, availableItemsOnly = false } = options;
+  const { activeCategoriesOnly = false, availableItemsOnly = false, resolveComplements = false } = options;
 
   const categories = await getCategoriesByTenantServer(tenantId, {
     activeOnly: activeCategoriesOnly,
@@ -25,10 +28,18 @@ export async function getTenantCatalogServer(
 
   if (categories.length === 0) return [];
 
+  const complementsCatalog = resolveComplements
+    ? await getComplementsByTenantServer(tenantId)
+    : undefined;
+
   const itemsByCategoryId = await getItemsByCategoriesServer(
     tenantId,
     categories.map((c) => c.id),
-    { availableOnly: availableItemsOnly },
+    {
+      availableOnly: availableItemsOnly,
+      resolveComplements,
+      complementsCatalog,
+    },
   );
 
   return categories.map((category) => ({

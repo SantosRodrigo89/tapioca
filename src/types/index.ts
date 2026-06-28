@@ -93,6 +93,19 @@ export interface Category {
   updatedAt: Date;
 }
 
+export interface Complement {
+  id: string;
+  name: string;
+  description?: string;
+  /** Price stored in cents */
+  price: number;
+  imageUrl?: string;
+  enabled: boolean;
+  order: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export interface MenuItem {
   id: string;
   name: string;
@@ -103,6 +116,8 @@ export interface MenuItem {
   available: boolean;
   availability?: AvailabilitySchedule;
   configurationGroups?: ConfigurationGroup[];
+  /** IDs from tenants/{tenantId}/complements — order defines display order */
+  complementIds?: string[];
   badge?: MenuItemBadge;
   order: number;
   createdAt: Date;

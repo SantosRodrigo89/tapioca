@@ -14,6 +14,8 @@ tenants/
       {categoryId}/         # categoria do cardápio
         items/
           {itemId}          # item do cardápio
+    complements/
+      {complementId}        # complemento global (adicionais)
     gallery/
       {imageId}             # imagem da galeria do site
 
@@ -103,6 +105,7 @@ Items individuais do cardápio.
 | `available` | `boolean` | ✅ | Se `false`, não aparece no cardápio público |
 | `order` | `number` | ✅ | Posição dentro da categoria (crescente) |
 | `configurationGroups` | `ConfigurationGroup[]` | ❌ | Grupos de configuração do produto (ver abaixo) |
+| `complementIds` | `string[]` | ❌ | IDs de complementos globais vinculados ao produto |
 | `availability` | `AvailabilitySchedule` | ❌ | Horários próprios (override da categoria) |
 | `badge` | `MenuItemBadge` | ❌ | Badge exibido no cardápio (ex: "Novo") — sem UI admin na v1 |
 | `createdAt` | `Timestamp` | ✅ | Data de criação |
@@ -156,6 +159,28 @@ Produtos podem ter zero ou mais grupos de configuração, embutidos no documento
 - Apenas um grupo por produto pode ter `definesBasePrice: true`
 - Grupos com `definesBasePrice` exigem `pricingStrategy: fixed` e seleção única
 - Pedidos futuros farão snapshot das opções selecionadas (sem referência viva ao catálogo)
+
+**Complementos globais:** adicionais simples (nome + preço) vivem em `tenants/{tenantId}/complements`. O produto referencia por `complementIds[]`; na leitura pública, o servidor resolve um grupo sintético `Complementos` com `pricingStrategy: additional`. Preço é sempre global — alterações no catálogo propagam para todos os produtos vinculados.
+
+## Subcollection: `tenants/{tenantId}/complements`
+
+Catálogo global de adicionais reutilizáveis entre produtos.
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---|---|---|---|
+| `id` | `string` | ✅ | Igual ao document ID |
+| `name` | `string` | ✅ | Nome do complemento |
+| `description` | `string` | ❌ | Descrição opcional |
+| `price` | `number` | ✅ | Preço em centavos |
+| `imageUrl` | `string` | ❌ | URL da imagem no Storage |
+| `enabled` | `boolean` | ✅ | Se `false`, oculto no cardápio público |
+| `order` | `number` | ✅ | Posição de exibição (crescente) |
+| `createdAt` | `Timestamp` | ✅ | Data de criação |
+| `updatedAt` | `Timestamp` | ✅ | Data da última atualização |
+
+**Regras:** leitura/escrita pelo tenant admin ou super admin (tenant ativo).
+
+**Índice:** `order ASC` (ou `enabled ASC, order ASC` para filtro de ativos)
 
 ## Subcollection: `tenants/{tenantId}/gallery`
 
@@ -216,7 +241,8 @@ Os tipos em `src/types/index.ts` mapeiam diretamente este modelo:
 
 - `Tenant` → `tenants/{id}` (inclui `siteConfig` opcional)
 - `Category` → `categories/{id}`
-- `MenuItem` → `items/{id}` (inclui `configurationGroups` opcional)
+- `MenuItem` → `items/{id}` (inclui `configurationGroups` e `complementIds` opcionais)
+- `Complement` → `complements/{id}`
 - `GalleryImage` → `gallery/{id}`
 - `SlugIndexEntry` → `slugIndex/{slug}`
 - `AuthUser` → usuário Firebase Auth com claims
