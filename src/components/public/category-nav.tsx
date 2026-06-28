@@ -36,12 +36,16 @@ export function CategoryNav({ categories }: CategoryNavProps) {
           const id = visible[0].target.id.replace("cat-", "");
           setActiveId(id);
 
-          const pill = navRef.current?.querySelector(`[data-cat="${id}"]`);
-          pill?.scrollIntoView({
-            behavior: "smooth",
-            block: "nearest",
-            inline: "center",
-          });
+          const track = navRef.current;
+          const pill = track?.querySelector<HTMLElement>(`[data-cat="${id}"]`);
+          if (track && pill) {
+            const targetLeft =
+              pill.offsetLeft - (track.clientWidth - pill.clientWidth) / 2;
+            track.scrollTo({
+              left: Math.max(0, targetLeft),
+              behavior: "smooth",
+            });
+          }
         }
       },
       { rootMargin: "-30% 0px -55% 0px", threshold: [0, 0.25, 0.5, 1] },

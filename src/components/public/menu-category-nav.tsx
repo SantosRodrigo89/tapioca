@@ -16,6 +16,18 @@ function categorySectionId(categoryId: string) {
   return `menu-cat-${categoryId}`;
 }
 
+function scrollActivePillIntoTrack(
+  track: HTMLElement,
+  button: HTMLElement,
+) {
+  const targetLeft =
+    button.offsetLeft - (track.clientWidth - button.clientWidth) / 2;
+  track.scrollTo({
+    left: Math.max(0, targetLeft),
+    behavior: "smooth",
+  });
+}
+
 export function MenuCategoryNav({ categories }: MenuCategoryNavProps) {
   const [activeId, setActiveId] = useState(
     categories[0] ? categorySectionId(categories[0].id) : "",
@@ -60,11 +72,7 @@ export function MenuCategoryNav({ categories }: MenuCategoryNavProps) {
     );
     if (!activeButton) return;
 
-    activeButton.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
-    });
+    scrollActivePillIntoTrack(track, activeButton);
   }, [activeId]);
 
   if (categories.length <= 1) return null;
