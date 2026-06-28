@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { ColorField } from "./color-field";
+import { ThemeColorPreview } from "./theme-color-preview";
 import { SectionHeadingFields } from "@/features/presenca-digital/section-heading-fields";
 import type { FontPreset, SiteConfig } from "@/types/site";
 import type { Tenant } from "@/types";
@@ -176,22 +177,15 @@ export function AppearanceTab({
           onChange={(v) => setTheme((t) => ({ ...t, primaryDarkColor: v }))}
         />
         <ColorField
-          label="Cor do texto"
+          label="Cor secundária"
+          hint="Textos do site e fundo do rodapé"
           value={theme.secondaryColor}
           disabled={isSubmitting}
           onChange={(v) => setTheme((t) => ({ ...t, secondaryColor: v }))}
         />
       </div>
 
-      <div
-        className="rounded-xl border p-4 text-sm"
-        style={{
-          backgroundColor: theme.primaryColor,
-          color: theme.secondaryColor,
-        }}
-      >
-        Pré-visualização das cores
-      </div>
+      <ThemeColorPreview theme={theme} />
 
       <div className="space-y-1">
         <Label htmlFor="typography">Tipografia</Label>

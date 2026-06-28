@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { stripUndefined } from "@/lib/firestore/sanitize";
 import type { TenantInvite } from "@/types/platform/invite";
 
 function docToInvite(
@@ -70,7 +71,7 @@ export async function createInviteServer(
 ): Promise<string> {
   const ref = adminDb.collection("invites").doc();
   await ref.set({
-    ...invite,
+    ...stripUndefined(invite),
     createdAt: FieldValue.serverTimestamp(),
     updatedAt: FieldValue.serverTimestamp(),
   });

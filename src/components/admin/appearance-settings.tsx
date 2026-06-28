@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ImageUpload } from "@/components/admin/image-upload";
 import { ColorField } from "@/features/presenca-digital/color-field";
+import { ThemeColorPreview } from "@/features/presenca-digital/theme-color-preview";
 import type { Tenant } from "@/types";
 
 interface AppearanceSettingsProps {
@@ -106,22 +107,18 @@ export function AppearanceSettings({ tenant }: AppearanceSettingsProps) {
           onChange={(v) => setTheme((t) => ({ ...t, primaryDarkColor: v }))}
         />
         <ColorField
-          label="Cor do texto"
+          label="Cor secundária"
+          hint="Textos do site e fundo do rodapé"
           value={theme.secondaryColor}
           disabled={isSubmitting}
           onChange={(v) => setTheme((t) => ({ ...t, secondaryColor: v }))}
         />
       </div>
 
-      <div
-        className="rounded-xl border p-4 text-sm"
-        style={{
-          backgroundColor: theme.primaryColor,
-          color: theme.secondaryColor,
-        }}
-      >
-        Pré-visualização das cores do cardápio
-      </div>
+      <ThemeColorPreview
+        theme={theme}
+        caption="Pré-visualização das cores do cardápio"
+      />
 
       <Button
         type="button"

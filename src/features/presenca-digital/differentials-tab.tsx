@@ -133,7 +133,7 @@ export function DifferentialsTab({
         onSubtitleChange={setSectionSubtitle}
       />
 
-      <div className="space-y-4">
+      <div className="space-y-4 border-t border-border/60 pt-6">
         {items.map((item, index) => (
           <div
             key={item.id}
@@ -196,28 +196,30 @@ export function DifferentialsTab({
             </div>
           </div>
         ))}
+
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          {items.length < MAX_ITEMS && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={isSubmitting}
+              onClick={addItem}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Adicionar diferencial
+            </Button>
+          )}
+
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isSubmitting || !hasChanges}
+          >
+            {isSubmitting ? "Salvando…" : "Salvar diferenciais"}
+          </Button>
+        </div>
       </div>
-
-      {items.length < MAX_ITEMS && (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled={isSubmitting}
-          onClick={addItem}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          Adicionar diferencial
-        </Button>
-      )}
-
-      <Button
-        type="button"
-        onClick={handleSave}
-        disabled={isSubmitting || !hasChanges}
-      >
-        {isSubmitting ? "Salvando…" : "Salvar diferenciais"}
-      </Button>
     </div>
   );
 }

@@ -34,7 +34,10 @@ export function MenuSection({ data, variant = "editorial" }: MenuSectionProps) {
           Nenhum item disponível no momento.
         </p>
       ) : (
-        <MenuCatalog categories={visibleCategories} />
+        <MenuCatalog
+          categories={visibleCategories}
+          catalogLayout={variant === "grid" ? "grid" : "editorial"}
+        />
       )}
     </section>
   );

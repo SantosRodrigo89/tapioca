@@ -161,6 +161,127 @@
   }
 }
 
+/* Hero compact — bar / ambientes noturnos */
+.public-menu [data-section="hero"][data-layout="compact"] {
+  background: var(--menu-secondary);
+}
+
+.public-menu .landing-hero-compact {
+  display: grid;
+  min-height: min(72svh, 640px);
+  padding-top: calc(var(--landing-nav-offset, 4rem) + 0.5rem);
+}
+
+@media (min-width: 1024px) {
+  .public-menu .landing-hero-compact {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    min-height: min(68svh, 560px);
+    max-height: 620px;
+  }
+}
+
+.public-menu .landing-hero-compact__media {
+  position: relative;
+  min-height: 220px;
+  overflow: hidden;
+}
+
+@media (min-width: 1024px) {
+  .public-menu .landing-hero-compact__media {
+    min-height: 100%;
+  }
+}
+
+.public-menu .landing-hero-compact__media-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--menu-secondary) 55%, transparent) 0%,
+    transparent 55%
+  );
+}
+
+@media (min-width: 1024px) {
+  .public-menu .landing-hero-compact__media-overlay {
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      color-mix(in srgb, var(--menu-secondary) 25%, transparent) 100%
+    );
+  }
+}
+
+.public-menu .landing-hero-compact__panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1.25rem;
+  padding: 1.5rem 1.25rem 2rem;
+}
+
+@media (min-width: 640px) {
+  .public-menu .landing-hero-compact__panel {
+    padding: 2rem 1.5rem 2.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .public-menu .landing-hero-compact__panel {
+    padding: 2.5rem 3rem 2.5rem 2rem;
+  }
+}
+
+.public-menu .landing-hero-compact__title {
+  font-size: clamp(1.875rem, 4vw, 2.75rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  color: var(--menu-text);
+}
+
+.public-menu .landing-hero-compact__subtitle {
+  font-size: 1rem;
+  line-height: 1.6;
+  color: var(--menu-text-muted);
+  max-width: 36rem;
+}
+
+@media (min-width: 640px) {
+  .public-menu .landing-hero-compact__subtitle {
+    font-size: 1.0625rem;
+  }
+}
+
+/* Cardápio grid-first — pizzaria / açaí */
+.public-menu .menu-catalog--grid-first .menu-display-toggle {
+  justify-content: center;
+}
+
+.public-menu .menu-catalog--grid-first .menu-items-grid {
+  gap: 0.75rem;
+}
+
+@media (min-width: 640px) {
+  .public-menu .menu-catalog--grid-first .menu-items-grid {
+    gap: 1.25rem;
+  }
+}
+
+.public-menu .menu-catalog--grid-first .menu-items-grid .menu-card {
+  border-radius: 1rem;
+}
+
+.public-menu .menu-catalog--grid-first .menu-category-header {
+  text-align: center;
+}
+
+@media (min-width: 640px) {
+  .public-menu .menu-catalog--grid-first .menu-category-header {
+    text-align: left;
+  }
+}
+
 /* ─── Badges ─────────────────────────────────────────────────────────────── */
 
 .public-menu .landing-badge {

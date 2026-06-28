@@ -8,6 +8,7 @@ interface ColorFieldProps {
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
+  hint?: string;
 }
 
 export function ColorField({
@@ -15,10 +16,14 @@ export function ColorField({
   value,
   onChange,
   disabled,
+  hint,
 }: ColorFieldProps) {
   return (
     <div className="space-y-1">
       <Label>{label}</Label>
+      <p className="min-h-5 text-xs leading-snug text-muted-foreground">
+        {hint ?? "\u00a0"}
+      </p>
       <div className="flex items-center gap-3">
         <input
           type="color"

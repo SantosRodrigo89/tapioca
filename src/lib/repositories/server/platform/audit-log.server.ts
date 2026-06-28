@@ -1,5 +1,6 @@
 import { adminDb } from "@/lib/firebase/admin";
 import { FieldValue } from "firebase-admin/firestore";
+import { stripUndefined } from "@/lib/firestore/sanitize";
 import type { AuditLog, AuditEventType } from "@/types/platform/audit-log";
 
 function docToAuditLog(
@@ -32,7 +33,7 @@ export async function createAuditLogServer(
 ): Promise<string> {
   const ref = adminDb.collection("auditLogs").doc();
   await ref.set({
-    ...event,
+    ...stripUndefined(event),
     createdAt: FieldValue.serverTimestamp(),
   });
   return ref.id;

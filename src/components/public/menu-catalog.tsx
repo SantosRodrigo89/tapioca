@@ -20,19 +20,29 @@ export type MenuDisplayMode = "list" | "grid";
 interface MenuCatalogProps {
   categories: CategoryWithItems[];
   defaultDisplay?: MenuDisplayMode;
+  /** Template layout: editorial (lista) ou grid (fotos em destaque). */
+  catalogLayout?: "editorial" | "grid";
 }
 
 export function MenuCatalog({
   categories,
-  defaultDisplay = "list",
+  defaultDisplay,
+  catalogLayout = "editorial",
 }: MenuCatalogProps) {
-  const [display, setDisplay] = useState<MenuDisplayMode>(defaultDisplay);
+  const initialDisplay =
+    defaultDisplay ?? (catalogLayout === "grid" ? "grid" : "list");
+  const [display, setDisplay] = useState<MenuDisplayMode>(initialDisplay);
   const hasPhotoItems = categories.some((cat) =>
     cat.items.some((item) => item.imageUrl),
   );
 
   return (
-    <div className="menu-catalog">
+    <div
+      className={cn(
+        "menu-catalog",
+        catalogLayout === "grid" && "menu-catalog--grid-first",
+      )}
+    >
       <MenuCategoryNav categories={categories} />
 
       <div className="menu-catalog-body">
@@ -91,7 +101,7 @@ export function MenuCatalog({
                 ))}
               </ul>
             ) : (
-              <div className="menu-items-grid grid gap-4 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+              <div className="menu-items-grid grid gap-3 grid-cols-2 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
                 {category.items.map((item) => (
                   <MenuItemCard
                     key={item.id}
