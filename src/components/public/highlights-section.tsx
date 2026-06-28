@@ -1,5 +1,6 @@
-import { ScrollReveal } from "@/components/public/scroll-reveal";
+import { LandingHeading } from "@/components/public/landing";
 import { HighlightsCarousel } from "@/components/public/highlights-carousel";
+import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { Category, MenuItem } from "@/types";
 
 export interface HighlightEntry {
@@ -15,17 +16,22 @@ export function HighlightsSection({ entries }: HighlightsSectionProps) {
   if (entries.length === 0) return null;
 
   return (
-    <div className="space-y-8">
+    <section
+      id="destaques"
+      aria-labelledby="highlights-heading"
+      className="landing-section"
+    >
       <ScrollReveal>
-        <div className="space-y-2">
-          <h2 className="landing-heading">Destaques da Casa</h2>
-          <p className="landing-subheading">
-            Os favoritos dos nossos clientes
-          </p>
-        </div>
+        <LandingHeading
+          title="Destaques da Casa"
+          titleId="highlights-heading"
+          subtitle="Os favoritos dos nossos clientes"
+        />
       </ScrollReveal>
 
-      <HighlightsCarousel entries={entries} />
-    </div>
+      <div className="mt-8 sm:mt-10">
+        <HighlightsCarousel entries={entries} />
+      </div>
+    </section>
   );
 }

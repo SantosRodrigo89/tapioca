@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { MenuItemCard } from "@/components/public/menu-item-card";
+import { HighlightCard } from "@/components/public/highlight-card";
 import type { HighlightEntry } from "@/components/public/highlights-section";
 
 interface HighlightsCarouselProps {
@@ -88,15 +88,14 @@ export function HighlightsCarousel({ entries }: HighlightsCarouselProps) {
 
       <div
         ref={trackRef}
-        className="highlights-track scrollbar-hide -mx-4 overflow-x-auto px-4 pb-2 sm:-mx-6 sm:px-6"
+        className="highlights-track scrollbar-hide overflow-x-auto pb-2"
       >
-        <div className="flex w-max gap-4 sm:gap-5">
-          {entries.map(({ item, category }) => (
-            <MenuItemCard
-              key={item.id}
-              item={item}
-              category={category}
-              variant="featured"
+        <div className="highlights-track__row flex w-max gap-4 sm:gap-5">
+          {entries.map((entry, index) => (
+            <HighlightCard
+              key={entry.item.id}
+              entry={entry}
+              variant={index === 0 ? "hero" : "standard"}
             />
           ))}
         </div>

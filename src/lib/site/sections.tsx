@@ -12,6 +12,7 @@ import {
 } from "@/lib/platform/entitlements";
 import type { SiteSectionId } from "@/types/site";
 import type { LandingPageData } from "./landing-types";
+import { bandVariantToClass, resolveBandVariant } from "./section-bands";
 
 export const HERO_SECTIONS = ["hero"] as const satisfies readonly SiteSectionId[];
 
@@ -155,13 +156,10 @@ function wrapInBand(
 ) {
   if (!BANDED_SECTIONS.has(sectionId)) return content;
 
-  const variant =
-    bandIndex % 2 === 0
-      ? "landing-section-band--white"
-      : "landing-section-band--surface";
+  const variant = resolveBandVariant(sectionId, bandIndex);
 
   return (
-    <div className={`landing-section-band ${variant}`}>
+    <div className={`landing-section-band ${bandVariantToClass(variant)}`}>
       <div className="landing-container">{content}</div>
     </div>
   );

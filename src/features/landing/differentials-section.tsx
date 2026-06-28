@@ -1,8 +1,57 @@
+import {
+  Award,
+  ChefHat,
+  Clock3,
+  Flame,
+  Heart,
+  Leaf,
+  MapPin,
+  Sparkles,
+  Star,
+  Truck,
+  Users,
+  UtensilsCrossed,
+  type LucideIcon,
+} from "lucide-react";
+import { LandingHeading } from "@/components/public/landing";
 import { ScrollReveal } from "@/components/public/scroll-reveal";
 import type { LandingPageData } from "@/lib/site/landing-types";
 
 interface DifferentialsSectionProps {
   data: LandingPageData;
+}
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  star: Star,
+  heart: Heart,
+  flame: Flame,
+  leaf: Leaf,
+  clock: Clock3,
+  truck: Truck,
+  users: Users,
+  award: Award,
+  chef: ChefHat,
+  utensils: UtensilsCrossed,
+  map: MapPin,
+  sparkles: Sparkles,
+};
+
+function DifferentialIcon({ icon }: { icon?: string }) {
+  if (!icon) {
+    return <Sparkles className="h-6 w-6" aria-hidden />;
+  }
+
+  const key = icon.trim().toLowerCase();
+  const Lucide = ICON_MAP[key];
+  if (Lucide) {
+    return <Lucide className="h-6 w-6" aria-hidden />;
+  }
+
+  return (
+    <span className="text-2xl leading-none" role="img" aria-hidden>
+      {icon}
+    </span>
+  );
 }
 
 export function DifferentialsSection({ data }: DifferentialsSectionProps) {
@@ -16,35 +65,33 @@ export function DifferentialsSection({ data }: DifferentialsSectionProps) {
       className="landing-section"
     >
       <ScrollReveal>
-        <h2
-          id="differentials-heading"
-          className="landing-heading mb-10 text-center sm:mb-12"
-        >
-          Por que escolher a gente
-        </h2>
+        <LandingHeading
+          align="center"
+          title="Por que escolher a gente"
+          titleId="differentials-heading"
+          subtitle="O que torna nossa experiência especial"
+        />
       </ScrollReveal>
 
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3 lg:gap-8">
+      <div className="differentials-grid mt-10 sm:mt-12">
         {differentials.map((diff, index) => (
           <ScrollReveal
             key={diff.id}
             delay={index * 80}
             as="article"
-            className="menu-card flex h-full min-h-[220px] flex-col items-center gap-4 p-6 text-center sm:items-start sm:p-8 sm:text-left"
+            className="differential-card"
           >
-            {diff.icon && (
-              <span className="text-4xl leading-none" role="img" aria-hidden>
-                {diff.icon}
-              </span>
-            )}
-            <h3 className="text-lg font-semibold text-[var(--menu-secondary)] sm:text-xl">
-              {diff.title}
-            </h3>
-            {diff.description && (
-              <p className="flex-1 text-sm leading-relaxed text-[#666] sm:text-base">
-                {diff.description}
-              </p>
-            )}
+            <div className="differential-card__icon">
+              <DifferentialIcon icon={diff.icon} />
+            </div>
+            <div className="differential-card__content">
+              <h3 className="differential-card__title">{diff.title}</h3>
+              {diff.description && (
+                <p className="differential-card__description">
+                  {diff.description}
+                </p>
+              )}
+            </div>
           </ScrollReveal>
         ))}
       </div>
