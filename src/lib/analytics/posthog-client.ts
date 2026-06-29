@@ -4,41 +4,37 @@ import {
   type AnalyticsEventProperties,
   type WhatsAppClickSource,
 } from "@/lib/analytics/events";
-import { getPostHogClientConfig } from "@/lib/analytics/posthog-config";
 
-let initialized = false;
+// PostHog is initialized in instrumentation-client.ts (Next.js 15.3+)
 
-function ensurePostHog(): typeof posthog | null {
-  const config = getPostHogClientConfig();
-  if (!config) return null;
+export function identifyUser(
+  uid: string,
+  properties?: {
+    email?: string | null;
+    role?: string;
+    tenantId?: string;
+  },
+): void {
+  posthog.identify(uid, {
+    ...(properties?.email ? { email: properties.email } : {}),
+    ...(properties?.role ? { role: properties.role } : {}),
+    ...(properties?.tenantId ? { tenant_id: properties.tenantId } : {}),
+  });
+}
 
-  if (!initialized && typeof window !== "undefined") {
-    posthog.init(config.apiKey, {
-      api_host: config.apiHost,
-      capture_pageview: false,
-      capture_pageleave: false,
-      persistence: "localStorage+cookie",
-      autocapture: false,
-    });
-    initialized = true;
-  }
-
-  return posthog;
+export function resetUser(): void {
+  posthog.reset();
 }
 
 export function identifyTenantGroup(tenantId: string): void {
-  const client = ensurePostHog();
-  if (!client) return;
-  client.group("tenant", tenantId);
+  posthog.group("tenant", tenantId);
 }
 
 export function captureAnalyticsEvent(
   event: string,
   properties: AnalyticsEventProperties,
 ): void {
-  const client = ensurePostHog();
-  if (!client) return;
-  client.capture(event, properties);
+  posthog.capture(event, properties);
 }
 
 export function capturePageView(tenantId: string, slug: string): void {

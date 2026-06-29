@@ -3,6 +3,9 @@ export const ANALYTICS_EVENTS = {
   QR_VISIT: "qr_visit",
   PRODUCT_OPEN: "product_open",
   WHATSAPP_CLICK: "whatsapp_click",
+  USER_LOGGED_IN: "user_logged_in",
+  INVITE_ACCEPTED: "invite_accepted",
+  USER_LOGGED_OUT: "user_logged_out",
 } as const;
 
 export type AnalyticsEventName =
@@ -17,8 +20,8 @@ export type WhatsAppClickSource =
   | "other";
 
 export interface AnalyticsEventProperties {
-  tenant_id: string;
-  slug: string;
+  tenant_id?: string;
+  slug?: string;
   referrer?: string;
   visit_source?: string;
   utm_source?: string;
@@ -27,6 +30,8 @@ export interface AnalyticsEventProperties {
   product_id?: string;
   category_id?: string;
   source?: WhatsAppClickSource;
+  role?: string;
+  email?: string;
 }
 
 export interface TenantAnalyticsSummary {

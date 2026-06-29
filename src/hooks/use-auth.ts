@@ -11,6 +11,9 @@ import {
   type User,
 } from "firebase/auth";
 import { getClientAuth } from "@/lib/firebase/client";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { resetUser } from "@/lib/analytics/posthog-client";
+import posthog from "posthog-js";
 import type { AuthUser } from "@/types";
 
 async function getClaimsFromToken(user: User): Promise<{
@@ -103,6 +106,8 @@ export function useAuth(): UseAuthReturn {
   };
 
   const signOut = async (): Promise<void> => {
+    posthog.capture(ANALYTICS_EVENTS.USER_LOGGED_OUT);
+    resetUser();
     await fetch("/api/auth/session", { method: "DELETE" });
     await firebaseSignOut(getClientAuth());
   };

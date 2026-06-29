@@ -6,8 +6,11 @@ import Link from "next/link";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAuth } from "@/hooks/use-auth";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { identifyUser } from "@/lib/analytics/posthog-client";
 import { getPostLoginPath } from "@/lib/auth/redirect";
 import { LoginSchema, type LoginInput } from "@/lib/schemas/auth.schema";
+import posthog from "posthog-js";
 
 export function LoginForm() {
   const router = useRouter();
@@ -28,6 +31,15 @@ export function LoginForm() {
     setServerError(null);
     try {
       const authUser = await signIn(data.email, data.password);
+      identifyUser(authUser.uid, {
+        email: authUser.email,
+        role: authUser.role,
+        tenantId: authUser.tenantId,
+      });
+      posthog.capture(ANALYTICS_EVENTS.USER_LOGGED_IN, {
+        role: authUser.role,
+        ...(authUser.tenantId ? { tenant_id: authUser.tenantId } : {}),
+      });
       router.push(getPostLoginPath(authUser.role, redirect));
     } catch (err) {
       const message = err instanceof Error ? err.message : "Erro ao fazer login";

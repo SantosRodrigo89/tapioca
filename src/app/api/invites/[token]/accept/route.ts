@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureServerEvent } from "@/lib/analytics/posthog-node-capture";
 import { getSessionUser } from "@/lib/auth/session";
 import { AcceptInviteSchema } from "@/lib/schemas/platform/accept-invite.schema";
 import {
@@ -17,6 +19,9 @@ export async function POST(
 
     if (sessionUser) {
       const result = await acceptInviteServer(token, { sessionUser });
+      void captureServerEvent(result.uid, ANALYTICS_EVENTS.INVITE_ACCEPTED, {
+        tenant_id: result.tenantId,
+      });
       return NextResponse.json({ ok: true, ...result });
     }
 
@@ -38,6 +43,9 @@ export async function POST(
 
     const result = await acceptInviteServer(token, {
       password: parsed.data.password,
+    });
+    void captureServerEvent(result.uid, ANALYTICS_EVENTS.INVITE_ACCEPTED, {
+      tenant_id: result.tenantId,
     });
 
     return NextResponse.json({ ok: true, ...result });

@@ -6,6 +6,8 @@ import {
   clearSessionCookie,
   getSessionUser,
 } from "@/lib/auth/session";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { captureServerEvent } from "@/lib/analytics/posthog-node-capture";
 import { logAuditEvent } from "@/services/platform/audit.service";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
 
@@ -50,6 +52,11 @@ export async function POST(request: NextRequest) {
       tenantId,
       tenantName,
       metadata: { role },
+    });
+
+    void captureServerEvent(decoded.uid, ANALYTICS_EVENTS.USER_LOGGED_IN, {
+      role,
+      ...(tenantId ? { tenant_id: tenantId } : {}),
     });
 
     return NextResponse.json({ status: "ok" });

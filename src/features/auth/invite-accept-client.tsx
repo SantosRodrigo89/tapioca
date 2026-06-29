@@ -10,7 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/use-auth";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import { identifyUser } from "@/lib/analytics/posthog-client";
 import { getClientAuth } from "@/lib/firebase/client";
+import posthog from "posthog-js";
 import {
   AcceptInviteFormSchema,
   type AcceptInviteFormInput,
@@ -59,6 +62,11 @@ export function InviteAcceptClient({ token, preview }: InviteAcceptClientProps) 
         });
       }
 
+      if (user) {
+        identifyUser(user.uid, { email: user.email, role: user.role, tenantId: user.tenantId });
+      }
+      posthog.capture(ANALYTICS_EVENTS.INVITE_ACCEPTED);
+
       router.push("/dashboard");
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Erro ao aceitar convite");
@@ -83,7 +91,9 @@ export function InviteAcceptClient({ token, preview }: InviteAcceptClientProps) 
         throw new Error(body.error ?? "Falha ao aceitar convite");
       }
 
-      await signIn(preview.email, data.password!);
+      const authUser = await signIn(preview.email, data.password!);
+      identifyUser(authUser.uid, { email: authUser.email, role: authUser.role, tenantId: authUser.tenantId });
+      posthog.capture(ANALYTICS_EVENTS.INVITE_ACCEPTED);
       router.push("/dashboard");
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Erro ao aceitar convite");
