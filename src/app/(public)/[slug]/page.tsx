@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { PublicAnalyticsProvider } from "@/components/public/public-analytics-provider";
 import { PublicTheme } from "@/components/public/public-theme";
 import { ProductDetailProvider } from "@/components/public/product-detail-context";
 import { UnavailablePage } from "@/components/public/unavailable-page";
@@ -82,16 +83,23 @@ export default async function PublicLandingPage({ params }: PageProps) {
   }
 
   const { pageData, entitlements, drawerActions } = result;
+  const analyticsEnabled = entitlements.analytics ?? false;
 
   return (
-    <ProductDetailProvider
-      tenantSlug={slug}
-      whatsapp={pageData.whatsapp}
-      drawerActions={drawerActions}
-      categories={pageData.categoriesWithItems}
+    <PublicAnalyticsProvider
+      tenantId={pageData.tenant.id}
+      slug={slug}
+      enabled={analyticsEnabled}
     >
-      <PublicTheme tenant={pageData.tenant} siteConfig={pageData.siteConfig} />
-      {renderLandingSections(pageData, entitlements)}
-    </ProductDetailProvider>
+      <ProductDetailProvider
+        tenantSlug={slug}
+        whatsapp={pageData.whatsapp}
+        drawerActions={drawerActions}
+        categories={pageData.categoriesWithItems}
+      >
+        <PublicTheme tenant={pageData.tenant} siteConfig={pageData.siteConfig} />
+        {renderLandingSections(pageData, entitlements)}
+      </ProductDetailProvider>
+    </PublicAnalyticsProvider>
   );
 }

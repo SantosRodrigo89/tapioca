@@ -20,7 +20,7 @@ export interface TenantMetrics {
   productCount?: number;
   categoryCount?: number;
   landingPublished?: boolean;
-  /** Placeholder — analytics not implemented */
+  /** Page views (30d) synced from PostHog or live query */
   views?: number;
 }
 

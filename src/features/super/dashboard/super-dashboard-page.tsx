@@ -28,7 +28,11 @@ export function SuperDashboardPage({ metrics }: SuperDashboardPageProps) {
         <SuperKpiCard
           label="Visualizações"
           value={metrics.totalViews ?? "—"}
-          hint="Placeholder — analytics em breve"
+          hint={
+            metrics.totalViews === null
+              ? "Configure PostHog ou sincronize métricas"
+              : "Últimos 30 dias"
+          }
         />
       </div>
     </div>

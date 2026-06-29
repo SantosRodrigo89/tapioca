@@ -25,6 +25,7 @@ const PRO_FEATURES = {
   ...STARTER_FEATURES,
   gallery: true,
   premium_themes: true,
+  analytics: true,
 } as const satisfies Partial<Record<FeatureId, boolean>>;
 
 const PREMIUM_FEATURES = {

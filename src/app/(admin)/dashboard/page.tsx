@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth/session";
 import { getTenantByIdServer } from "@/lib/repositories/server/tenant.server";
 import { TenantStatusBadge } from "@/components/admin/tenant-status-badge";
+import { AnalyticsCards } from "@/features/dashboard/analytics-cards";
 import { OnboardingCards } from "@/features/dashboard/onboarding-cards";
 import { SummaryCards } from "@/features/dashboard/summary-cards";
 import { QuickActions } from "@/features/dashboard/quick-actions";
@@ -12,6 +13,8 @@ import {
 } from "@/services/onboarding.service";
 import { getPublicUrlDisplay } from "@/lib/brand";
 import { getTenantCatalogServer } from "@/lib/site/tenant-catalog.server";
+import { getTenantEntitlementsServer } from "@/lib/platform/get-tenant-entitlements.server";
+import { getTenantAnalyticsSummary } from "@/services/analytics.service";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
@@ -37,6 +40,16 @@ export default async function DashboardPage() {
     process.env.NEXT_PUBLIC_APP_URL,
   );
 
+  const entitlements = await getTenantEntitlementsServer(tenant);
+  const analytics =
+    entitlements.analytics
+      ? await getTenantAnalyticsSummary(tenant.id)
+      : null;
+
+  const productNames = Object.fromEntries(
+    allItems.map((item) => [item.id, item.name]),
+  );
+
   return (
     <div className="mx-auto max-w-5xl space-y-10">
       <div className="space-y-1">
@@ -50,6 +63,9 @@ export default async function DashboardPage() {
       </div>
 
       <OnboardingCards tasks={tasks} />
+      {analytics ? (
+        <AnalyticsCards analytics={analytics} productNames={productNames} />
+      ) : null}
       <SummaryCards stats={stats} publicUrlDisplay={publicUrlDisplay} />
       <QuickActions publicUrl={publicUrl} slug={tenant.slug} />
     </div>

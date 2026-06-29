@@ -35,7 +35,7 @@ export function SuperMetricsPage({ metrics }: SuperMetricsPageProps) {
     <div className="space-y-8">
       <SuperPageHeader
         title="Métricas"
-        description="Agregados da plataforma. Analytics de visualizações ainda não implementado."
+        description="Agregados da plataforma, incluindo visualizações via PostHog."
       />
 
       <MetricsSection title="Plataforma" description="Restaurantes e status">
@@ -63,12 +63,16 @@ export function SuperMetricsPage({ metrics }: SuperMetricsPageProps) {
 
       <MetricsSection
         title="Engajamento"
-        description="Placeholder — integração com analytics futura"
+        description="Visualizações de landing (últimos 30 dias)"
       >
         <SuperKpiCard
-          label="Visualizações"
+          label="Visualizações (30d)"
           value={metrics.totalViews ?? "—"}
-          hint="Em breve"
+          hint={
+            metrics.totalViews === null
+              ? "Configure PostHog ou sincronize métricas"
+              : undefined
+          }
         />
       </MetricsSection>
     </div>

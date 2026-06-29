@@ -59,6 +59,7 @@ export function ProductDetailDrawer({
         side={isMobile ? "bottom" : "right"}
         className="product-detail-sheet w-full gap-0 overflow-hidden p-0 sm:max-w-lg"
         aria-describedby={undefined}
+        data-product-drawer
       >
         <SheetTitle className="sr-only">{item.name}</SheetTitle>
 

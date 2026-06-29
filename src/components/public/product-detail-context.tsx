@@ -12,6 +12,7 @@ import {
 import type { CategoryWithItems } from "@/lib/site/landing-types";
 import type { Category, MenuItem } from "@/types";
 import type { ProductDrawerActionId } from "@/types/site";
+import { usePublicAnalytics } from "@/components/public/public-analytics-provider";
 import { ProductDetailDrawer } from "./product-detail-drawer";
 
 interface ProductSelection {
@@ -52,6 +53,7 @@ export function ProductDetailProvider({
 }: ProductDetailProviderProps) {
   const [selection, setSelection] = useState<ProductSelection | null>(null);
   const [open, setOpen] = useState(false);
+  const analytics = usePublicAnalytics();
 
   const itemIndex = useMemo(() => {
     const map = new Map<string, ProductSelection>();
@@ -63,11 +65,15 @@ export function ProductDetailProvider({
     return map;
   }, [categories]);
 
-  const openProduct = useCallback((item: MenuItem, category: Category) => {
-    setSelection({ item, category });
-    setOpen(true);
-    window.history.replaceState(null, "", `#produto-${item.id}`);
-  }, []);
+  const openProduct = useCallback(
+    (item: MenuItem, category: Category) => {
+      setSelection({ item, category });
+      setOpen(true);
+      window.history.replaceState(null, "", `#produto-${item.id}`);
+      analytics?.captureProductOpen(item.id, category.id);
+    },
+    [analytics],
+  );
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
     setOpen(nextOpen);
@@ -93,13 +99,14 @@ export function ProductDetailProvider({
       if (match) {
         setSelection(match);
         setOpen(true);
+        analytics?.captureProductOpen(match.item.id, match.category.id);
       }
     }
 
     openFromHash();
     window.addEventListener("hashchange", openFromHash);
     return () => window.removeEventListener("hashchange", openFromHash);
-  }, [itemIndex]);
+  }, [itemIndex, analytics]);
 
   const value = useMemo(() => ({ openProduct }), [openProduct]);
 

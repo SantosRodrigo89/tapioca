@@ -4,6 +4,10 @@ import type { SuperDashboardMetrics } from "@/types/platform";
 import type { TenantStatus } from "@/types";
 import { adminDb } from "@/lib/firebase/admin";
 import { CACHE_TTL, SUPER_METRICS_CACHE_TAG } from "@/lib/cache/revalidate";
+import { countPlatformPageViews } from "@/lib/analytics/posthog.server";
+import {
+  sumTenantViewsFromFirestore,
+} from "@/services/analytics.service";
 import { countPendingInvitesServer } from "@/lib/repositories/server/platform/invite.server";
 import { listFeaturesServer } from "@/lib/repositories/server/platform/feature.server";
 import { listPlansServer } from "@/lib/repositories/server/platform/plan.server";
@@ -68,6 +72,14 @@ async function aggregateCatalogMetrics(tenantIds: string[]) {
   );
 }
 
+async function resolveTotalViews(): Promise<number | null> {
+  const fromPostHog = await countPlatformPageViews(30);
+  if (fromPostHog !== null) return fromPostHog;
+
+  const fromFirestore = await sumTenantViewsFromFirestore();
+  return fromFirestore > 0 ? fromFirestore : null;
+}
+
 async function getSuperDashboardMetricsUncached(): Promise<SuperDashboardMetrics> {
   const tenantsSnap = await adminDb.collection("tenants").get();
   const tenants = tenantsSnap.docs.map((doc) => ({
@@ -75,9 +87,10 @@ async function getSuperDashboardMetricsUncached(): Promise<SuperDashboardMetrics
     siteConfig: doc.data().siteConfig,
   }));
 
-  const [{ totalProducts }, pendingInvites] = await Promise.all([
+  const [{ totalProducts }, pendingInvites, totalViews] = await Promise.all([
     aggregateCatalogMetrics(tenantsSnap.docs.map((d) => d.id)),
     countPendingInvitesServer().catch(() => 0),
+    resolveTotalViews(),
   ]);
 
   return {
@@ -90,7 +103,7 @@ async function getSuperDashboardMetricsUncached(): Promise<SuperDashboardMetrics
     publishedLandings: tenantsSnap.docs.filter((doc) =>
       isLandingPublished(doc.data().siteConfig),
     ).length,
-    totalViews: null,
+    totalViews,
   };
 }
 
@@ -117,6 +130,8 @@ async function getSuperPlatformMetricsUncached(): Promise<SuperPlatformMetrics> 
     isLandingPublished(doc.data().siteConfig),
   ).length;
 
+  const totalViews = await resolveTotalViews();
+
   return {
     totalTenants: tenantsSnap.size,
     totalProducts,
@@ -124,7 +139,7 @@ async function getSuperPlatformMetricsUncached(): Promise<SuperPlatformMetrics> 
     publishedLandings,
     totalUsers: tenantsSnap.docs.filter((doc) => !!doc.data().ownerUid).length,
     totalQrCodes: tenantsSnap.size,
-    totalViews: null,
+    totalViews,
     pendingInvites,
     activeTenants: countByStatus(tenants, "active"),
     trialTenants: countByStatus(tenants, "trial"),
